@@ -7,6 +7,9 @@ import 'screens/login_screen.dart';
 import 'screens/login_webview_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/detalhes_pedido_screen.dart';
+import 'screens/visualizar_danfe_screen.dart';
+import 'screens/scanner_imei_screen.dart';
+import 'screens/price_tags_screen.dart';
 import 'utils/constants.dart';
 
 void main() async {
@@ -41,8 +44,11 @@ class MaestroApp extends StatelessWidget {
           '/login': (_) => const LoginScreen(),
           '/webview': (_) => LoginWebViewScreen(args: {}),
           '/home': (_) => HomeScreen(session: session, apiService: apiService),
+          '/etiquetas': (_) => PriceTagsScreen(
+              session: session, apiService: apiService),
         },
       ),
     );
   }
 }
+

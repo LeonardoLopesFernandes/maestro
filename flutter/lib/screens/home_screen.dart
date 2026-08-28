@@ -6,6 +6,7 @@ import '../network/session_manager.dart';
 import '../utils/constants.dart';
 import '../utils/currency_formatter.dart';
 import 'historico_screen.dart';
+import 'price_tags_screen.dart';
 import '../widgets/pedido_card.dart';
 import 'detalhes_pedido_screen.dart';
 
@@ -140,6 +141,17 @@ class _HomeScreenState extends State<HomeScreen>
             IconButton(
               icon: const Icon(Icons.person),
               onPressed: _abrirPerfil,
+            ),
+            IconButton(
+              icon: const Icon(Icons.label),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => PriceTagsScreen(
+                    session: widget.session,
+                    apiService: widget.apiService,
+                  ),
+                ),
+              ),
             ),
           ],
           bottom: TabBar(
@@ -318,11 +330,10 @@ class _PedidoListTabState extends State<_PedidoListTab> {
     if (!_temMais) return;
     setState(() => _carregando = true);
     try {
-      final resp = await widget.apiService.getPedidos(
-        store: widget.session.getUserStore() ?? Constants.defaultStore,
-        status: widget.status,
+      final resp = await widget.apiService.getPedidosPaged(
         skip: _skip,
         limit: _limit,
+        status: widget.status,
         minDias: widget.minDias,
         ordemDataInclusao: widget.ordemDataInclusao,
         find: widget.search.isNotEmpty ? widget.search : null,

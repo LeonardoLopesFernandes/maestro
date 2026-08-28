@@ -44,11 +44,10 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
     if (!_temMais) return;
     setState(() => _carregando = true);
     try {
-      final resp = await widget.apiService.getPedidos(
-        store: widget.session.getUserStore() ?? Constants.defaultStore,
-        status: Constants.statusFinalizado,
+      final resp = await widget.apiService.getPedidosPaged(
         skip: _skip,
         limit: _limit,
+        status: Constants.statusFinalizado,
         minDias: 90,
         ordemDataInclusao: false,
         find: widget.search.isNotEmpty ? widget.search : null,

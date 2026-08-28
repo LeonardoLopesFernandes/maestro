@@ -5,6 +5,8 @@ import '../network/session_manager.dart';
 import '../utils/constants.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/dialogs.dart';
+import 'visualizar_danfe_screen.dart';
+import 'scanner_imei_screen.dart';
 
 class DetalhesPedidoScreen extends StatefulWidget {
   final SessionManager session;
@@ -38,8 +40,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   Future<void> _carregar() async {
     setState(() => _carregando = true);
     try {
-      final p = await widget.apiService
-          .getPedidoById(widget.session.getUserStore() ?? Constants.defaultStore, widget.pedidoId);
+      final p = await widget.apiService.getPedidoById(widget.pedidoId);
       if (mounted) setState(() => _pedido = p);
     } catch (e) {
       if (mounted) {
@@ -53,12 +54,42 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
 
   Future<void> _acao(String novoStatus, {String? msg}) async {
     setState(() => _carregando = true);
+    final origem = _pedido.loja.isNotEmpty
+        ? _pedido.loja
+        : (widget.session.getUserStore() ?? Constants.defaultStore);
+    final cod = _pedido.codigoExterno.isNotEmpty
+        ? _pedido.codigoExterno
+        : _pedido.numero;
     try {
-      await widget.apiService.updateStatus(
-        widget.session.getUserStore() ?? Constants.defaultStore,
-        _pedido.id,
-        novoStatus,
-      );
+      switch (novoStatus) {
+        case Constants.statusEmSeparacao:
+          await widget.apiService.separarPedido(origem, cod);
+          break;
+        case Constants.statusProntoParaSair:
+          await widget.apiService.confirmarPedido(origem, cod);
+          break;
+        case Constants.statusSaiuParaEntrega:
+          if ((_pedido.canalDeVendas ?? '')
+                  .toUpperCase()
+                  .contains('PEGUE') ||
+              (_pedido.tipoEntrega ?? '').toUpperCase() == 'RETIRADA') {
+            await widget.apiService.retirarPedidoPackk(cod);
+          } else {
+            await widget.apiService.retirarPedidoShipFromStore(cod);
+          }
+          break;
+        case 'FINALIZADO':
+          await widget.apiService.retirarPedidoPackk(cod);
+          break;
+        case 'DEVOLVIDO':
+          await widget.apiService.devolverPedido(origem, cod);
+          break;
+        case Constants.statusRetornarEstoque:
+          await widget.apiService.retornarParaEstoque(origem, cod);
+          break;
+        default:
+          await widget.apiService.updateStatus(cod, novoStatus);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg ?? 'Status atualizado: $novoStatus')),
@@ -142,9 +173,15 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     if (motivo == null || motivo.isEmpty) return;
     setState(() => _carregando = true);
     try {
+      final origem = _pedido.loja.isNotEmpty
+          ? _pedido.loja
+          : (widget.session.getUserStore() ?? Constants.defaultStore);
+      final cod = _pedido.codigoExterno.isNotEmpty
+          ? _pedido.codigoExterno
+          : _pedido.numero;
       await widget.apiService.cancelarPedido(
-        widget.session.getUserStore() ?? Constants.defaultStore,
-        _pedido.id,
+        origem,
+        cod,
         motivo,
         'CANCELAMENTO',
       );
@@ -187,14 +224,37 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           if (_pedido.notaFiscalChave != null)
             IconButton(
               icon: const Icon(Icons.picture_as_pdf),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Abrindo DANFE...')),
-                );
-              },
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => VisualizarDanfeScreen(
+                    session: widget.session,
+                    apiService: widget.apiService,
+                    chave: _pedido.notaFiscalChave!,
+                  ),
+                ),
+              ),
             ),
         ],
       ),
+      floatingActionButton: _pedido.itens
+                  .any((e) => e.quantidadeImeis > 0 || e.imeis.isNotEmpty)
+          ? FloatingActionButton(
+              backgroundColor: const Color(Constants.RED_600),
+              child: const Icon(Icons.qr_code_scanner),
+              onPressed: () async {
+                final imeis = await Navigator.of(context).push<List<String>>(
+                  MaterialPageRoute(
+                      builder: (_) => const ScannerImeiScreen()),
+                );
+                if (imeis != null && imeis.isNotEmpty && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text('IMEIs capturados: ${imeis.length}')),
+                  );
+                }
+              },
+            )
+          : null,
       body: _carregando
           ? const Center(child: CircularProgressIndicator())
           : ListView(

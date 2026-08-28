@@ -1,0 +1,68 @@
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
+import '../network/api_service.dart';
+import '../network/session_manager.dart';
+import '../utils/constants.dart';
+
+class VisualizarDanfeScreen extends StatefulWidget {
+  final SessionManager session;
+  final ApiService apiService;
+  final String chave;
+
+  const VisualizarDanfeScreen({
+    super.key,
+    required this.session,
+    required this.apiService,
+    required this.chave,
+  });
+
+  @override
+  State<VisualizarDanfeScreen> createState() => _VisualizarDanfeScreenState();
+}
+
+class _VisualizarDanfeScreenState extends State<VisualizarDanfeScreen> {
+  Uint8List? _bytes;
+  bool _carregando = true;
+  String? _erro;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregar();
+  }
+
+  Future<void> _carregar() async {
+    try {
+      final b = await widget.apiService.getDanfe(widget.chave);
+      if (mounted) setState(() => _bytes = b);
+    } catch (e) {
+      if (mounted) setState(() => _erro = e.toString());
+    } finally {
+      if (mounted) setState(() => _carregando = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(Constants.RED_600),
+        title: const Text('DANFE'),
+      ),
+      body: _carregando
+          ? const Center(child: CircularProgressIndicator())
+          : _erro != null
+              ? Center(child: Text('Erro: $_erro'))
+              : _bytes == null
+                  ? const Center(child: Text('Sem dados.'))
+                  : PdfPreview(
+                      allowPrinting: true,
+                      canChangeOrientation: false,
+                      canChangePageFormat: false,
+                      pdfFileName: 'danfe_${widget.chave}.pdf',
+                      build: (_) async => _bytes!,
+                    ),
+    );
+  }
+}
