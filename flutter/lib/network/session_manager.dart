@@ -9,6 +9,7 @@ class SessionManager {
   static const String _keyUserStore = "USER_STORE";
   static const String _keyRememberLogin = "REMEMBER_LOGIN";
   static const String _keyMsPassword = "MS_PASSWORD";
+  static const String _keyDemo = "DEMO_MODE";
   static const int _tokenExpiryDays = 14;
 
   final SharedPreferences _prefs;
@@ -86,4 +87,14 @@ class SessionManager {
   void clearCredentials() => _prefs.remove(_keyMsPassword);
 
   void clearAll() => _prefs.clear();
+
+  // ---------- Modo Demonstração (preview sem credenciais) ----------
+  void enableDemo() {
+    _prefs.setBool(_keyDemo, true);
+    saveToken("demo-token");
+  }
+
+  void disableDemo() => _prefs.setBool(_keyDemo, false);
+
+  bool isDemo() => _prefs.getBool(_keyDemo) ?? false;
 }

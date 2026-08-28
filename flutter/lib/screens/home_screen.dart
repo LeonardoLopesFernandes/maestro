@@ -161,9 +161,31 @@ class _HomeScreenState extends State<HomeScreen>
             tabs: _abas.map(_tabLabel).toList(),
           ),
         ),
-        body: TabBarView(
-          controller: _tabController,
-          children: _abas.map((aba) {
+        body: Column(
+          children: [
+            if (widget.session.isDemo())
+              Container(
+                width: double.infinity,
+                color: Colors.black87,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: const Row(
+                  children: [
+                    Icon(Icons.visibility, color: Colors.amber, size: 16),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'MODO DEMONSTRAÇÃO — dados fictícios, sem login real.',
+                        style: TextStyle(color: Colors.amber, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: _abas.map((aba) {
             if (aba.status == 'HISTORICO') {
               return HistoricoScreen(
                 session: widget.session,
@@ -183,7 +205,10 @@ class _HomeScreenState extends State<HomeScreen>
           }).toList(),
         ),
       ),
-    );
+    ],
+  ),
+    ),
+  );
   }
 
   Future<void> _abrirFiltro() async {

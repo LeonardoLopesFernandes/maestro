@@ -53,6 +53,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  void _entrarDemo() {
+    _session.enableDemo();
+    Navigator.of(context).pushReplacementNamed('/home');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -231,6 +236,23 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                               ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // 2b. Modo demonstração (preview sem credenciais)
+                          SizedBox(
+                            width: double.infinity,
+                            height: 44,
+                            child: TextButton(
+                              onPressed: _carregando ? null : _entrarDemo,
+                              child: const Text(
+                                'Entrar em modo demonstração',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
                             ),
                           ),
                           const Spacer(),
