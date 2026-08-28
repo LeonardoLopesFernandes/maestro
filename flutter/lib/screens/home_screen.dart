@@ -14,14 +14,15 @@ const int _red = 0xFFE60000;
 const int _redDark = 0xFFF80032;
 const int _bgLight = 0xFFF0F0F0;
 
-// Cores dos badges de contagem por aba (semânticas, sem azul).
-const List<int> _tabBadge = [
-  0xFF12CD0C, // Novos
-  0xFFFFAA02, // Separação
-  0xFFFFAA02, // Retirada
-  0xFFCE00FF, // Entrega
-  0xFFF80032, // Estoque
-  0xFF7F8C8D, // Histórico
+// Cores próprias de cada aba (como no Kotlin). O azul original da aba
+// Separação foi trocado por rosa para não usar a cor de tema azul.
+const List<int> _tabColors = [
+  0xFF12CD0C, // Novos - verde
+  0xFFDB2777, // Separação - rosa (substitui o azul)
+  0xFFFFAA02, // Retirada - laranja
+  0xFFCE00FF, // Entrega - roxo
+  0xFFB62F2C, // Estoque - vermelho escuro
+  0xFF7F8C8D, // Histórico - cinza
 ];
 
 const List<IconData> _tabIcons = [
@@ -414,20 +415,26 @@ class _HomeScreenState extends State<HomeScreen> {
             final aba = e.value;
             final ativo = _currentIndex == i;
             final count = _contagemPara(i);
+            final cor = Color(_tabColors[i]);
             return Expanded(
               child: InkWell(
                 onTap: () => _onNavTap(i),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Container(
+                      height: 3,
+                      width: 28,
+                      margin: const EdgeInsets.only(bottom: 4),
+                      decoration: BoxDecoration(
+                        color: ativo ? cor : Colors.transparent,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        Icon(_tabIcons[i],
-                            size: 28,
-                            color: ativo
-                                ? const Color(_red)
-                                : const Color(0xFF9CA3AF)),
+                        Icon(_tabIcons[i], size: 26, color: cor),
                         if (count > 0)
                           Positioned(
                             top: -8,
@@ -438,7 +445,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 3),
                               decoration: BoxDecoration(
-                                color: Color(_tabBadge[i]),
+                                color: cor,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text('$count',
@@ -454,11 +461,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 4),
                     Text(aba.titulo,
                         style: TextStyle(
-                            color: ativo
-                                ? const Color(_red)
-                                : const Color(0xFF9CA3AF),
+                            color: cor,
                             fontSize: 10,
-                            fontWeight: FontWeight.bold)),
+                            fontWeight: ativo
+                                ? FontWeight.bold
+                                : FontWeight.w600)),
                   ],
                 ),
               ),
