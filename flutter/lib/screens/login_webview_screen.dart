@@ -26,6 +26,9 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
   bool _carregando = true;
   bool _pronto = false;
   bool _tokenCapturado = false;
+  bool _autoLogin = false;
+  String _email = '';
+  String _senha = '';
   Timer? _pollTimer;
 
   @override
@@ -37,6 +40,10 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
   Future<void> _initAsync() async {
     _session = await SessionManager.create();
     _apiService = ApiService(ApiClient(session: _session));
+    final args = widget.args ?? {};
+    _autoLogin = args['autoLogin'] == true;
+    _email = (args['email'] ?? '').toString();
+    _senha = (args['senha'] ?? '').toString();
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setUserAgent(
@@ -56,6 +63,13 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
               setState(() => _carregando = false);
             }
             if (url != null) _verificarUrl(url);
+            // Auto-login: preenche e submete o formulário Microsoft quando
+            // as credenciais salvas estiverem disponíveis.
+            if (_autoLogin &&
+                url != null &&
+                url.contains('login.microsoftonline.com')) {
+              _preencherLoginAutomatico();
+            }
           },
           onNavigationRequest: (request) {
             _verificarUrl(request.url);
@@ -75,6 +89,33 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
       final token = await _capturarToken();
       if (token != null) _salvarToken(token);
     });
+  }
+
+  // Espelha preencherLoginAutomatico/montarScriptPreenchimento do Kotlin.
+  void _preencherLoginAutomatico() {
+    if (_loginConcluido || !_autoLogin) return;
+    if (_email.isEmpty || _senha.isEmpty) return;
+    final emailJs = _jsString(_email);
+    final senhaJs = _jsString(_senha);
+    const script = "(function(){"
+        "function setV(el,v){try{var d=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value');if(d&&d.set)d.set.call(el,v);else el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}catch(e){}}"
+        "var btn=document.getElementById('idSIButton9');"
+        "var em=document.getElementById('i0116');"
+        "if(em){setV(em,\$EMAIL\$);if(btn){btn.click();return 'email';}return 'email-no-btn';}"
+        "var pw=document.getElementById('i0118');"
+        "if(pw){setV(pw,\$SENHA\$);if(btn){btn.click();return 'pwd';}return 'pwd-no-btn';}"
+        "var km=document.getElementById('KmsiCheckboxField');"
+        "if(km){if(btn){btn.click();return 'kmsi';}return 'kmsi-no-btn';}"
+        "return 'none';"
+        "})();";
+    final js = script
+        .replaceAll('\$EMAIL\$', emailJs)
+        .replaceAll('\$SENHA\$', senhaJs);
+    _controller.runJavaScript(js);
+  }
+
+  String _jsString(String v) {
+    return "'${v.replaceAll(r'\', r'\\').replaceAll("'", r"\'")}'";
   }
 
   void _verificarUrl(String url) {

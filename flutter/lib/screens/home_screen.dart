@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
 import '../models/pedido.dart';
 import '../network/api_service.dart';
@@ -71,6 +72,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Timer? _pollTimer;
   int _currentIndex = 0;
 
+  final AudioPlayer _player = AudioPlayer();
+  int _prevNovo = 0;
+  bool _somTocado = false;
+
   // Filtros
   int _minDias = 7;
   bool _ordemDataInclusao = true;
@@ -99,9 +104,28 @@ class _HomeScreenState extends State<HomeScreen> {
       final c = await widget.apiService
           .getCounts(widget.session.getUserStore() ?? Constants.defaultStore);
       if (mounted) setState(() => _counts = c);
+      _verificarSomNovo(c.novoPedido);
     } catch (_) {
     } finally {
       if (mounted) setState(() => _carregandoCounts = false);
+    }
+  }
+
+  // Toca o som de novo pedido ao entrar na home (se houver) e quando a
+  // contagem de novos aumenta durante o polling (igual ao web/app Kotlin).
+  void _verificarSomNovo(int novo) {
+    if (novo > 0 && (novo > _prevNovo || !_somTocado)) {
+      _tocarSomNovo();
+    }
+    _prevNovo = novo;
+    _somTocado = true;
+  }
+
+  Future<void> _tocarSomNovo() async {
+    try {
+      await _player.play(UrlSource(Constants.orderAlertSoundUrl));
+    } catch (_) {
+      // CDN pode bloquear no dispositivo; som silencioso em caso de falha.
     }
   }
 
@@ -266,6 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _pollTimer?.cancel();
     _searchController.dispose();
+    _player.dispose();
     super.dispose();
   }
 

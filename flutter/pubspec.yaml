@@ -1,7 +1,7 @@
 name: maestro
 description: "App de gestão de pedidos Maestro (fiel ao app Android Kotlin)."
 publish_to: 'none'
-version: 2.0.22+2022
+version: 2.0.23+2023
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -35,6 +35,9 @@ dependencies:
 
   # WebView (fluxo Microsoft OAuth)
   webview_flutter: ^4.4.2
+
+  # Áudio (som de novo pedido)
+  audioplayers: ^5.2.1
 
   # Formatação pt-BR
   intl: ^0.19.0

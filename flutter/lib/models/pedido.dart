@@ -107,6 +107,12 @@ double _toDouble(dynamic v) {
   return double.tryParse(v.toString()) ?? 0.0;
 }
 
+int _toInt(dynamic v) {
+  if (v == null) return 0;
+  if (v is num) return v.toInt();
+  return int.tryParse(v.toString()) ?? 0;
+}
+
 class Cliente {
   final String? nome;
   final String? cpf;
@@ -256,15 +262,29 @@ class CountResponse {
     this.finalizado = 0,
   });
 
-  factory CountResponse.fromJson(Map<String, dynamic> json) => CountResponse(
-        novoPedido: json['NOVO_PEDIDO'] ?? 0,
-        previsto: json['PREVISTO'] ?? 0,
-        emSeparacao: json['EM_SEPARACAO'] ?? 0,
-        prontoParaSair: json['PRONTO_PARA_SAIR'] ?? 0,
-        saiuParaEntrega: json['SAIU_PARA_ENTREGA'] ?? 0,
-        retornarEstoque: json['RETORNAR_PARA_ESTOQUE'] ?? 0,
-        finalizado: json['FINALIZADO'] ?? 0,
-      );
+  factory CountResponse.fromJson(Map<String, dynamic> json) {
+    final Map<String, int> map = {};
+    final data = json['data'];
+    if (data is List) {
+      for (final item in data) {
+        if (item is Map) {
+          final key = item['_id'] ?? item['status'];
+          if (key is String && key.isNotEmpty) {
+            map[key] = _toInt(item['count']);
+          }
+        }
+      }
+    }
+    return CountResponse(
+      novoPedido: map['NOVO_PEDIDO'] ?? 0,
+      previsto: map['PREVISTO'] ?? 0,
+      emSeparacao: map['EM_SEPARACAO'] ?? 0,
+      prontoParaSair: map['PRONTO_PARA_SAIR'] ?? 0,
+      saiuParaEntrega: map['SAIU_PARA_ENTREGA'] ?? 0,
+      retornarEstoque: map['RETORNAR_PARA_ESTOQUE'] ?? 0,
+      finalizado: map['FINALIZADO'] ?? 0,
+    );
+  }
 }
 
 class PedidoResponse {
@@ -275,11 +295,25 @@ class PedidoResponse {
   PedidoResponse({this.pedidos = const [], this.total = 0, this.completo = false});
 
   factory PedidoResponse.fromJson(Map<String, dynamic> json) {
-    final data = json['data'] ?? json['pedidos'] ?? [];
+    final data = json['data'];
+    List<dynamic> records;
+    int total;
+    int? limit;
+    if (data is Map) {
+      records = (data['records'] is List) ? data['records'] : [];
+      total = _toInt(data['total'] ?? data['count']);
+      limit = _toInt(data['limit']);
+    } else if (data is List) {
+      records = data;
+      total = data.length;
+    } else {
+      records = [];
+      total = 0;
+    }
     return PedidoResponse(
-      pedidos: (data as List).map((e) => Pedido.fromJson(e)).toList(),
-      total: json['total'] ?? (data as List).length,
-      completo: json['completo'] ?? false,
+      pedidos: records.map((e) => Pedido.fromJson(e)).toList(),
+      total: total,
+      completo: limit != null && records.length < limit,
     );
   }
 }

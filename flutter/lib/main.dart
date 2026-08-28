@@ -39,7 +39,21 @@ class MaestroApp extends StatelessWidget {
               .copyWith(primary: const Color(Constants.RED_600)),
           useMaterial3: true,
         ),
-        initialRoute: session.isLoggedIn() ? '/home' : '/login',
+        initialRoute: _initialRoute(session),
+        onGenerateRoute: (settings) {
+          if (settings.name == '/auto-login') {
+            final email = session.getUserEmail() ?? '';
+            final senha = session.getSavedPassword() ?? '';
+            return MaterialPageRoute(
+              builder: (_) => LoginWebViewScreen(args: {
+                'email': email,
+                'senha': senha,
+                'autoLogin': true,
+              }),
+            );
+          }
+          return null;
+        },
         routes: {
           '/login': (_) => const LoginScreen(),
           '/webview': (_) => LoginWebViewScreen(args: {}),
@@ -49,6 +63,12 @@ class MaestroApp extends StatelessWidget {
         },
       ),
     );
+  }
+
+  String _initialRoute(SessionManager session) {
+    if (session.isLoggedIn()) return '/home';
+    if (session.hasSavedCredentials()) return '/auto-login';
+    return '/login';
   }
 }
 

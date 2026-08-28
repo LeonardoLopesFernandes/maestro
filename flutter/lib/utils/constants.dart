@@ -20,6 +20,10 @@ class Constants {
   // Cabeçalhos padrão
   static const String maestroVersion = "v2";
 
+  // Som de novo pedido (mesmo do web app)
+  static const String orderAlertSoundUrl =
+      "https://maestro.americanas.io/static/media/order_alert.91ea9a1ce8aba530269b.wav";
+
   // Status dos pedidos (aba -> status)
   static const String statusNovoPedido = "NOVO_PEDIDO";
   static const String statusPrevisto = "PREVISTO";
