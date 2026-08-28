@@ -303,59 +303,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _header() => Container(
         height: 56,
-        color: _corAba,
+        decoration: BoxDecoration(
+          color: _corAba,
+          boxShadow: const [
+            BoxShadow(
+                color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+          ],
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
-            if (_buscando)
-              Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    hintText: 'Buscar pedido...',
-                    hintStyle: TextStyle(color: Colors.white70),
-                    border: InputBorder.none,
-                  ),
-                  onChanged: (_) => setState(() {}),
-                ),
-              )
-            else ...[
-              Image.asset('assets/ic_maestro_logo.png',
-                  height: 40, width: 40, color: Colors.white),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(_abas[_currentIndex].titulo,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold)),
-              ),
-            ],
-            IconButton(
-              icon: Icon(_buscando ? Icons.close : Icons.search,
-                  color: Colors.white),
-              onPressed: () => setState(() {
-                _buscando = !_buscando;
-                if (!_buscando) _searchController.clear();
-              }),
-            ),
+            Image.asset('assets/icons/ic_logo_header.png',
+                height: 40, width: 40),
+            const Spacer(),
             IconButton(
               icon: Image.asset('assets/icons/ic_profile.png',
                   height: 24, width: 24, color: Colors.white),
               onPressed: _abrirPerfil,
-            ),
-            IconButton(
-              icon: const Icon(Icons.label, color: Colors.white),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => PriceTagsScreen(
-                    session: widget.session,
-                    apiService: widget.apiService,
-                  ),
-                ),
-              ),
             ),
           ],
         ),
@@ -392,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style:
                           TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                   style: TextButton.styleFrom(
-                    backgroundColor: _corAba,
+                    backgroundColor: const Color(0xFFF80032),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(17)),
@@ -405,8 +369,8 @@ class _HomeScreenState extends State<HomeScreen> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFFF2F2F2),
-                borderRadius: BorderRadius.circular(4),
+                color: const Color(0xFFF3F4F6),
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
               ),
               child: Text(
                 'Loja ${widget.session.getUserStore() ?? Constants.defaultStore}',
@@ -422,18 +386,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _bottomNav() => Container(
         height: 76,
+        margin: const EdgeInsets.only(top: 6, bottom: 4),
         decoration: BoxDecoration(
-          color: _corAba,
+          color: Colors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(18),
+            topRight: Radius.circular(18),
+          ),
           boxShadow: const [
             BoxShadow(
-                color: Colors.black26, blurRadius: 8, offset: Offset(0, -1)),
+                color: Colors.black26, blurRadius: 8, offset: Offset(0, -2)),
           ],
         ),
         child: Row(
           children: _abas.asMap().entries.map((e) {
             final i = e.key;
             final aba = e.value;
-            final ativo = _currentIndex == i;
             final count = _contagemPara(i);
             final cor = Color(_tabColors[i]);
             return Expanded(
@@ -442,20 +410,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      height: 3,
-                      width: 28,
-                      margin: const EdgeInsets.only(bottom: 4),
-                      decoration: BoxDecoration(
-                        color: ativo ? Colors.white : Colors.transparent,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
                         Image.asset(_tabIconAssets[i],
-                            width: 26, height: 26, color: Colors.white),
+                            width: 28, height: 28),
                         if (count > 0)
                           Positioned(
                             top: -8,
@@ -466,12 +425,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 3),
                               decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
+                                color: cor,
+                                shape: BoxShape.circle,
                               ),
                               child: Text('$count',
-                                  style: TextStyle(
-                                      color: cor,
+                                  style: const TextStyle(
+                                      color: Colors.black,
                                       fontSize: 9,
                                       fontWeight: FontWeight.bold),
                                   textAlign: TextAlign.center),
@@ -482,11 +441,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 4),
                     Text(aba.titulo,
                         style: TextStyle(
-                            color: Colors.white,
+                            color: cor,
                             fontSize: 10,
-                            fontWeight: ativo
-                                ? FontWeight.bold
-                                : FontWeight.w600)),
+                            fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),

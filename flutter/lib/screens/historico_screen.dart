@@ -32,13 +32,15 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
   final _busca = TextEditingController();
 
   final List<_Filtro> _filtros = const [
-    _Filtro('TODOS', 0xFF6B7280, ''),
-    _Filtro('PEGUE NA LOJA', 0xFF0086FF, 'PEGUE'),
-    _Filtro('DELIVERY', 0xFFFFAA02, 'DELIVERY'),
-    _Filtro('IFOOD', 0xFFEF4444, 'IFOOD'),
-    _Filtro('CANCELADO', 0xFFF80032, 'CANCELADO'),
-    _Filtro('DEVOLVIDO', 0xFF7F8C8D, 'DEVOLVIDO'),
+    _Filtro('TODOS', 0xFF5D6D7E, ''),
+    _Filtro('PEGUE NA LOJA', 0xFFF39C12, 'PEGUE'),
+    _Filtro('DELIVERY', 0xFF8E44AD, 'DELIVERY'),
+    _Filtro('IFOOD', 0xFFE74C3C, 'IFOOD'),
+    _Filtro('CANCELADO', 0xFF7B241C, 'CANCELADO'),
+    _Filtro('DEVOLVIDO', 0xFF641E16, 'DEVOLVIDO'),
   ];
+
+  static const int _cinzaFiltro = 0xFF95A5A6;
 
   @override
   void initState() {
@@ -133,7 +135,8 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
                   decoration: const InputDecoration(
                     hintText: 'Pesquisar no histórico...',
                     border: InputBorder.none,
-                    prefixIcon: Icon(Icons.search, color: Color(0xFF999999)),
+                    prefixIcon:
+                        Icon(Icons.search, color: Color(0xFF94A3B8)),
                     contentPadding: EdgeInsets.symmetric(vertical: 8),
                   ),
                 ),
@@ -141,7 +144,7 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
             ),
             if (_busca.text.isNotEmpty)
               IconButton(
-                icon: const Icon(Icons.close, color: Color(0xFF1A1A1A)),
+                icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
                 onPressed: () {
                   _busca.clear();
                   _carregar(reset: true);
@@ -178,11 +181,10 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
           height: 28,
           margin: const EdgeInsets.symmetric(horizontal: 3),
           decoration: BoxDecoration(
-            color: Color(f.cor),
-            borderRadius: BorderRadius.circular(4),
-            border: _filtro == f.nome
-                ? Border.all(color: Colors.white, width: 2)
-                : null,
+            color: _filtro == f.nome
+                ? Color(f.cor)
+                : const Color(_cinzaFiltro),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Material(
             color: Colors.transparent,
