@@ -34,6 +34,15 @@ const List<IconData> _tabIcons = [
   Icons.history,
 ];
 
+const List<String> _tabIconAssets = [
+  'assets/icons/ic_clipboard.png',
+  'assets/icons/ic_sync.png',
+  'assets/icons/ic_bag.png',
+  'assets/icons/ic_truck.png',
+  'assets/icons/ic_estoque.png',
+  'assets/icons/ic_historico.png',
+];
+
 class HomeScreen extends StatefulWidget {
   final SessionManager session;
   final ApiService apiService;
@@ -312,10 +321,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   onChanged: (_) => setState(() {}),
                 ),
               )
-            else
+            else ...[
               Image.asset('assets/ic_maestro_logo.png',
                   height: 40, width: 40, color: Colors.white),
-            const Spacer(),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(_abas[_currentIndex].titulo,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold)),
+              ),
+            ],
             IconButton(
               icon: Icon(_buscando ? Icons.close : Icons.search,
                   color: Colors.white),
@@ -325,7 +342,8 @@ class _HomeScreenState extends State<HomeScreen> {
               }),
             ),
             IconButton(
-              icon: const Icon(Icons.person, color: Colors.white),
+              icon: Image.asset('assets/icons/ic_profile.png',
+                  height: 24, width: 24, color: Colors.white),
               onPressed: _abrirPerfil,
             ),
             IconButton(
@@ -368,8 +386,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Spacer(),
                 TextButton.icon(
                   onPressed: _abrirFiltro,
-                  icon: const Icon(Icons.filter_list,
-                      color: Colors.white, size: 16),
+                  icon: Image.asset('assets/icons/ic_filter_slider.png',
+                      height: 16, width: 16, color: Colors.white),
                   label: const Text('Filtrar',
                       style:
                           TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
@@ -436,7 +454,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        Icon(_tabIcons[i], size: 26, color: cor),
+                        Image.asset(_tabIconAssets[i],
+                            width: 26, height: 26, color: cor),
                         if (count > 0)
                           Positioned(
                             top: -8,

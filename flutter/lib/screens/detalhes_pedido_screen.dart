@@ -3,6 +3,7 @@ import '../models/pedido.dart';
 import '../network/api_service.dart';
 import '../network/session_manager.dart';
 import '../utils/currency_formatter.dart';
+import '../widgets/maestro_dialogs.dart';
 import 'scanner_imei_screen.dart';
 
 const int _cinzaBorda = 0xFF475569;
@@ -170,10 +171,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           bottom: false,
           child: Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
               const SizedBox(width: 4),
               Expanded(
                 child: Container(
@@ -661,6 +658,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoConfirmar() async {
+    final ok = await MaestroDialogs.quantidadeNovo(context, _pedido);
+    if (ok != true) return;
+    final conf = await MaestroDialogs.tudoCerto(
+        context, _pedido.itens.length);
+    if (conf != true) return;
     try {
       await widget.apiService.confirmarPedido(
           _pedido.origem ?? '', _pedido.codigoExterno ?? _pedido.numero);
@@ -671,11 +673,10 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoRetirar() async {
-    final codigo = await showDialog<String>(
-      context: context,
-      builder: (_) => _TokenDialog(),
-    );
-    if (codigo == null) return;
+    final codigo = await MaestroDialogs.token(context,
+        nome: _pedido.cliente?.nome ?? '',
+        numero: _pedido.codigoExterno ?? _pedido.numero);
+    if (codigo == null || codigo.isEmpty) return;
     try {
       await widget.apiService.retirarPedidoShipFromStore(
           _pedido.codigoExterno ?? _pedido.numero);
@@ -686,15 +687,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoCancelarRetirada() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => _ConfirmSimpleDialog(
+    final ok = await MaestroDialogs.confirmar(context,
         titulo: 'Cancelar pedido',
         mensagem:
             'Este pedido está há mais de 3 dias em PRONTO PARA RETIRADA. Deseja realmente cancelá-lo?',
-        textoSim: 'SIM, CANCELAR',
-      ),
-    );
+        textoSim: 'SIM, CANCELAR');
     if (ok != true) return;
     try {
       await widget.apiService.cancelarPedido(
@@ -707,15 +704,15 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoEntregadorVoltou() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => _ConfirmSimpleDialog(
-        titulo: 'Entregador voltou',
-        mensagem: 'Confirmar retorno do entregador?',
-        textoSim: 'CONFIRMAR',
-      ),
-    );
-    if (ok != true) return;
+    List<String> motivos = [];
+    try {
+      final m = await widget.apiService.getMotivosInsucesso();
+      motivos = m.map((e) => e.toString()).toList();
+    } catch (_) {
+      motivos = ['Cliente ausente', 'Endereço incorreto', 'Recusou receber'];
+    }
+    final res = await MaestroDialogs.entregadorVoltou(context, motivos);
+    if (res == null) return;
     try {
       await widget.apiService.updateStatus(
           _pedido.codigoExterno ?? _pedido.numero, 'RETORNAR_PARA_ESTOQUE');
@@ -726,14 +723,10 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoDevolverEstoque() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => _ConfirmSimpleDialog(
+    final ok = await MaestroDialogs.atencao(context,
         titulo: 'ATENÇÃO',
         mensagem: 'Tem certeza que deseja retornar ao estoque?',
-        textoSim: 'SIM',
-      ),
-    );
+        sim: 'SIM');
     if (ok != true) return;
     try {
       await widget.apiService.retornarParaEstoque(
@@ -745,19 +738,12 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoCancelarHistorico() async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => _ConfirmSimpleDialog(
-        titulo: 'ATENÇÃO',
-        mensagem: 'Cancelar este pedido finalizado?',
-        textoSim: 'CANCELAR PEDIDO',
-      ),
-    );
-    if (ok != true) return;
+    final motivo = await MaestroDialogs.devolverHistorico(context);
+    if (motivo == null || motivo.isEmpty) return;
     try {
       await widget.apiService.cancelarPedido(
           _pedido.origem ?? '', _pedido.codigoExterno ?? _pedido.numero,
-          'Cancelado pelo usuário', 'CANCELAMENTO');
+          motivo, 'CANCELAMENTO');
       _sucesso('Pedido cancelado.');
     } catch (e) {
       _erroMsg(e);
@@ -767,106 +753,5 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   void _erroMsg(Object e) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text('Erro: $e')));
-  }
-}
-
-class _TokenDialog extends StatefulWidget {
-  @override
-  State<_TokenDialog> createState() => _TokenDialogState();
-}
-
-class _TokenDialogState extends State<_TokenDialog> {
-  final _c = TextEditingController();
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      contentPadding: const EdgeInsets.all(24),
-      title: const Text('Código de Retirada',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center),
-      content: SizedBox(
-        width: double.infinity,
-        child: TextField(
-          controller: _c,
-          keyboardType: TextInputType.number,
-          maxLength: 4,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-              fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 8),
-          decoration: InputDecoration(
-            hintText: '----',
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6)),
-          ),
-        ),
-      ),
-      actions: [
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2E7D32)),
-            onPressed: () => Navigator.of(context).pop(_c.text.trim()),
-            child: const Text('CONFIRMAR',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFD50000)),
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('CANCELAR',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ConfirmSimpleDialog extends StatelessWidget {
-  final String titulo;
-  final String mensagem;
-  final String textoSim;
-  const _ConfirmSimpleDialog(
-      {required this.titulo,
-      required this.mensagem,
-      required this.textoSim});
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: Text(titulo,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center),
-      content: Text(mensagem, textAlign: TextAlign.center),
-      actions: [
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF80032)),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(textoSim,
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2E7D32)),
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('NÃO',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ),
-      ],
-    );
   }
 }
