@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- WebView com o login Microsoft -->
+    <WebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="visible" />
+
+    <!-- Loading overlay (aparece após o login) -->
+    <LinearLayout
+        android:id="@+id/layoutCarregamentoCustom"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="#E31837"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/imgLogoPreenchimento"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:src="@drawable/ic_maestro_logo"
+            android:scaleType="fitCenter" />
+
+        <TextView
+            android:id="@+id/tvStatusCarregamento"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Carregando credenciais..."
+            android:textColor="#FFFFFF"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</FrameLayout>

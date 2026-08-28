@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_rounded"
+    android:elevation="8dp"
+    android:padding="20dp">
+
+    <!-- Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Filtrar pedidos"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#1A1A1A" />
+
+        <TextView
+            android:id="@+id/btnFilterClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="✕"
+            android:textSize="18sp"
+            android:textColor="#333333"
+            android:padding="8dp"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#EEEEEE"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Busca -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Buscar por código ou cliente"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="#333333"
+        android:layout_marginBottom="6dp" />
+
+    <EditText
+        android:id="@+id/etFilterSearch"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:hint="Ex.: #M24012ASZ1J"
+        android:textSize="14sp"
+        android:textColor="#333333"
+        android:textColorHint="#999999"
+        android:background="@drawable/bg_input_quantidade"
+        android:paddingHorizontal="12dp"
+        android:singleLine="true"
+        android:importantForAutofill="no"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Origem -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Origem do pedido"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="#333333"
+        android:layout_marginBottom="8dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/chipOrigemDelivery"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:text="Delivery"
+            android:textSize="13sp"
+            android:textColor="@color/chip_text"
+            android:gravity="center"
+            android:background="@drawable/bg_chip_filter_blue"
+            android:clickable="true"
+            android:focusable="true"
+            android:paddingHorizontal="8dp" />
+
+        <View
+            android:layout_width="8dp"
+            android:layout_height="1dp" />
+
+        <TextView
+            android:id="@+id/chipOrigemPegueHoje"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:text="Pegue na Loja Hoje"
+            android:textSize="13sp"
+            android:textColor="@color/chip_text"
+            android:gravity="center"
+            android:background="@drawable/bg_chip_filter_blue"
+            android:clickable="true"
+            android:focusable="true"
+            android:paddingHorizontal="8dp" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#EEEEEE"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Ações -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/btnFilterClear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Limpar"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:paddingVertical="10dp"
+            android:paddingHorizontal="12dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/btnFilterApply"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Aplicar"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/bg_btn_dark"
+            android:paddingVertical="10dp"
+            android:paddingHorizontal="24dp"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingHorizontal="4dp">
+
+    <LinearLayout
+        android:layout_width="24dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <View
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:background="@drawable/bg_timeline_circle_light"
+            android:layout_marginTop="6dp" />
+
+        <View
+            android:layout_width="2dp"
+            android:layout_height="match_parent"
+            android:background="#E2E8F0"
+            android:layout_marginTop="4dp"
+            android:minHeight="35dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:paddingBottom="16dp"
+        android:layout_marginStart="8dp">
+
+        <TextView
+            android:id="@+id/tvTimelineNome"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="CRIADO"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#1E293B" />
+
+        <TextView
+            android:id="@+id/tvTimelineData"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="29/06/2026 23:14"
+            android:textSize="12sp"
+            android:textColor="#64748B"
+            android:layout_marginTop="2dp" />
+
+        <TextView
+            android:id="@+id/tvTimelineDuracao"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="10sp"
+            android:textColor="#9CA3AF"
+            android:textStyle="bold"
+            android:layout_marginTop="1dp" />
+    </LinearLayout>
+
+</LinearLayout>

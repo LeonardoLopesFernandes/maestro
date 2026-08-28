@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#2563EB</color>
+    <color name="colorPrimaryDark">#1D4ED8</color>
+    <color name="colorAccent">#00CBFE</color>
+    
+    <color name="azul">#00CBFE</color>
+    <color name="verde">#12CD0C</color>
+    <color name="amarelo">#EAB308</color>
+    <color name="vermelho">#EF4444</color>
+    <color name="vermelho_maestro">#F80032</color>
+    <color name="roxo">#CE00FF</color>
+    <color name="laranja">#FFAA02</color>
+    <color name="cinza">#5D6D7E</color>
+    
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="background_light">#F0F0F0</color>
+    <color name="background">#F3F4F6</color>
+    <color name="gray_light">#E5E7EB</color>
+    <color name="gray">#9CA3AF</color>
+    <color name="gray_dark">#4B5563</color>
+    
+    <color name="black_text">#1A1A1A</color>
+    <color name="gray_medium">#6B7280</color>
+    <color name="skeleton_base">#E5E7EB</color>
+    <color name="gray_soft">#9CA3AF</color>
+    <color name="green_dark">#16A34A</color>
+    <color name="blue_primary">#2563EB</color>
+    <color name="red_dark">#DC2626</color>
+    <color name="yellow_dark">#FFAA02</color>
+    
+    <color name="btn_novo">#12CD0C</color>
+    <color name="btn_previsto">#CE00FF</color>
+    <color name="btn_separacao">#00CBFE</color>
+    <color name="btn_pronto">#FFAA02</color>
+    <color name="btn_entrega">#CE00FF</color>
+    <color name="btn_estoque">#B62F2C</color>
+    <color name="btn_historico">#6B7280</color>
+    <color name="chip_text">#1A4A75</color>
+	<color name="green_500">#12CD0C</color>
+	<color name="green_600">#16A34A</color>
+	<color name="blue_500">#00CBFE</color>
+	<color name="orange_500">#FFAA02</color>
+	<color name="red_500">#DC2626</color>
+	<color name="gray_300">#D1D5DB</color>
+	<color name="btn_disabled_text">#A6A6A6</color>
+	<color name="divider_color">#E2E8F0</color>
+	<color name="perfil_bkg">#E0F0FF</color>
+</resources>

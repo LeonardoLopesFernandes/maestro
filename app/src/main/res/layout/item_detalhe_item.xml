@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingTop="12dp"
+    android:paddingBottom="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:baselineAligned="false">
+
+        <TextView
+            android:id="@+id/tvQuantidade"
+            android:layout_width="45dp"
+            android:layout_height="wrap_content"
+            android:text="33x"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#2B2B2B" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginEnd="8dp">
+
+            <TextView
+                android:id="@+id/tvDescricao"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="CHOC KIT KAT AO LEITE 41,5G NESTLE"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:textColor="#4A4A4A"
+                android:maxLines="3"
+                android:ellipsize="end"
+                android:lineSpacingExtra="1dp" />
+
+            <LinearLayout
+                android:id="@+id/layoutCodigo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:id="@+id/tvCodigo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="EAN: 7891000248768 / SAP: 4267534"
+                    android:textSize="11sp"
+                    android:textColor="#888888" />
+
+                <ImageButton
+                    android:id="@+id/btnToggleEans"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:background="@android:color/transparent"
+                    android:src="@drawable/ic_arrow_down"
+                    android:tint="#64748B"
+                    android:contentDescription="Expandir EANs"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutEansExtras"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="4dp"
+                android:visibility="gone" />
+
+            <!-- ✅ IMEIs - Layout com múltiplos IMEIs -->
+            <LinearLayout
+                android:id="@+id/layoutImeis"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="4dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tvImeisLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="11sp"
+                    android:textColor="#666666"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvImeis"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="12sp"
+                    android:textColor="#D32F2F"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="110dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="end">
+
+            <TextView
+                android:id="@+id/tvValorTotal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="R$ 148,17"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#2B2B2B" />
+
+            <TextView
+                android:id="@+id/tvValorUnitario"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="33x R$ 4,49"
+                android:textSize="12sp"
+                android:textColor="#555555"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutEstoqueBadge"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:layout_marginTop="10dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvEstoqueBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Estoque estimado: 15307"
+            android:textSize="11sp"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/bg_stock_badge"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="4dp" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/dividerItem"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#DDDDDD"
+        android:layout_marginTop="8dp" />
+
+</LinearLayout>

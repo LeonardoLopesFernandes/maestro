@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reCAPTCHA</title>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100px;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 320px;
+        }
+        .g-recaptcha {
+            display: inline-block;
+        }
+        .loading {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .success {
+            color: #12CD0C;
+            font-size: 14px;
+            display: none;
+            margin-top: 10px;
+        }
+        .error {
+            color: #DC2626;
+            font-size: 14px;
+            display: none;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="recaptcha-container">
+            <div class="g-recaptcha" data-sitekey="6LcGCN4aAAAAACBn8w45pz5foZB7yf7RO_bZUJl6" data-callback="onRecaptchaSuccess" data-expired-callback="onRecaptchaExpired"></div>
+            <div class="loading" id="loading">Carregando reCAPTCHA...</div>
+            <div class="success" id="success">✅ Verificado com sucesso!</div>
+            <div class="error" id="error">❌ Erro ao carregar reCAPTCHA. Tente novamente.</div>
+        </div>
+    </div>
+
+    <script>
+        var onloadCallback = function() {
+            document.getElementById('loading').style.display = 'none';
+        };
+
+        function onRecaptchaSuccess(token) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('success').style.display = 'block';
+            if (window.RecaptchaBridge) {
+                window.RecaptchaBridge.onToken(token);
+            }
+        }
+
+        function onRecaptchaExpired() {
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').textContent = '❌ O reCAPTCHA expirou. Por favor, tente novamente.';
+        }
+
+        // Carregar reCAPTCHA
+        var script = document.createElement('script');
+        script.src = 'https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit';
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>

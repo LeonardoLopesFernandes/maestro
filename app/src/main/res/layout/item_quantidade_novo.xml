@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingVertical="10dp"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <!-- Checkbox + Multiplicador -->
+        <LinearLayout
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <CheckBox
+                android:id="@+id/cbItemSelecionado"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="8dp"
+                android:buttonTint="#E61937" />
+
+            <TextView
+                android:id="@+id/tvQuantidadeOriginal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2x"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:minWidth="24dp"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <!-- Detalhes do Item -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginEnd="15dp">
+
+            <TextView
+                android:id="@+id/tvDescricaoItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Produto"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:lineSpacingExtra="-2dp" />
+
+            <TextView
+                android:id="@+id/tvCodigo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="EAN: 000000 / SAP: 000000"
+                android:textSize="10sp"
+                android:textColor="#555555"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/tvEstoqueBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Estoque estimado: 0"
+                android:textSize="10sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:background="@drawable/bg_stock_badge"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="3dp"
+                android:layout_marginTop="8dp" />
+        </LinearLayout>
+
+        <!-- Input de Quantidade -->
+        <LinearLayout
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <FrameLayout
+                android:layout_width="55dp"
+                android:layout_height="36dp"
+                android:clipChildren="false"
+                android:clipToPadding="false">
+
+ <EditText
+                android:id="@+id/etQuantidade"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:inputType="number"
+                android:text="0"
+                android:textSize="14sp"
+                    android:textColor="#333333"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:background="@drawable/bg_input_quantidade_floating"
+                    android:padding="4dp"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:importantForAutofill="no" />
+
+                <TextView
+                    android:id="@+id/tvQtdeLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Qtde"
+                    android:textSize="11sp"
+                    android:textColor="#555555"
+                    android:layout_gravity="top|start"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="-8dp"
+                    android:paddingHorizontal="4dp" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Disponível"
+                android:textSize="11sp"
+                android:textColor="#666666"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- IMEI fields (visível apenas para smartphones) -->
+    <LinearLayout
+        android:id="@+id/layoutImeis"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="8dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tvImeiLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="IMEI(s) do Item:"
+            android:textSize="11sp"
+            android:textColor="#D32F2F"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/etImei1"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:inputType="number"
+            android:textSize="12sp"
+            android:textColor="#333333"
+            android:textColorHint="#999999"
+            android:gravity="center"
+            android:background="@drawable/bg_input_quantidade"
+            android:padding="4dp"
+            android:maxLength="15"
+            android:hint="Digite o IMEI 1"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:visibility="gone" />
+
+        <EditText
+            android:id="@+id/etImei2"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:inputType="number"
+            android:textSize="12sp"
+            android:textColor="#333333"
+            android:textColorHint="#999999"
+            android:gravity="center"
+            android:background="@drawable/bg_input_quantidade"
+            android:padding="4dp"
+            android:maxLength="15"
+            android:hint="Digite o IMEI 2"
+            android:layout_marginTop="4dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#CCCCCC"
+        android:layout_marginTop="12dp" />
+</LinearLayout>

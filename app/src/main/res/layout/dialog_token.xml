@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="300dp"
+    android:layout_gravity="center"
+    app:cardCornerRadius="20dp"
+    app:cardBackgroundColor="@color/white"
+    android:elevation="12dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="24dp">
+
+        <TextView
+            android:id="@+id/tvTokenClienteNome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nome do Cliente"
+            android:textSize="26sp"
+            android:textColor="#D50000"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/tvTokenNumeroPedido"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="#123456"
+            android:textSize="18sp"
+            android:textColor="#000000"
+			android:textStyle="bold"
+            android:layout_marginBottom="24dp"
+            android:gravity="center" />
+
+        <EditText
+            android:id="@+id/etTokenCodigo"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:hint="Insira o código de retirada"
+            android:textColorHint="#8C8C8C"
+            android:inputType="number"
+            android:background="@drawable/bg_token_input"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="16dp"
+            android:textSize="18sp"
+            android:textColor="#000000"
+			android:textStyle="bold"
+            android:maxLength="4"
+            android:layout_marginBottom="20dp"
+			android:gravity="center" />
+
+        <TextView
+            android:id="@+id/btnTokenConfirmar"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="CONFIRMAR"
+            android:textSize="15sp"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:background="@drawable/bg_btn_confirmar_retirada"
+            android:clickable="true"
+            android:focusable="true"
+            android:textAllCaps="true"
+            android:enabled="false"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/btnTokenCancelar"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="CANCELAR"
+            android:textSize="15sp"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:background="@drawable/bg_btn_cancelar_retirada"
+            android:clickable="true"
+            android:focusable="true"
+            android:textAllCaps="true" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

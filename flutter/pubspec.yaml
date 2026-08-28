@@ -1,0 +1,58 @@
+name: maestro
+description: "App de gestão de pedidos Maestro (fiel ao app Android Kotlin)."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+
+  # HTTP / API
+  http: ^1.2.0
+
+  # Estado / tema
+  provider: ^6.1.1
+  shared_preferences: ^2.2.2
+
+  # Ícones vetoriais convertidos de VectorDrawable
+  flutter_svg: ^2.0.9
+
+  # Imagens de rede
+  cached_network_image: ^3.3.1
+
+  # Abrir links / URL launcher
+  url_launcher: ^6.2.4
+
+  # Arquivos locais
+  path_provider: ^2.1.0
+
+  # Permissões
+  permission_handler: ^11.3.1
+
+  # WebView (fluxo Microsoft OAuth)
+  webview_flutter: ^4.4.2
+
+  # Formatação pt-BR
+  intl: ^0.19.0
+
+  # Geração de Excel (.xlsx)
+  excel: ^4.0.0
+
+  # Geração de PDF
+  pdf: ^3.10.7
+  printing: ^5.11.1
+
+  # Câmera / galeria (telas de fotos)
+  image_picker: ^1.0.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

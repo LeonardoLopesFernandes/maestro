@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog_rounded">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <!-- Título -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Selecione o motivo de Retorno:"
+                android:textSize="14sp"
+                android:textColor="#64748B"
+                android:textStyle="bold"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Spinner de Motivos (custom: abre diálogo centralizado) -->
+            <LinearLayout
+                android:id="@+id/layoutMotivoSelector"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_spinner_insucesso"
+                android:paddingHorizontal="12dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:id="@+id/tvMotivoSelecionado"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Selecione um motivo..."
+                    android:textSize="14sp"
+                    android:textColor="#374151"
+                    android:singleLine="true" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="▼"
+                    android:textSize="12sp"
+                    android:textColor="#9CA3AF"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+
+            <!-- Observação -->
+            <EditText
+                android:id="@+id/etObservacao"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:hint="Digite aqui a observação"
+                android:textSize="14sp"
+                android:textColor="#374151"
+                android:textColorHint="#9CA3AF"
+                android:background="@drawable/bg_textarea_input"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="10dp"
+                android:gravity="top"
+                android:inputType="textMultiLine"
+                android:fontFamily="monospace"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Divisor + Código de Devolução -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#F1F5F9"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Código de Devolução para Entregador:"
+                android:textSize="12sp"
+                android:textColor="#9CA3AF"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Código do Token -->
+            <TextView
+                android:id="@+id/tvTokenInsucessoGrande"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="48sp"
+                android:textColor="#DC2626"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:maxLines="1"
+                android:letterSpacing="1"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp" />
+
+            <!-- reCAPTCHA -->
+            <LinearLayout
+                android:id="@+id/layoutRecaptcha"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="#F9F9F9"
+                android:paddingHorizontal="14dp"
+                android:paddingVertical="10dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:layout_marginTop="16dp">
+
+                <CheckBox
+                    android:id="@+id/cbRecaptcha"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:button="@drawable/ic_checkbox_recaptcha"
+                    android:layout_marginEnd="12dp"
+                    android:clickable="false"
+                    android:focusable="false" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Não sou um robô"
+                        android:textSize="14sp"
+                        android:textColor="#000000"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Os Termos de Serviço do reCAPTCHA estão mudando."
+                        android:textSize="10sp"
+                        android:textColor="#666666"
+                        android:layout_marginTop="1dp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:layout_marginStart="8dp">
+
+                    <ImageView
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:src="@drawable/ic_recaptcha_logo"
+                        android:contentDescription="reCAPTCHA" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="reCAPTCHA"
+                        android:textSize="10sp"
+                        android:textColor="#666666"
+                        android:layout_marginTop="1dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Botões de Ação -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#F1F5F9" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="16dp">
+
+        <TextView
+            android:id="@+id/btnCancelar"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:text="CANCELAR"
+            android:textSize="12sp"
+            android:textColor="#DC2626"
+            android:textStyle="bold"
+            android:background="@drawable/bg_btn_cancel_outline"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/btnConfirmar"
+            android:layout_width="0dp"
+            android:layout_height="46dp"
+            android:layout_weight="1"
+            android:text="CONFIRMAR"
+            android:textSize="12sp"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:background="#D1D5DB"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true"
+            android:enabled="false" />
+    </LinearLayout>
+
+</LinearLayout>

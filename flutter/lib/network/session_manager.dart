@@ -1,0 +1,89 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
+class SessionManager {
+  static const String _prefsName = "MaestroPrefs";
+  static const String _keyBearerToken = "BEARER_TOKEN";
+  static const String _keyTokenExpiry = "TOKEN_EXPIRY";
+  static const String _keyUserEmail = "USER_EMAIL";
+  static const String _keyUserName = "USER_NAME";
+  static const String _keyUserStore = "USER_STORE";
+  static const String _keyRememberLogin = "REMEMBER_LOGIN";
+  static const String _keyMsPassword = "MS_PASSWORD";
+  static const int _tokenExpiryDays = 14;
+
+  final SharedPreferences _prefs;
+
+  SessionManager(this._prefs);
+
+  static Future<SessionManager> create() async {
+    final prefs = await SharedPreferences.getInstance();
+    return SessionManager(prefs);
+  }
+
+  void saveToken(String token) {
+    _prefs.setString(_keyBearerToken, token);
+    final expiry = DateTime.now()
+        .add(const Duration(days: _tokenExpiryDays))
+        .millisecondsSinceEpoch;
+    _prefs.setInt(_keyTokenExpiry, expiry);
+    _prefs.setBool(_keyRememberLogin, true);
+  }
+
+  String? getToken() {
+    final token = _prefs.getString(_keyBearerToken);
+    if (token == null || token.isEmpty) return null;
+    if (isTokenExpired()) {
+      clearToken();
+      return null;
+    }
+    return token;
+  }
+
+  bool isLoggedIn() {
+    final remember = _prefs.getBool(_keyRememberLogin) ?? false;
+    final token = getToken();
+    return remember && token != null && token.isNotEmpty;
+  }
+
+  bool isTokenExpired() {
+    final expiry = _prefs.getInt(_keyTokenExpiry) ?? 0;
+    if (expiry == 0) return false;
+    return DateTime.now().millisecondsSinceEpoch > expiry;
+  }
+
+  void clearToken() {
+    _prefs.remove(_keyBearerToken);
+    _prefs.remove(_keyTokenExpiry);
+    _prefs.setBool(_keyRememberLogin, false);
+  }
+
+  void saveUserInfo(String email, String name, String store) {
+    _prefs.setString(_keyUserEmail, email);
+    _prefs.setString(_keyUserName, name);
+    _prefs.setString(_keyUserStore, store);
+  }
+
+  String? getUserEmail() => _prefs.getString(_keyUserEmail);
+  String? getUserName() => _prefs.getString(_keyUserName);
+  String? getUserStore() => _prefs.getString(_keyUserStore) ?? "L291";
+
+  void saveCredentials(String email, String password) {
+    _prefs.setString(_keyUserEmail, email);
+    _prefs.setString(_keyMsPassword, password);
+  }
+
+  String? getSavedPassword() => _prefs.getString(_keyMsPassword);
+
+  bool hasSavedCredentials() {
+    final email = getUserEmail();
+    final senha = getSavedPassword();
+    return email != null &&
+        email.isNotEmpty &&
+        senha != null &&
+        senha.isNotEmpty;
+  }
+
+  void clearCredentials() => _prefs.remove(_keyMsPassword);
+
+  void clearAll() => _prefs.clear();
+}
