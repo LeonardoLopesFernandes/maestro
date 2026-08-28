@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../models/pedido.dart';
 import '../utils/currency_formatter.dart';
 
@@ -49,23 +50,9 @@ class PedidoCard extends StatelessWidget {
         .join(' ');
   }
 
-  ({String texto, Color cor})? get _acao {
-    switch (_statusNormalizado) {
-      case 'NOVO_PEDIDO':
-      case 'INCLUIDO':
-      case 'VISUALIZADO':
-      case 'NOVO':
-        return (texto: 'Em Separação', cor: const Color(0xFF12CD0C));
-      case 'EM_SEPARACAO':
-      case 'SEPARACAO':
-        return (texto: 'Confirmar Separação', cor: const Color(0xFF12CD0C));
-      case 'PRONTO_PARA_SAIR':
-      case 'PRONTO':
-        return (texto: 'Retirar Pedido', cor: const Color(0xFFFFAA02));
-      default:
-        return null;
-    }
-  }
+  bool get _mostraDuracao =>
+      _statusNormalizado.contains('NOVO') ||
+      _statusNormalizado.contains('SEPARACAO');
 
   String get _canalTexto {
     final c = pedido.canalDeVendas ?? '';
@@ -101,7 +88,6 @@ class PedidoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final badge = _badge;
-    final acao = _acao;
     final mostraCanal =
         pedido.canalDeVendas != null && pedido.canalDeVendas!.isNotEmpty;
     final mostraEntrega =
@@ -217,31 +203,115 @@ class PedidoCard extends StatelessWidget {
                             color: Color(0xFF16A34A))),
                   ],
                 ),
-                // Bloco E: botão de ação
-                if (acao != null)
-                  Container(
-                    width: double.infinity,
-                    height: 44,
-                    margin: const EdgeInsets.only(top: 8),
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: acao.cor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                        padding: EdgeInsets.zero,
-                      ),
-                      onPressed: onAcao ?? onTap,
-                      child: Text(acao.texto,
-                          style: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold)),
-                    ),
+                // Bloco E: barra de duração de separação (NOVO / EM SEPARAÇÃO)
+                if (_mostraDuracao)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: _DuracaoSeparacao(pedido),
                   ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+// Barra de duração de separação (igual ao Kotlin item_pedido): aparece em
+// NOVO/EM_SEPARAÇÃO, fica verde até 35 min e vermelha depois.
+class _DuracaoSeparacao extends StatefulWidget {
+  final Pedido pedido;
+  const _DuracaoSeparacao(this.pedido);
+
+  @override
+  State<_DuracaoSeparacao> createState() => _DuracaoSeparacaoState();
+}
+
+class _DuracaoSeparacaoState extends State<_DuracaoSeparacao> {
+  static const int _limiteMin = 35;
+  late final int _baseMs;
+  late final int _momento;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _momento = DateTime.now().millisecondsSinceEpoch;
+    final tc = widget.pedido.tempoConfirmacao;
+    if (tc != null) {
+      _baseMs = tc;
+    } else {
+      try {
+        final dt = DateTime.parse(widget.pedido.dataInclusao!).toLocal();
+        _baseMs = DateTime.now().millisecondsSinceEpoch - dt.millisecondsSinceEpoch;
+      } catch (_) {
+        _baseMs = 0;
+      }
+    }
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  int get _totalMin {
+    final decorrido =
+        _baseMs + (DateTime.now().millisecondsSinceEpoch - _momento);
+    return (decorrido / 60000).toInt();
+  }
+
+  bool _dentroHorario() {
+    final now = DateTime.now();
+    final wd = now.weekday; // 1=seg .. 7=dom
+    final horaAbre = wd == 7 ? 14 : 10;
+    final horaFecha = wd == 7 ? 19 : 22;
+    return now.hour >= horaAbre && now.hour < horaFecha;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Fallback (sem tempoConfirmacao) só conta dentro do horário da loja.
+    if (widget.pedido.tempoConfirmacao == null && !_dentroHorario()) {
+      return const SizedBox.shrink();
+    }
+    final totalMin = _totalMin;
+    final texto = totalMin >= 60
+        ? '${totalMin ~/ 60}h ${totalMin % 60}min'
+        : '$totalMin';
+    final verde = totalMin <= _limiteMin;
+    final cor = verde ? const Color(0xFF28A745) : const Color(0xFFDC3545);
+    final pct = (totalMin / _limiteMin * 100).clamp(0, 100);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Duração: $texto',
+            style: const TextStyle(
+                fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF555555))),
+        const SizedBox(height: 4),
+        Container(
+          height: 8,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE5E7EB),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: pct / 100,
+            child: Container(
+              decoration: BoxDecoration(
+                color: cor,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

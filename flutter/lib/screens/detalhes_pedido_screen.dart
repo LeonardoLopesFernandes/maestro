@@ -34,6 +34,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   bool _erro = false;
   Map<String, dynamic>? _tokens;
   bool _timelineAberta = false;
+  final ScrollController _scrollController = ScrollController();
+  bool _mostrarAcao = false;
+  bool _didInitFim = false;
 
   @override
   void initState() {
@@ -82,7 +85,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     try {
       final t = await widget.apiService
           .getDeliveryTokens(_pedido.codigoExterno ?? _pedido.numero);
-      if (mounted) setState(() => _tokens = t);
+      if (mounted) {
+        final data = (t is Map && t['data'] is Map) ? t['data'] : t;
+        setState(() => _tokens =
+            data is Map ? Map<String, dynamic>.from(data as Map) : null);
+      }
     } catch (_) {}
   }
 
@@ -117,6 +124,18 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   @override
   Widget build(BuildContext context) {
     final status = _statusBadge;
+    if (!_carregando && !_didInitFim) {
+      _didInitFim = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          final pos = _scrollController.position;
+          final atEnd = pos.pixels >= (pos.maxScrollExtent - 4);
+          if (atEnd != _mostrarAcao) {
+            if (mounted) setState(() => _mostrarAcao = atEnd);
+          }
+        }
+      });
+    }
     return Scaffold(
       backgroundColor: const Color(_bgTela),
       body: _carregando
@@ -125,23 +144,38 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
               children: [
                 _toolbar(status.cor),
                 Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.all(16),
-                    children: [
-                      _headerStatus(status),
-                      const SizedBox(height: 12),
-                      _cardCliente(),
-                      const SizedBox(height: 10),
-                      _cardRecebedor(),
-                      const SizedBox(height: 10),
-                      _cardItens(),
-                      const SizedBox(height: 10),
-                      _cardTokens(),
-                      const SizedBox(height: 80),
-                    ],
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (n) {
+                      if (n is ScrollUpdateNotification ||
+                          n is ScrollEndNotification) {
+                        final pos = n.metrics;
+                        final atEnd =
+                            pos.pixels >= (pos.maxScrollExtent - 4);
+                        if (atEnd != _mostrarAcao && mounted) {
+                          setState(() => _mostrarAcao = atEnd);
+                        }
+                      }
+                      return false;
+                    },
+                    child: ListView(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        _headerStatus(status),
+                        const SizedBox(height: 12),
+                        _cardCliente(),
+                        const SizedBox(height: 10),
+                        _cardRecebedor(),
+                        const SizedBox(height: 10),
+                        _cardItens(),
+                        const SizedBox(height: 10),
+                        _cardTokens(),
+                        const SizedBox(height: 90),
+                      ],
+                    ),
                   ),
                 ),
-                _botoesAcao(status),
+                _barraAcao(status),
               ],
             ),
       floatingActionButton: _temImei()
@@ -266,11 +300,13 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
               onTap: () => setState(() => _timelineAberta = !_timelineAberta),
               child: Row(
                 children: [
-                  Transform.rotate(
-                    angle: _timelineAberta ? 3.14159 : 0,
-                    child: SvgPicture.asset('assets/vectors/ic_arrow_down.svg',
-                        width: 20, height: 20,
-                        color: const Color(0xFF64748B)),
+                  SvgPicture.asset(
+                    _timelineAberta
+                        ? 'assets/vectors/ic_arrow_up.svg'
+                        : 'assets/vectors/ic_arrow_down.svg',
+                    width: 20,
+                    height: 20,
+                    color: const Color(0xFF64748B),
                   ),
                   const Text('Linha do Tempo',
                       style: TextStyle(
@@ -288,56 +324,112 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         ),
       );
 
+  ({String icon, Color cor}) _timelineStyle(String nome) {
+    final n = nome.toUpperCase();
+    if (n.contains('NOVO') ||
+        n.contains('INCLUIDO') ||
+        n.contains('CHEGADA') ||
+        n.contains('VISUALIZ') ||
+        n.contains('CRIADO')) {
+      return (icon: 'assets/icons/criado.png', cor: const Color(0xFF12CD0C));
+    }
+    if (n.contains('SEPARACAO')) {
+      return (
+        icon: 'assets/icons/em_separacao.png',
+        cor: const Color(0xFF00CBFE)
+      );
+    }
+    if (n.contains('EDITADO')) {
+      return (icon: 'assets/icons/editado.png', cor: const Color(0xFFED7D31));
+    }
+    if (n.contains('PRONTO')) {
+      return (
+        icon: 'assets/icons/pronto_para_retirada.png',
+        cor: const Color(0xFFFFAA02)
+      );
+    }
+    if (n.contains('ENTREGA')) {
+      return (
+        icon: 'assets/icons/saiu_para_entrega.png',
+        cor: const Color(0xFFCE00FF)
+      );
+    }
+    if (n.contains('RETORNAR')) {
+      return (
+        icon: 'assets/icons/retornar_para_estoque.png',
+        cor: const Color(0xFFDC2626)
+      );
+    }
+    if (n.contains('CANCEL')) {
+      return (icon: 'assets/icons/cancelado.png', cor: const Color(0xFFDC2626));
+    }
+    if (n.contains('DEVOLV')) {
+      return (icon: 'assets/icons/devolvido.png', cor: const Color(0xFFDC2626));
+    }
+    if (n.contains('ENTREGUE') || n.contains('FINALIZ')) {
+      return (icon: 'assets/icons/entregue.png', cor: const Color(0xFF12CD0C));
+    }
+    return (icon: 'assets/icons/criado.png', cor: const Color(0xFF9CA3AF));
+  }
+
   Widget _timeline() {
-    final passos = [
-      'NOVO',
-      'SEPARAÇÃO',
-      'PRONTO',
-      'ENTREGA',
-      'FINALIZADO'
-    ];
-    return Row(
-      children: passos.asMap().entries.map((e) {
-        final ativo = e.key <= _indiceStatus();
-        return Expanded(
-          child: Column(
-            children: [
-              Container(
-                width: 18,
-                height: 18,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: ativo ? _statusBadge.cor : const Color(0xFFD1D5DB),
+    final passos = _pedido.timelines;
+    if (passos.isEmpty) return const SizedBox.shrink();
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: passos.map((t) {
+          final style = _timelineStyle(t.nome ?? '');
+          return Container(
+            width: 86,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Column(
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: style.cor.withOpacity(0.12),
+                    border: Border.all(color: style.cor, width: 2),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(9),
+                    child: Image.asset(style.icon, color: style.cor),
+                  ),
                 ),
-                child: ativo
-                    ? SvgPicture.asset('assets/vectors/ic_check_confirm.svg',
-                        width: 12, height: 12, color: Colors.white)
-                    : null,
-              ),
-              const SizedBox(height: 4),
-              Text(e.value,
-                  style: TextStyle(
-                      fontSize: 9,
-                      color: ativo
-                          ? _statusBadge.cor
-                          : const Color(0xFF9CA3AF)),
-                  textAlign: TextAlign.center),
-            ],
-          ),
-        );
-      }).toList(),
+                const SizedBox(height: 5),
+                Text(t.nome ?? '',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: style.cor),
+                    textAlign: TextAlign.center),
+                if (t.data != null && t.data!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(t.data!,
+                        style: const TextStyle(
+                            fontSize: 9, color: Color(0xFF9CA3AF)),
+                        textAlign: TextAlign.center),
+                  ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
     );
   }
 
-  int _indiceStatus() {
-    final s = _pedido.status.toUpperCase();
-    if (s.contains('NOVO')) return 0;
-    if (s.contains('SEPARACAO')) return 1;
-    if (s.contains('PRONTO')) return 2;
-    if (s.contains('ENTREGA')) return 3;
-    if (s.contains('FINALIZADO') || s.contains('CANCELADO') || s.contains('DEVOLVIDO'))
-      return 4;
-    return 0;
+  bool _temMaisDe3Dias() {
+    final d = _pedido.dataInclusao;
+    if (d == null || d.isEmpty) return false;
+    try {
+      final dt = DateTime.parse(d).toLocal();
+      return DateTime.now().difference(dt).inDays > 3;
+    } catch (_) {
+      return false;
+    }
   }
 
   Widget _cardCliente() => _card(
@@ -573,65 +665,67 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         ),
       );
 
-  Widget _botoesAcao(({String texto, Color cor}) status) {
+  Widget _barraAcao(({String texto, Color cor}) status) {
     final s = _pedido.status.toUpperCase();
-    List<Widget> botoes = [];
+    final badges = <Widget>[];
     if (s.contains('NOVO')) {
-      botoes.add(_acao('EM SEPARAÇÃO', const Color(0xFF12CD0C),
-          () => _acaoSeparar()));
+      badges.add(_badgeAcao(
+          'POR EM SEPARAÇÃO', const Color(0xFF12CD0C), _acaoSeparar));
     } else if (s.contains('SEPARACAO')) {
-      botoes.add(_acao('CONFIRMAR SEPARAÇÃO', const Color(0xFF12CD0C),
-          () => _acaoConfirmar()));
+      badges.add(_badgeAcao('CONFIRMAR', const Color(0xFF12CD0C), _acaoConfirmar));
     } else if (s.contains('PRONTO')) {
-      botoes.add(_acao('RETIRAR PEDIDO', const Color(0xFFFFAA02),
-          () => _acaoRetirar()));
-      botoes.add(_acao('CANCELAR', const Color(0xFFF80032),
-          () => _acaoCancelarRetirada(), margem: true));
+      badges.add(_badgeAcao(
+          'RETIRAR PEDIDO', const Color(0xFFFFAA02), _acaoRetirar));
+      if (_temMaisDe3Dias()) {
+        badges.add(const SizedBox(height: 8));
+        badges.add(_badgeAcao(
+            'CANCELAR', const Color(0xFFF80032), _acaoCancelarRetirada));
+      }
     } else if (s.contains('ENTREGA')) {
-      botoes.add(_acao('ENTREGADOR VOLTOU', const Color(0xFFF80032),
-          () => _acaoEntregadorVoltou()));
+      badges.add(_badgeAcao(
+          'ENTREGADOR VOLTOU', const Color(0xFFF80032), _acaoEntregadorVoltou));
     } else if (s.contains('RETORNAR')) {
-      botoes.add(_acao('DEVOLVER PARA O ESTOQUE', const Color(0xFFF80032),
-          () => _acaoDevolverEstoque()));
+      badges.add(_badgeAcao('DEVOLVER PARA O ESTOQUE', const Color(0xFFF80032),
+          _acaoDevolverEstoque));
     } else if (s.contains('FINALIZADO')) {
-      botoes.add(_acao('CANCELAR', const Color(0xFFF80032),
-          () => _acaoCancelarHistorico()));
+      badges.add(_badgeAcao(
+          'CANCELAR', const Color(0xFFF80032), _acaoCancelarHistorico));
     }
-    if (botoes.isEmpty) return const SizedBox.shrink();
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(children: botoes),
+    if (badges.isEmpty) return const SizedBox.shrink();
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 200),
+      opacity: _mostrarAcao ? 1 : 0,
+      child: IgnorePointer(
+        ignoring: !_mostrarAcao,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+          color: const Color(_bgTela),
+          child: Column(children: badges),
+        ),
+      ),
     );
   }
 
-  Widget _acao(String texto, Color cor, VoidCallback onTap,
-      {bool margem = false}) {
-    final w = Expanded(
-      child: Container(
-        height: 44,
-        margin: margem ? const EdgeInsets.only(left: 8) : null,
+  Widget _badgeAcao(String texto, Color cor, VoidCallback onTap) => Container(
+        width: double.infinity,
+        height: 48,
         decoration: BoxDecoration(
-          color: cor,
-          borderRadius: BorderRadius.circular(6),
-        ),
+            color: cor, borderRadius: BorderRadius.circular(24)),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
+            borderRadius: BorderRadius.circular(24),
             onTap: onTap,
-            borderRadius: BorderRadius.circular(6),
             child: Center(
               child: Text(texto,
                   style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 14,
+                      fontSize: 15,
                       fontWeight: FontWeight.bold)),
             ),
           ),
         ),
-      ),
-    );
-    return w;
-  }
+      );
 
   void _sucesso(String msg) {
     showDialog(
@@ -720,8 +814,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     final res = await MaestroDialogs.entregadorVoltou(context, motivos);
     if (res == null) return;
     try {
-      await widget.apiService.updateStatus(
-          _pedido.codigoExterno ?? _pedido.numero, 'RETORNAR_PARA_ESTOQUE');
+      await widget.apiService.devolverPedido(
+          _pedido.origem ?? '',
+          _pedido.codigoExterno ?? _pedido.numero,
+          recaptchaToken: res.$3,
+          observacao: res.$2);
       _sucesso('Pedido retornado ao estoque.');
     } catch (e) {
       _erroMsg(e);
@@ -729,14 +826,14 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoDevolverEstoque() async {
-    final ok = await MaestroDialogs.atencao(context,
-        titulo: 'ATENÇÃO',
-        mensagem: 'Tem certeza que deseja retornar ao estoque?',
-        sim: 'SIM');
-    if (ok != true) return;
+    final res = await MaestroDialogs.retornarEstoque(context);
+    if (res == null) return;
     try {
       await widget.apiService.retornarParaEstoque(
-          _pedido.origem ?? '', _pedido.codigoExterno ?? _pedido.numero);
+          _pedido.origem ?? '',
+          _pedido.codigoExterno ?? _pedido.numero,
+          captchaToken: res.$2,
+          motivo: res.$1);
       _sucesso('Devolvido ao estoque.');
     } catch (e) {
       _erroMsg(e);
@@ -744,12 +841,14 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoCancelarHistorico() async {
-    final motivo = await MaestroDialogs.devolverHistorico(context);
-    if (motivo == null || motivo.isEmpty) return;
+    final res = await MaestroDialogs.devolverHistorico(context);
+    if (res == null) return;
     try {
       await widget.apiService.cancelarPedido(
-          _pedido.origem ?? '', _pedido.codigoExterno ?? _pedido.numero,
-          motivo, 'CANCELAMENTO');
+          _pedido.origem ?? '',
+          _pedido.codigoExterno ?? _pedido.numero,
+          res.$1,
+          'CANCELAMENTO');
       _sucesso('Pedido cancelado.');
     } catch (e) {
       _erroMsg(e);

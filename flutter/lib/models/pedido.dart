@@ -24,6 +24,7 @@ class Pedido {
   final String? searchtext;
   final String? notaFiscalChave;
   final String? transportadora;
+  final int? tempoConfirmacao;
 
   Pedido({
     this.id = "",
@@ -47,11 +48,12 @@ class Pedido {
     this.deliveryToken,
     this.timelines = const [],
     this.historico = const [],
-    this.canalDeVendas,
-    this.searchtext,
-    this.notaFiscalChave,
-    this.transportadora,
-  });
+      this.canalDeVendas,
+      this.searchtext,
+      this.notaFiscalChave,
+      this.transportadora,
+      this.tempoConfirmacao,
+    });
 
   factory Pedido.fromJson(Map<String, dynamic> json) {
     return Pedido(
@@ -91,6 +93,7 @@ class Pedido {
       searchtext: json['searchtext'],
       notaFiscalChave: json['notaFiscal']?['chave'],
       transportadora: json['transportadora'],
+      tempoConfirmacao: _toInt(json['tempoConfirmacao']),
     );
   }
 

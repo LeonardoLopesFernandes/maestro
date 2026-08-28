@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/pedido.dart';
+import 'recaptcha_dialog.dart';
 
 // Cores conforme drawables do Kotlin
 const _verde = 0xFF12CD0C;
@@ -356,13 +357,14 @@ class MaestroDialogs {
     );
   }
 
-  // Entregador voltou (insucesso)
-  static Future<(String motivo, String obs)?> entregadorVoltou(
+  // Entregador voltou (insucesso) — retorna (motivo, observacao, tokenRecaptcha)
+  static Future<(String, String, String)?> entregadorVoltou(
       BuildContext context, List<String> motivos) {
     String? motivo;
+    String? token;
     final obs = TextEditingController();
     bool recaptcha = false;
-    return showDialog<(String, String)>(
+    return showDialog<(String, String, String)>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, set) => AlertDialog(
@@ -409,10 +411,21 @@ class MaestroDialogs {
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
+                  secondary: Image.asset('assets/icons/ic_recaptcha_logo.png',
+                      height: 28),
                   title: const Text('Não sou um robô',
                       style: TextStyle(fontSize: 14)),
                   value: recaptcha,
-                  onChanged: (v) => set(() => recaptcha = v ?? false),
+                  onChanged: (v) async {
+                    if (v == true) {
+                      final t = await RecaptchaDialog.show(ctx);
+                      set(() => recaptcha = t != null);
+                      if (t != null) token = t;
+                    } else {
+                      set(() => recaptcha = false);
+                      token = null;
+                    }
+                  },
                 ),
               ],
             ),
@@ -430,7 +443,7 @@ class MaestroDialogs {
                       : const Color(0xFFD1D5DB)),
               onPressed: (motivo != null && recaptcha)
                   ? () => Navigator.of(ctx)
-                      .pop((motivo!, obs.text))
+                      .pop((motivo!, obs.text, token!))
                   : null,
               child: const Text('CONFIRMAR',
                   style: TextStyle(color: Colors.white)),
@@ -441,11 +454,12 @@ class MaestroDialogs {
     );
   }
 
-  // Retornar ao estoque (com motivo)
-  static Future<String?> retornarEstoque(BuildContext context) {
+  // Retornar ao estoque (com motivo) — retorna (motivo, tokenRecaptcha)
+  static Future<(String, String)?> retornarEstoque(BuildContext context) {
     final m = TextEditingController();
+    String? token;
     bool recaptcha = false;
-    return showDialog<String>(
+    return showDialog<(String, String)>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, set) => AlertDialog(
@@ -476,10 +490,21 @@ class MaestroDialogs {
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
+                  secondary: Image.asset('assets/icons/ic_recaptcha_logo.png',
+                      height: 28),
                   title: const Text('Não sou um robô',
                       style: TextStyle(fontSize: 14)),
                   value: recaptcha,
-                  onChanged: (v) => set(() => recaptcha = v ?? false),
+                  onChanged: (v) async {
+                    if (v == true) {
+                      final t = await RecaptchaDialog.show(ctx);
+                      set(() => recaptcha = t != null);
+                      if (t != null) token = t;
+                    } else {
+                      set(() => recaptcha = false);
+                      token = null;
+                    }
+                  },
                 ),
               ],
             ),
@@ -492,7 +517,7 @@ class MaestroDialogs {
                     backgroundColor: const Color(_vermelho),
                     disabledBackgroundColor: const Color(0xFFE0E0E0)),
                 onPressed: (m.text.isNotEmpty && recaptcha)
-                    ? () => Navigator.of(ctx).pop(m.text)
+                    ? () => Navigator.of(ctx).pop((m.text, token!))
                     : null,
                 child: const Text('Devolver',
                     style: TextStyle(
@@ -517,13 +542,14 @@ class MaestroDialogs {
     );
   }
 
-  // Devolver no histórico (cancelar finalizado)
-  static Future<String?> devolverHistorico(BuildContext context) {
+  // Devolver no histórico (cancelar finalizado) — retorna (motivo, tokenRecaptcha)
+  static Future<(String, String)?> devolverHistorico(BuildContext context) {
     final m = TextEditingController();
+    String? token;
     bool recaptcha = false;
-    return showDialog<String>(
+    return showDialog<(String, String)>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
+        builder: (ctx) => StatefulBuilder(
         builder: (ctx, set) => AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -557,10 +583,21 @@ class MaestroDialogs {
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
+                  secondary: Image.asset('assets/icons/ic_recaptcha_logo.png',
+                      height: 28),
                   title: const Text('Não sou um robô',
                       style: TextStyle(fontSize: 14)),
                   value: recaptcha,
-                  onChanged: (v) => set(() => recaptcha = v ?? false),
+                  onChanged: (v) async {
+                    if (v == true) {
+                      final t = await RecaptchaDialog.show(ctx);
+                      set(() => recaptcha = t != null);
+                      if (t != null) token = t;
+                    } else {
+                      set(() => recaptcha = false);
+                      token = null;
+                    }
+                  },
                 ),
               ],
             ),
@@ -573,7 +610,7 @@ class MaestroDialogs {
                     backgroundColor: const Color(_vermelho),
                     disabledBackgroundColor: const Color(0xFFE0E0E0)),
                 onPressed: (m.text.isNotEmpty && recaptcha)
-                    ? () => Navigator.of(ctx).pop(m.text)
+                    ? () => Navigator.of(ctx).pop((m.text, token!))
                     : null,
                 child: const Text('CANCELAR PEDIDO',
                     style: TextStyle(

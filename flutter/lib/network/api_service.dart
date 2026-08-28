@@ -71,11 +71,19 @@ class ApiService {
           String origem, String codigoExterno) =>
       _putStatus('api/pedidos/$origem/$codigoExterno/cancelado', {});
 
-  Future<void> retornarParaEstoque(String origem, String codigoExterno) =>
-      _putStatus('api/pedidos/$origem/$codigoExterno/retornarParaEstoque', {});
+  Future<void> retornarParaEstoque(String origem, String codigoExterno,
+          {String? captchaToken, String? motivo}) =>
+      _putStatus('api/pedidos/$origem/$codigoExterno/retornarParaEstoque', {
+        if (captchaToken != null) 'captchaToken': captchaToken,
+        if (motivo != null) 'motivo': motivo,
+      });
 
-  Future<void> devolverPedido(String origem, String codigoExterno) =>
-      _putStatus('api/pedidos/$origem/$codigoExterno/devolvido', {});
+  Future<void> devolverPedido(String origem, String codigoExterno,
+          {String? recaptchaToken, String? observacao}) =>
+      _putStatus('api/pedidos/$origem/$codigoExterno/devolvido', {
+        if (recaptchaToken != null) 'recaptchaToken': recaptchaToken,
+        if (observacao != null) 'observacao': observacao,
+      });
 
   Future<Map<String, dynamic>> confirmarDevolucao(
           Map<String, dynamic> body) async =>
