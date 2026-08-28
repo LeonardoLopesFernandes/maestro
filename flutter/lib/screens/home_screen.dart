@@ -423,10 +423,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _bottomNav() => Container(
         height: 76,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: _corAba,
           boxShadow: const [
             BoxShadow(
-                color: Colors.black12, blurRadius: 8, offset: Offset(0, -1)),
+                color: Colors.black26, blurRadius: 8, offset: Offset(0, -1)),
           ],
         ),
         child: Row(
@@ -447,7 +447,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: 28,
                       margin: const EdgeInsets.only(bottom: 4),
                       decoration: BoxDecoration(
-                        color: ativo ? cor : Colors.transparent,
+                        color: ativo ? Colors.white : Colors.transparent,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -455,7 +455,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       clipBehavior: Clip.none,
                       children: [
                         Image.asset(_tabIconAssets[i],
-                            width: 26, height: 26, color: cor),
+                            width: 26, height: 26, color: Colors.white),
                         if (count > 0)
                           Positioned(
                             top: -8,
@@ -466,12 +466,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 3),
                               decoration: BoxDecoration(
-                                color: cor,
+                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text('$count',
-                                  style: const TextStyle(
-                                      color: Colors.black,
+                                  style: TextStyle(
+                                      color: cor,
                                       fontSize: 9,
                                       fontWeight: FontWeight.bold),
                                   textAlign: TextAlign.center),
@@ -482,7 +482,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 4),
                     Text(aba.titulo,
                         style: TextStyle(
-                            color: cor,
+                            color: Colors.white,
                             fontSize: 10,
                             fontWeight: ativo
                                 ? FontWeight.bold
