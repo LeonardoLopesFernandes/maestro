@@ -43,6 +43,15 @@ const List<String> _tabIconAssets = [
   'assets/icons/ic_historico.png',
 ];
 
+const List<String> _tabIconKeys = [
+  'clipboard',
+  'sync',
+  'bag',
+  'truck',
+  'estoque',
+  'historico',
+];
+
 class HomeScreen extends StatefulWidget {
   final SessionManager session;
   final ApiService apiService;
@@ -347,21 +356,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontWeight: FontWeight.bold),
                   ),
                 ),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: _abrirFiltro,
-                  icon: Image.asset('assets/icons/ic_filter_slider.png',
-                      height: 16, width: 16, color: Colors.white),
-                  label: const Text('Filtrar',
-                      style:
-                          TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                  style: TextButton.styleFrom(
-                    backgroundColor: const Color(0xFFF80032),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(17)),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 4),
@@ -414,10 +408,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        Image.asset(_tabIconAssets[i],
+                        Image.asset(
+                            'assets/icons/nav_${_tabIconKeys[i]}_${ativo ? 'on' : 'off'}.png',
                             width: 28,
-                            height: 28,
-                            color: ativo ? cor : const Color(0xFF9AA0A6)),
+                            height: 28),
                         if (count > 0)
                           Positioned(
                             top: -8,
