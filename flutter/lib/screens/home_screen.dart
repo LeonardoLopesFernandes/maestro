@@ -402,6 +402,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: _abas.asMap().entries.map((e) {
             final i = e.key;
             final aba = e.value;
+            final ativo = _currentIndex == i;
             final count = _contagemPara(i);
             final cor = Color(_tabColors[i]);
             return Expanded(
@@ -414,7 +415,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       clipBehavior: Clip.none,
                       children: [
                         Image.asset(_tabIconAssets[i],
-                            width: 28, height: 28),
+                            width: 28,
+                            height: 28,
+                            color: ativo ? cor : const Color(0xFF9AA0A6)),
                         if (count > 0)
                           Positioned(
                             top: -8,
@@ -430,7 +433,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               child: Text('$count',
                                   style: const TextStyle(
-                                      color: Colors.black,
+                                      color: Colors.white,
                                       fontSize: 9,
                                       fontWeight: FontWeight.bold),
                                   textAlign: TextAlign.center),
@@ -441,9 +444,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 4),
                     Text(aba.titulo,
                         style: TextStyle(
-                            color: cor,
+                            color: ativo ? cor : const Color(0xFF9AA0A6),
                             fontSize: 10,
-                            fontWeight: FontWeight.bold)),
+                            fontWeight:
+                                ativo ? FontWeight.bold : FontWeight.w600)),
                   ],
                 ),
               ),
