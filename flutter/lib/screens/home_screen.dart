@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import '../models/pedido.dart';
 import '../network/api_service.dart';
@@ -15,10 +16,10 @@ const int _redDark = 0xFFF80032;
 const int _bgLight = 0xFFF0F0F0;
 
 // Cores próprias de cada aba (como no Kotlin). O azul original da aba
-// Separação foi trocado por rosa para não usar a cor de tema azul.
+// Cores exatas das abas conforme activity_main.xml do Kotlin.
 const List<int> _tabColors = [
   0xFF12CD0C, // Novos - verde
-  0xFFDB2777, // Separação - rosa (substitui o azul)
+  0xFF00CBFE, // Separação - ciano
   0xFFFFAA02, // Retirada - laranja
   0xFFCE00FF, // Entrega - roxo
   0xFFB62F2C, // Estoque - vermelho escuro
@@ -272,8 +273,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _confirmarSaida,
-      child: Scaffold(
-        backgroundColor: const Color(_bgLight),
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+        ),
+        child: Scaffold(
+          backgroundColor: const Color(_bgLight),
         body: Column(
           children: [
             _header(),
@@ -306,12 +313,12 @@ class _HomeScreenState extends State<HomeScreen> {
             _bottomNav(),
           ],
         ),
+        ),
       ),
     );
   }
 
   Widget _header() => Container(
-        height: 56,
         decoration: BoxDecoration(
           color: _corAba,
           boxShadow: const [
@@ -319,7 +326,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
           ],
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top + 8,
+          left: 16,
+          right: 16,
+          bottom: 8,
+        ),
         child: Row(
           children: [
             Image.asset('assets/icons/ic_logo_header.png',
@@ -409,9 +421,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       clipBehavior: Clip.none,
                       children: [
                         Image.asset(
-                            'assets/icons/nav_${_tabIconKeys[i]}_${ativo ? 'on' : 'off'}.png',
+                            _tabIconAssets[i],
                             width: 28,
-                            height: 28),
+                            height: 28,
+                            color: ativo ? cor : const Color(0xFF9AA0A6),
+                            colorBlendMode: BlendMode.srcIn),
                         if (count > 0)
                           Positioned(
                             top: -8,
