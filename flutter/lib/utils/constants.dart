@@ -6,7 +6,7 @@ class Constants {
   static const String webBaseUrl = "https://maestro.americanas.io/";
   static const String loginUrl = "https://maestro.americanas.io/unauthorized";
 
-  // Microsoft OAuth (mesmo tenant do Recebimento / Maestro Kotlin)
+  // Microsoft OAuth (tenant do MaestroApp Kotlin)
   static const String tenant = "e316d1ac-42c8-4d30-817c-12c7a71f8ab2";
   static const String clientId = "883c90b2-f8df-4308-a4d4-c91e11bc989f";
   static const String redirectUri = "https://maestro-auth.americanas.io/ad/reply";

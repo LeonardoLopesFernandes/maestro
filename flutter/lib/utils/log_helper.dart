@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 class LogHelper {
-  static const String _tag = "RecebimentoApp";
+  static const String _tag = "MaestroApp";
 
   static void d(String message) {
     if (kDebugMode) debugPrint("$_tag D: $message");

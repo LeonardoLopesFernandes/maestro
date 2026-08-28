@@ -10,7 +10,7 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.OutputStream
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "com.recebimento/media"
+    private val CHANNEL = "io.maestro/media"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -49,7 +49,7 @@ class MainActivity : FlutterActivity() {
             put(MediaStore.Downloads.MIME_TYPE, mimeType)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 put(MediaStore.Downloads.IS_PENDING, 1)
-                put(MediaStore.Downloads.RELATIVE_PATH, "Download/Recebimento")
+                put(MediaStore.Downloads.RELATIVE_PATH, "Download/Maestro")
             } else {
                 val dir = android.os.Environment
                     .getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
