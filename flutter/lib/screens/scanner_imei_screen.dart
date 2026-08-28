@@ -9,17 +9,19 @@ class ScannerImeiScreen extends StatefulWidget {
 }
 
 class _ScannerImeiScreenState extends State<ScannerImeiScreen> {
-  final List<String> _imeis = [];
   final TextEditingController _c = TextEditingController();
 
-  void _adicionar() {
-    final v = _c.text.trim();
-    if (v.isNotEmpty) {
-      setState(() {
-        _imeis.add(v);
-        _c.clear();
-      });
+  String _limpar(String v) => v.replaceAll(RegExp(r'[^0-9]'), '');
+
+  void _confirmar() {
+    final imei = _limpar(_c.text);
+    if (imei.length < 15) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('IMEI inválido: são necessários ao menos 15 dígitos')),
+      );
+      return;
     }
+    Navigator.of(context).pop(imei.substring(0, 15));
   }
 
   @override
@@ -32,51 +34,27 @@ class _ScannerImeiScreenState extends State<ScannerImeiScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-                'Capture o IMEI do smartphone. (Entrada manual espelhando o fallback do app Kotlin.)',
+                'Capture o IMEI do smartphone. O app Kotlin lê um IMEI por vez '
+                'e preenche o próximo campo vazio. (Entrada manual espelha o fallback.)',
                 style: TextStyle(color: Color(Constants.GRAY_400))),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _c,
-                    decoration:
-                        const InputDecoration(labelText: 'IMEI'),
-                    keyboardType: TextInputType.number,
-                    onSubmitted: (_) => _adicionar(),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: _adicionar,
-                ),
-              ],
+            TextField(
+              controller: _c,
+              decoration: const InputDecoration(labelText: 'IMEI'),
+              keyboardType: TextInputType.number,
+              onSubmitted: (_) => _confirmar(),
             ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _imeis.length,
-                itemBuilder: (_, i) => ListTile(
-                  title: Text(_imeis[i]),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () =>
-                        setState(() => _imeis.removeAt(i)),
-                  ),
-                ),
-              ),
-            ),
+            const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(Constants.GREEN_500)),
-                onPressed: _imeis.isEmpty
-                    ? null
-                    : () => Navigator.of(context).pop(_imeis),
-                child: const Text('Confirmar IMEIs',
+                onPressed: _confirmar,
+                child: const Text('Confirmar IMEI',
                     style: TextStyle(color: Colors.white)),
               ),
             ),

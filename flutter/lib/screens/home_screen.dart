@@ -285,10 +285,12 @@ class _HomeScreenState extends State<HomeScreen> {
             width: double.infinity,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2E7D32)),
+                  backgroundColor: const Color(0xFF2E7D32),
+                  foregroundColor: Colors.white),
               onPressed: () => Navigator.of(context).pop(true),
               child: const Text('SIM, SAIR',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.white)),
             ),
           ),
           const SizedBox(height: 8),
@@ -296,10 +298,12 @@ class _HomeScreenState extends State<HomeScreen> {
             width: double.infinity,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD50000)),
+                  backgroundColor: const Color(0xFFD50000),
+                  foregroundColor: Colors.white),
               onPressed: () => Navigator.of(context).pop(false),
               child: const Text('NÃO',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, color: Colors.white)),
             ),
           ),
         ],
@@ -416,22 +420,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 4),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
-                borderRadius: const BorderRadius.all(Radius.circular(12)),
-              ),
-              child: Text(
-                'Loja ${widget.session.getUserStore() ?? Constants.defaultStore}',
-                style: const TextStyle(
-                    color: Color(0xFF666666),
-                    fontSize: 11,
-                    fontWeight: FontWeight.normal),
-              ),
             ),
           ],
         ),

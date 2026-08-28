@@ -9,6 +9,7 @@ class Pedido {
   final String dataInclusao;
   final String? dataAlteracao;
   final Cliente? cliente;
+  final Recebedor? recebedor;
   final List<Item> itens;
   final double valorTotal;
   final double valorSubtotal;
@@ -25,6 +26,7 @@ class Pedido {
   final String? notaFiscalChave;
   final String? transportadora;
   final int? tempoConfirmacao;
+  final List<MotivoCancelamento>? motivo;
 
   Pedido({
     this.id = "",
@@ -37,6 +39,7 @@ class Pedido {
     this.dataInclusao = "",
     this.dataAlteracao,
     this.cliente,
+    this.recebedor,
     this.itens = const [],
     this.valorTotal = 0.0,
     this.valorSubtotal = 0.0,
@@ -53,6 +56,7 @@ class Pedido {
       this.notaFiscalChave,
       this.transportadora,
       this.tempoConfirmacao,
+      this.motivo,
     });
 
   factory Pedido.fromJson(Map<String, dynamic> json) {
@@ -67,6 +71,9 @@ class Pedido {
       dataInclusao: json['dataInclusao'] ?? "",
       dataAlteracao: json['dataAlteracao'],
       cliente: json['cliente'] != null ? Cliente.fromJson(json['cliente']) : null,
+      recebedor: json['recebedor'] != null
+          ? Recebedor.fromJson(json['recebedor'])
+          : null,
       itens: (json['itens'] as List?)
               ?.map((e) => Item.fromJson(e))
               .toList() ??
@@ -94,6 +101,9 @@ class Pedido {
       notaFiscalChave: json['notaFiscal']?['chave'],
       transportadora: json['transportadora'],
       tempoConfirmacao: _toInt(json['tempoConfirmacao']),
+      motivo: (json['motivo'] as List?)
+              ?.map((e) => MotivoCancelamento.fromJson(e))
+              .toList(),
     );
   }
 
@@ -159,6 +169,27 @@ class Cliente {
         uf: json['uf'],
         cep: json['cep'],
       );
+}
+
+class Recebedor {
+  final String? nome;
+  final String? documento;
+
+  Recebedor({this.nome, this.documento});
+
+  factory Recebedor.fromJson(Map<String, dynamic> json) => Recebedor(
+        nome: json['nome'],
+        documento: json['documento'],
+      );
+}
+
+class MotivoCancelamento {
+  final String? texto;
+
+  MotivoCancelamento({this.texto});
+
+  factory MotivoCancelamento.fromJson(Map<String, dynamic> json) =>
+      MotivoCancelamento(texto: json['texto']);
 }
 
 class Item {

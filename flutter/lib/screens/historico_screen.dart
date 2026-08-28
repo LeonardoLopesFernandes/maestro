@@ -30,6 +30,7 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
   bool _temMais = true;
   final int _limit = 20;
   String _filtro = 'TODOS';
+  DateTime? _dataFiltro;
   final _busca = TextEditingController();
 
   final List<_Filtro> _filtros = const [
@@ -84,7 +85,32 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
   }
 
   List<Pedido> _filtrar(List<Pedido> lista) =>
-      lista.where(_matchesFilter).toList();
+      lista.where((p) => _matchesFilter(p) && _matchesData(p)).toList();
+
+  bool _matchesData(Pedido p) {
+    if (_dataFiltro == null) return true;
+    final d = _parseData(p.dataInclusao);
+    if (d == null) return false;
+    return d.year == _dataFiltro!.year &&
+        d.month == _dataFiltro!.month &&
+        d.day == _dataFiltro!.day;
+  }
+
+  DateTime? _parseData(String? data) {
+    if (data == null || data.isEmpty) return null;
+    try {
+      return DateTime.parse(data).toLocal();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String get _dataFiltroText {
+    final d = _dataFiltro;
+    if (d == null) return '';
+    final p = (int v) => v.toString().padLeft(2, '0');
+    return '${p(d.day)}/${p(d.month)}/${d.year}';
+  }
 
   Future<void> _carregar({bool reset = false}) async {
     if (reset) {
@@ -163,6 +189,8 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
                 ),
               ),
             ),
+            const SizedBox(width: 8),
+            _badgeData(),
             if (_busca.text.isNotEmpty)
               IconButton(
                 icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
@@ -174,6 +202,101 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
           ],
         ),
       );
+
+  Widget _badgeData() {
+    final ativo = _dataFiltro != null;
+    return Container(
+      height: 42,
+      decoration: BoxDecoration(
+        color: ativo ? const Color(0xFFF80032) : const Color(0xFFF2F2F2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: _abrirCalendario,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              children: [
+                Icon(Icons.calendar_month,
+                    size: 20,
+                    color: ativo
+                        ? Colors.white
+                        : const Color(0xFF94A3B8)),
+                if (ativo) ...[
+                  const SizedBox(width: 6),
+                  Text(_dataFiltroText,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 2),
+                  InkWell(
+                    onTap: () {
+                      setState(() => _dataFiltro = null);
+                      _carregar(reset: true);
+                    },
+                    child: const Icon(Icons.close,
+                        size: 16, color: Colors.white),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _abrirCalendario() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dataFiltro ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+      locale: const Locale('pt', 'BR'),
+      helpText: 'Filtrar por data',
+      builder: (ctx, child) => Theme(
+        data: ThemeData(
+          colorScheme: const ColorScheme.light(
+            primary: Color(0xFFF80032),
+            onPrimary: Colors.white,
+            onSurface: Color(0xFF1F2937),
+          ),
+          datePickerTheme: DatePickerThemeData(
+            backgroundColor: Colors.white,
+            headerBackgroundColor: const Color(0xFFF80032),
+            headerForegroundColor: Colors.white,
+            todayForegroundColor:
+                WidgetStateColor.resolveWith((_) => const Color(0xFFF80032)),
+            dayForegroundColor:
+                WidgetStateColor.resolveWith((s) => s.contains(WidgetState.selected)
+                    ? Colors.white
+                    : const Color(0xFF1F2937)),
+            dayBackgroundColor: WidgetStateColor.resolveWith((s) =>
+                s.contains(WidgetState.selected)
+                    ? const Color(0xFFF80032)
+                    : Colors.transparent),
+            yearForegroundColor: WidgetStateColor.resolveWith((s) =>
+                s.contains(WidgetState.selected)
+                    ? Colors.white
+                    : const Color(0xFF1F2937)),
+            yearBackgroundColor: WidgetStateColor.resolveWith((s) =>
+                s.contains(WidgetState.selected)
+                    ? const Color(0xFFF80032)
+                    : Colors.transparent),
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) {
+      setState(() => _dataFiltro = picked);
+      _carregar(reset: true);
+    }
+  }
 
   Widget _badges() => Container(
         color: Colors.white,

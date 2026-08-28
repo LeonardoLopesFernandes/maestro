@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import '../models/pedido.dart';
 import '../network/api_service.dart';
@@ -7,6 +8,8 @@ import '../network/session_manager.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/maestro_dialogs.dart';
 import 'scanner_imei_screen.dart';
+import 'visualizar_danfe_screen.dart';
+import '../widgets/smartphone_confirmacao_dialog.dart';
 
 const int _cinzaBorda = 0xFF475569;
 const int _bgTela = 0xFFF5F5F5;
@@ -37,6 +40,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   bool _timelineAberta = false;
   final ScrollController _scrollController = ScrollController();
   bool _mostrarAcao = false;
+  bool _mostrarTokens = false;
   bool _didInitFim = false;
   Timer? _pollingEntregador;
 
@@ -60,26 +64,32 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           timelines: [],
           historico: [],
         );
+    // O Kotlin sempre re-busca o pedido completo ao abrir os detalhes
+    // (getPedidoById), pois o pedido da listagem traz o endereço padrão da
+    // loja em cliente.endereco. Re-buscamos silenciosamente para obter o
+    // endereço real cadastrado pelo cliente.
     if (widget.pedido == null) {
       _carregar();
     } else {
       _carregando = false;
       _carregarTokens();
+      _carregar(silencioso: true);
     }
   }
 
-  Future<void> _carregar() async {
+  Future<void> _carregar({bool silencioso = false}) async {
+    if (!silencioso) setState(() => _carregando = true);
     try {
       final p = await widget.apiService.getPedidoById(widget.pedidoId);
       if (mounted) {
         setState(() {
           _pedido = p;
-          _carregando = false;
+          if (!silencioso) _carregando = false;
         });
       }
       _carregarTokens();
     } catch (_) {
-      if (mounted) setState(() => _erro = true);
+      if (mounted && !silencioso) setState(() => _erro = true);
     }
   }
 
@@ -135,6 +145,22 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             data is Map ? Map<String, dynamic>.from(data as Map) : null);
       }
     } catch (_) {}
+  }
+
+  Color _corCanal(String canal) {
+    final c = canal.toUpperCase();
+    if (c.contains('MAGAZINE')) return const Color(0xFF0086FF);
+    if (c.contains('AMERICANAS')) return const Color(0xFFE60014);
+    if (c.contains('IFOOD')) return const Color(0xFFEF2E2E);
+    if (c.contains('SHOPE')) return const Color(0xFFFFD200);
+    return const Color(0xFFF80032);
+  }
+
+  String _labelTipoEntrega(String tipo) {
+    final t = tipo.toUpperCase();
+    if (t.contains('RETIRADA')) return 'Pegue na Loja Hoje';
+    if (t.contains('EXTERNA')) return 'Delivery';
+    return tipo;
   }
 
   ({String texto, Color cor}) get _statusBadge {
@@ -211,6 +237,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                         const SizedBox(height: 10),
                         _cardRecebedor(),
                         const SizedBox(height: 10),
+                        _cardMotivo(),
+                        const SizedBox(height: 10),
                         _cardItens(),
                         const SizedBox(height: 10),
                         _cardTokens(),
@@ -222,22 +250,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 _barraAcao(status),
               ],
             ),
-      floatingActionButton: _temImei()
-          ? FloatingActionButton(
-              backgroundColor: const Color(0xFFE31837),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => ScannerImeiScreen(),
-                ),
-              ),
-              child: const Icon(Icons.barcode_reader, color: Colors.white),
-            )
-          : null,
+      floatingActionButton: null,
     );
   }
-
-  bool _temImei() =>
-      _pedido.itens.any((i) => i.quantidadeImeis > 0);
 
   Widget _skeleton() => const Center(
         child: CircularProgressIndicator(),
@@ -310,7 +325,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF80032),
+                      color: _corCanal(_pedido.canalDeVendas ?? ''),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(_pedido.canalDeVendas!,
@@ -330,7 +345,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                       color: const Color(0xFF760018),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Text(_pedido.tipoEntrega!,
+                    child: Text(_labelTipoEntrega(_pedido.tipoEntrega!),
                         style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -357,6 +372,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF1F2937))),
+                  const Spacer(),
+                  _badgeTempoTotal(),
                 ],
               ),
             ),
@@ -409,47 +426,151 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   Widget _timeline() {
     final passos = _pedido.timelines;
     if (passos.isEmpty) return const SizedBox.shrink();
+    DateTime? previous;
+    final linhas = <Map<String, dynamic>>[];
+    for (final p in passos) {
+      String duracao = 'Duração: 0s';
+      Color corDur = const Color(0xFF9CA3AF);
+      final cur = _parseData(p.data);
+      if (previous != null && cur != null) {
+        final diff = cur.difference(previous);
+        duracao = 'Duração: ${_formatarDuracao(diff)}';
+        corDur = diff.inMilliseconds > 30 * 60 * 1000
+            ? const Color(0xFFDC2626)
+            : const Color(0xFF9CA3AF);
+      }
+      linhas.add({'t': p, 'duracao': duracao, 'cor': corDur});
+      if (cur != null) previous = cur;
+    }
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: passos.map((t) {
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: linhas.map((l) {
+          final t = l['t'] as Timeline;
           final info = _timelineInfo(t.nome ?? '');
           final dataBr = _formatarDataBr(t.data);
           return Container(
-            width: 92,
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Column(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Stack(
+              clipBehavior: Clip.none,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(4),
-                  child: Image.asset(
-                    info.icon,
-                    width: 30,
-                    height: 30,
-                    color: info.tint ? info.cor : null,
-                  ),
+                Positioned(
+                  top: 20,
+                  left: 0,
+                  right: 0,
+                  child: Container(height: 2, color: const Color(0xFFE0E0E0)),
                 ),
-                const SizedBox(height: 4),
-                Text(info.label,
-                    style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: info.cor),
-                    textAlign: TextAlign.center),
-                if (dataBr.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(dataBr,
-                        style: const TextStyle(
-                            fontSize: 9, color: Color(0xFF9CA3AF)),
-                        textAlign: TextAlign.center),
-                  ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: 42,
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                        child: Center(
+                          child: Image.asset(
+                            info.icon,
+                            width: 30,
+                            height: 30,
+                            color: info.tint ? info.cor : null,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minWidth: 64),
+                      child: Text(info.label,
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: info.cor),
+                          textAlign: TextAlign.center,
+                          softWrap: false,
+                          overflow: TextOverflow.visible),
+                    ),
+                    if (dataBr.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(dataBr,
+                            style: const TextStyle(
+                                fontSize: 9, color: Color(0xFF9CA3AF)),
+                            textAlign: TextAlign.center),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F1F1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(l['duracao'] as String,
+                            style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: l['cor'] as Color)),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           );
         }).toList(),
       ),
     );
+  }
+
+  DateTime? _parseData(String? data) {
+    if (data == null || data.isEmpty) return null;
+    try {
+      return DateTime.parse(data).toLocal();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Widget _badgeTempoTotal() {
+    final passos = _pedido.timelines;
+    if (passos.length < 2) return const SizedBox.shrink();
+    final first = _parseData(passos.first.data);
+    final last = _parseData(passos.last.data);
+    if (first == null || last == null) return const SizedBox.shrink();
+    final texto = 'Tempo total: ${_formatarDuracao(last.difference(first))}';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFECECEC),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Text(texto,
+          style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF333333))),
+    );
+  }
+
+  String _formatarDuracao(Duration d) {
+    final totalSec = d.inSeconds.abs().clamp(1, 1 << 60);
+    final dias = totalSec ~/ (24 * 3600);
+    final horas = (totalSec % (24 * 3600)) ~/ 3600;
+    final minutos = (totalSec % 3600) ~/ 60;
+    final segundos = totalSec % 60;
+    final sb = StringBuffer();
+    if (dias > 0) sb.write('${dias}d ');
+    if (horas > 0 || dias > 0) sb.write('${horas}h ');
+    if (minutos > 0 || horas > 0 || dias > 0) sb.write('${minutos}m ');
+    sb.write('${segundos}s');
+    return sb.toString();
   }
 
   bool _temMaisDe3Dias() {
@@ -486,20 +607,72 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                               fontSize: 13, color: Color(0xFF6B7280)))),
                   IconButton(
                     icon: const Icon(Icons.call, color: Color(0xFF12CD0C)),
-                    onPressed: () {},
+                    onPressed: () => _ligar(_pedido.cliente!.telefone!),
                   ),
                 ],
               ),
             if (_pedido.cliente?.endereco != null)
-              _linhaDado(Icons.location_on, _pedido.cliente!.endereco!),
+              _linhaDado(Icons.location_on, _enderecoCompleto()),
           ],
         ),
       );
 
+  String _enderecoCompleto() {
+    final c = _pedido.cliente;
+    if (c == null) return 'Endereço não informado';
+    final b = StringBuffer();
+    if (c.endereco != null && c.endereco!.isNotEmpty) b.write(c.endereco);
+    if (c.numero != null && c.numero!.isNotEmpty) b.write(', ${c.numero}');
+    if (c.complemento != null && c.complemento!.isNotEmpty)
+      b.write(' - ${c.complemento}');
+    if (c.bairro != null && c.bairro!.isNotEmpty) b.write(' - ${c.bairro}');
+    if (c.cidade != null && c.cidade!.isNotEmpty) b.write(' - ${c.cidade}');
+    if (c.uf != null && c.uf!.isNotEmpty) b.write('/${c.uf}');
+    if (c.cep != null && c.cep!.isNotEmpty) b.write(' - CEP: ${c.cep}');
+    final s = b.toString().trim();
+    return s.isEmpty ? 'Endereço não informado' : s;
+  }
+
   Widget _cardRecebedor() => _card(
         titulo: 'Recebedor',
-        child: _linhaDado(Icons.person_outline, '-'),
+        child: _linhaDado(Icons.person_outline,
+            _pedido.recebedor?.nome ?? 'Não informado',
+            negrito: true, size: 16),
       );
+
+  Widget _cardMotivo() {
+    final motivos = _pedido.motivo;
+    final status = _pedido.status.toUpperCase();
+    final badges = <Widget>[];
+    if (motivos != null && motivos.isNotEmpty) {
+      for (final m in motivos) {
+        final t = m.texto;
+        if (t == null || t.isEmpty) continue;
+        badges.add(Text(t,
+            style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFDC2626))));
+      }
+    } else if (status == 'CANCELADO' || status == 'DEVOLVIDO') {
+      badges.add(Text(
+          status == 'CANCELADO'
+              ? 'Cancelado sem motivo informado'
+              : 'Devolvido sem motivo informado',
+          style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFFDC2626))));
+    }
+    if (badges.isEmpty) return const SizedBox.shrink();
+    return _card(
+      titulo: 'Motivo do cancelamento',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: badges,
+      ),
+    );
+  }
 
   Widget _cardItens() => _card(
         titulo: 'Itens do pedido',
@@ -518,7 +691,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                         TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const Spacer(),
                 Text(
-                    'R\$ ${CurrencyFormatter.format(_pedido.valorTotal)}',
+                    'R\$ ${CurrencyFormatter.formatarMoeda(_pedido.valorTotal)}',
                     style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -531,54 +704,105 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
 
   Widget _itemRow(Item i) => _ItemRowDetalhe(item: i);
 
+  Future<void> _ligar(String numero) async {
+    final limpo = numero.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (limpo.isEmpty) return;
+    try {
+      await launchUrl(Uri.parse('tel:$limpo'));
+    } catch (_) {}
+  }
+
   Widget _cardTokens() => _card(
         titulo: 'Tokens do pedido',
+        headerTrailing: SizedBox(
+          width: 30,
+          height: 30,
+          child: IconButton(
+            padding: EdgeInsets.zero,
+            icon: Icon(
+              _mostrarTokens ? Icons.visibility : Icons.visibility_off,
+              color: Colors.white,
+              size: 20,
+            ),
+            onPressed: () =>
+                setState(() => _mostrarTokens = !_mostrarTokens),
+            tooltip: _mostrarTokens ? 'Ocultar tokens' : 'Mostrar tokens',
+          ),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Token Cliente: ${_tokens?['tokenCliente'] ?? '--'}',
+            Text('Token Cliente: ${_tkMasc('tokenCliente')}',
                 style: const TextStyle(
                     fontSize: 13, color: Color(0xFF6B7280))),
-            Text('Token Retirada: ${_tokens?['tokenRetirada'] ?? '--'}',
+            Text('Token Retirada: ${_tkMasc('tokenRetirada')}',
                 style: const TextStyle(
                     fontSize: 13, color: Color(0xFF6B7280))),
-            Text('Token Insucesso: ${_tokens?['tokenInsucesso'] ?? '--'}',
+            Text('Token Insucesso: ${_tkMasc('tokenInsucesso')}',
                 style: const TextStyle(
                     fontSize: 13, color: Color(0xFF6B7280))),
           ],
         ),
       );
 
-  Widget _card({required String titulo, required Widget child}) => Card(
+  String _tkMasc(String k) {
+    final v = _tk(k);
+    if (v == '--' || v.isEmpty) return v;
+    return _mostrarTokens ? v : '••••••••';
+  }
+
+  String _tk(String k) {
+    final dt = _pedido.deliveryToken;
+    final doPedido = dt == null
+        ? null
+        : <String, dynamic>{
+            'tokenCliente': dt.tokenCliente,
+            'tokenRetirada': dt.tokenRetirada,
+            'tokenInsucesso': dt.tokenInsucesso,
+          }[k];
+    final v = _tokens?[k] ?? doPedido;
+    return (v == null || v.toString().isEmpty) ? '--' : v.toString();
+  }
+
+  Widget _card(
+          {required String titulo,
+          required Widget child,
+          Widget? headerTrailing}) =>
+      Card(
         margin: EdgeInsets.zero,
         elevation: 0,
+        clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: Color(_cinzaBorda), width: 1),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFB62F2C),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(titulo,
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: const BoxDecoration(
+                color: const Color(0xFFEF2E2E),
               ),
-              child,
-            ],
-          ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(titulo,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                  if (headerTrailing != null) headerTrailing,
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: child,
+            ),
+          ],
         ),
       );
 
@@ -613,7 +837,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                     color: Color(0xFF4A4A4A),
                     fontWeight: FontWeight.bold)),
             const Spacer(),
-            Text('R\$ ${CurrencyFormatter.format(v)}',
+            Text('R\$ ${CurrencyFormatter.formatarMoeda(v)}',
                 style: const TextStyle(fontSize: 13, color: Color(0xFF4A4A4A))),
           ],
         ),
@@ -646,6 +870,30 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           'CANCELAR', const Color(0xFFF80032), _acaoCancelarHistorico));
     }
     if (badges.isEmpty) return const SizedBox.shrink();
+
+    // NOTA FISCAL: só para pedidos entregues (Histórico / FINALIZADO / ENTREGUE)
+    final temNota = (_pedido.notaFiscalChave ?? '').isNotEmpty &&
+        (s.contains('FINALIZADO') || s.contains('ENTREGUE'));
+
+    final children = <Widget>[];
+    if (temNota) {
+      if (badges.length == 1) {
+        children.add(Row(
+          children: [
+            Expanded(child: _badgeAcaoNotaFiscal()),
+            const SizedBox(width: 8),
+            Expanded(flex: 2, child: badges.first),
+          ],
+        ));
+      } else {
+        children.add(_badgeAcaoNotaFiscal());
+        children.add(const SizedBox(height: 8));
+        children.addAll(badges);
+      }
+    } else {
+      children.addAll(badges);
+    }
+
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
       opacity: _mostrarAcao ? 1 : 0,
@@ -654,11 +902,39 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         child: Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           color: const Color(_bgTela),
-          child: Column(children: badges),
+          child: Column(children: children),
         ),
       ),
     );
   }
+
+  Widget _badgeAcaoNotaFiscal() => Container(
+        height: 48,
+        decoration: BoxDecoration(
+            color: Colors.black, borderRadius: BorderRadius.circular(24)),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(24),
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => VisualizarDanfeScreen(
+                  session: widget.session,
+                  apiService: widget.apiService,
+                  chave: _pedido.notaFiscalChave!,
+                ),
+              ));
+            },
+            child: const Center(
+              child: Text('NOTA FISCAL',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ),
+      );
 
   Widget _badgeAcao(String texto, Color cor, VoidCallback onTap) => Container(
         width: double.infinity,
@@ -705,6 +981,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     );
   }
 
+  void _aviso(String msg) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   Future<void> _acaoSeparar() async {
     try {
       await widget.apiService.separarPedido(
@@ -716,6 +997,25 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoConfirmar() async {
+    final temSmartphone =
+        _pedido.itens.any((i) => i.quantidadeImeis > 0);
+    if (temSmartphone) {
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => SmartphoneConfirmacaoDialog(
+          pedido: _pedido,
+          onConfirm: (quantidades, imeis) async {
+            await _confirmarComImeis(quantidades, imeis);
+          },
+          onCancel: () {
+            _aviso('Confirmação cancelada');
+          },
+        ),
+      );
+      return;
+    }
+
     final res = await MaestroDialogs.quantidadeNovo(context, _pedido);
     if (res == null) return;
     final (quantidadesEditadas, nenhum) = res;
@@ -805,11 +1105,84 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     }
   }
 
+  Future<void> _confirmarComImeis(
+      Map<String, int> quantidades, Map<String, List<String>> imeis) async {
+    final itens = _pedido.itens;
+    final origem = _normOrigem(_pedido.origem);
+    final codigoExterno = _pedido.codigoExterno ?? _pedido.numero;
+    final numero = _pedido.numero;
+
+    int novaQtd(Item it) {
+      final key = it.codigoSAP ?? it.codigoEAN ?? it.descricao ?? '';
+      return quantidades[key] ?? it.quantidade;
+    }
+
+    final houveAlteracao =
+        itens.any((it) => novaQtd(it) != it.quantidade);
+
+    if (houveAlteracao) {
+      final alterados = <(String, int, int)>[];
+      for (final it in itens) {
+        final n = novaQtd(it);
+        if (n != it.quantidade) {
+          alterados.add(
+              (it.codigoSAP ?? it.descricao ?? 'item', it.quantidade, n));
+        }
+      }
+      final total = itens.fold<int>(0, (s, it) => s + novaQtd(it));
+      final motivos = await _carregarMotivosRecusa(origem, _pedido.status ?? '');
+      final motivo = motivos.isEmpty
+          ? null
+          : await MaestroDialogs.confirmacaoParcial(context,
+              totalItens: total, alterados: alterados, motivos: motivos);
+      if (motivo == null) return;
+      try {
+        final itensComErro = _buildItensBody(itens, novaQtd, imeis)
+            .where((m) {
+              final sap = m['codigoSAP'] ?? '';
+              final it = itens.firstWhere((x) => (x.codigoSAP ?? '') == sap,
+                  orElse: () => itens.first);
+              return novaQtd(it) != it.quantidade;
+            })
+            .toList();
+        final novoValorTotal = _calcularValorTotal(itens, novaQtd);
+        await widget.apiService.updateInventory(numero, itensComErro, novoValorTotal);
+        await _executarConfirmacao(origem, codigoExterno, itens, novaQtd,
+            editado: true, motivo: motivo, imeisEditados: imeis);
+      } catch (e) {
+        _erroMsg(e);
+      }
+      return;
+    }
+
+    final conf = await MaestroDialogs.tudoCerto(context, itens.length);
+    if (conf != true) return;
+    try {
+      await _executarConfirmacao(origem, codigoExterno, itens, novaQtd,
+          editado: false, motivo: null, imeisEditados: imeis);
+      _sucesso('Separação confirmada.');
+    } catch (e) {
+      _erroMsg(e);
+    }
+  }
+
   List<Map<String, dynamic>> _buildItensBody(
-      List<Item> itens, int Function(Item) novaQtd) {
+      List<Item> itens, int Function(Item) novaQtd,
+      [Map<String, List<String>>? imeisEditados]) {
     return itens.map((it) {
       final n = novaQtd(it);
       final valorUnitario = it.valorUnitario;
+      final sap = it.codigoSAP ?? '';
+      final digitados = imeisEditados?[sap];
+      final List<dynamic> imeisFinal;
+      final int qtdImeis;
+      if (digitados != null && digitados.isNotEmpty) {
+        imeisFinal = [digitados];
+        qtdImeis = digitados.length;
+      } else {
+        imeisFinal = it.imeis;
+        qtdImeis = (it.imeis as List?)?.length ?? 0;
+      }
       return <String, dynamic>{
         'codigoEAN': it.codigoEAN ?? '',
         'codigoSAP': it.codigoSAP ?? '',
@@ -822,8 +1195,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         'estoqueInicial': it.estoque ?? 0,
         'precoVenda': it.precoVenda ?? 0.0,
         'peso': 0.0,
-        'quantidadeImeis': it.quantidadeImeis,
-        'imeis': const <List<String>>[],
+        'quantidadeImeis': qtdImeis,
+        'imeis': imeisFinal,
         'preVenda': false,
       };
     }).toList();
@@ -843,8 +1216,10 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       List<Item> itens,
       int Function(Item) novaQtd,
       {required bool editado,
-      String? motivo}) async {
-    final itensAtualizados = _buildItensBody(itens, novaQtd);
+      String? motivo,
+      Map<String, List<String>>? imeisEditados}) async {
+    final itensAtualizados =
+        _buildItensBody(itens, novaQtd, imeisEditados);
     final novoValorTotal = _calcularValorTotal(itens, novaQtd);
     final codigosSapAlterados = <String>[];
     for (final it in itens) {
@@ -884,8 +1259,14 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     final numero = _pedido.numero;
     final tipo = (_pedido.tipoEntrega ?? '').toUpperCase();
     final canal = (_pedido.canalDeVendas ?? '').toUpperCase();
-    // EXTERNA + Americanas/Magazine => fluxo inverso (exibimos o token p/ o entregador)
-    final isReserva = tipo == 'EXTERNA' &&
+    final origem = _normOrigem(_pedido.origem);
+    // Pegue na Loja Hoje (cliente retira na loja) NUNCA é reserva: nós
+    // digitamos o token informado e confirmamos a entrega (FINALIZADO).
+    final isPegueNaLoja = origem == 'PEGUE_NA_LOJA_HOJE';
+    // EXTERNA + Americanas/Magazine => fluxo inverso (exibimos o token p/ o
+    // entregador que vem buscar; ao confirmar dele, status SAIU_PARA_ENTREGA.
+    final isReserva = !isPegueNaLoja &&
+        tipo == 'EXTERNA' &&
         (canal.contains('MAGAZINE') || canal.contains('AMERICANAS'));
 
     String? tokenRetirada;
@@ -983,15 +1364,17 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoDevolverEstoque() async {
-    final res = await MaestroDialogs.retornarEstoque(context);
-    if (res == null) return;
+    final ok = await MaestroDialogs.confirmar(context,
+        titulo: 'Devolver ao estoque',
+        mensagem:
+            'Confirma a devolução deste pedido ao estoque? (Cancelado pela loja)',
+        textoSim: 'SIM, DEVOLVER');
+    if (ok != true) return;
     try {
       await widget.apiService.retornarParaEstoque(
           _normOrigem(_pedido.origem),
-          _pedido.codigoExterno ?? _pedido.numero,
-          captchaToken: res.$2,
-          motivo: res.$1);
-      _sucesso('Devolvido ao estoque.');
+          _pedido.codigoExterno ?? _pedido.numero);
+      _sucesso('Pedido devolvido ao estoque.');
     } catch (e) {
       _erroMsg(e);
     }
@@ -1063,27 +1446,26 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                     children: [
                       Text(i.descricao ?? '',
                           style: const TextStyle(
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF4A4A4A))),
+                              color: Color(0xFF000000))),
                       InkWell(
                         onTap: _secundarios.isNotEmpty
                             ? () => setState(() => _expanded = !_expanded)
                             : null,
                         child: Row(
                           children: [
-                            Icon(
-                                _secundarios.isEmpty
-                                    ? Icons.qr_code
-                                    : (_expanded
-                                        ? Icons.keyboard_arrow_up
-                                        : Icons.keyboard_arrow_down),
-                                size: 16,
-                                color: const Color(0xFF6B7280)),
-                            const SizedBox(width: 6),
+                            if (_secundarios.isNotEmpty)
+                              Icon(
+                                  _expanded
+                                      ? Icons.keyboard_arrow_up
+                                      : Icons.keyboard_arrow_down,
+                                  size: 16,
+                                  color: const Color(0xFF6B7280)),
+                            if (_secundarios.isNotEmpty)
+                              const SizedBox(width: 6),
                             Expanded(
-                              child: Text(
-                                  'EAN: ${i.codigoEAN ?? ''}  /  SAP: ${i.codigoSAP ?? ''}',
+                              child: Text('EAN: ${i.codigoEAN ?? ''}',
                                   style: const TextStyle(
                                       fontSize: 11, color: Color(0xFF888888))),
                             ),
@@ -1091,15 +1473,16 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                         ),
                       ),
                       if (_expanded && _secundarios.isNotEmpty)
-                        ..._secundarios
-                            .map((e) => Padding(
-                                  padding: const EdgeInsets.only(left: 22, top: 3),
-                                  child: Text('EAN: $e',
-                                      style: const TextStyle(
-                                          fontSize: 11,
-                                          color: Color(0xFF888888))),
-                                ))
-                            .toList(),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 22, top: 3),
+                          child: Text(
+                              'EANs: ${_secundarios.join(', ')}',
+                              style: const TextStyle(
+                                  fontSize: 11, color: Color(0xFF888888))),
+                        ),
+                      Text('SAP: ${i.codigoSAP ?? ''}',
+                          style: const TextStyle(
+                              fontSize: 11, color: Color(0xFF888888))),
                       if (i.imeis.isNotEmpty)
                         Text('IMEI: ${i.imeis.expand((e) => e).join(", ")}',
                             style: const TextStyle(
@@ -1114,16 +1497,16 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('R\$ ${CurrencyFormatter.format(i.valorTotal)}',
+                      Text('R\$ ${CurrencyFormatter.formatarMoeda(i.valorTotal)}',
                           style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF2B2B2B))),
+                              color: Color(0xFF000000))),
                       Text(
-                          '${i.quantidade}x R\$ ${CurrencyFormatter.format(i.valorUnitario)}',
+                          '${i.quantidade}x R\$ ${CurrencyFormatter.formatarMoeda(i.valorUnitario)}',
                           style: const TextStyle(
                               fontSize: 12,
-                              color: Color(0xFF555555),
+                              color: Color(0xFF000000),
                               fontWeight: FontWeight.bold)),
                     ],
                   ),

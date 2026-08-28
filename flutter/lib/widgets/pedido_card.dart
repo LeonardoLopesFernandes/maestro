@@ -196,7 +196,7 @@ class PedidoCard extends StatelessWidget {
                               fontSize: 12, color: Color(0xFF64748B))),
                     ),
                     Text(
-                        'R\$ ${CurrencyFormatter.format(pedido.valorTotal)}',
+                        'R\$ ${CurrencyFormatter.formatarMoeda(pedido.valorTotal)}',
                         style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

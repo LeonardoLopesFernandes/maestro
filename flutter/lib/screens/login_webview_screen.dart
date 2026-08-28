@@ -208,6 +208,47 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
     return null;
   }
 
+  Map<String, dynamic>? _decodificarClaims(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length < 2) return null;
+      var p = parts[1];
+      p = p.padRight(p.length + (4 - p.length % 4) % 4, '=');
+      final j = jsonDecode(utf8.decode(base64Url.decode(p)));
+      return j is Map ? Map<String, dynamic>.from(j) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _capitalizar(String s) => s
+      .split(' ')
+      .where((w) => w.isNotEmpty)
+      .map((w) => w[0].toUpperCase() + w.substring(1))
+      .join(' ');
+
+  String _nomeDosClaims(Map<String, dynamic>? c, String email) {
+    if (c != null) {
+      for (final k in ['nome', 'name', 'display_name', 'displayName']) {
+        final v = c[k];
+        if (v != null && v.toString().trim().isNotEmpty) {
+          return v.toString().trim();
+        }
+      }
+      final g = c['given_name']?.toString();
+      final f = c['family_name']?.toString();
+      if (g != null && g.isNotEmpty) {
+        return [g, if (f != null && f.isNotEmpty) f].join(' ');
+      }
+      final un = c['unique_name']?.toString();
+      if (un != null && un.isNotEmpty && !un.contains('@')) {
+        return _capitalizar(un.replaceAll(RegExp(r'[._-]'), ' '));
+      }
+    }
+    final local = email.split('@').first;
+    return _capitalizar(local.replaceAll(RegExp(r'[._-]'), ' '));
+  }
+
   void _salvarToken(String token) {
     if (_loginConcluido) return;
     _loginConcluido = true;
@@ -215,12 +256,14 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
     _pollTimer?.cancel();
     if (mounted) setState(() => _carregando = true);
     _session.saveToken(token);
-    final email = _extrairClaim(token, 'email') ??
-        widget.args?['email'] ??
+    final claims = _decodificarClaims(token);
+    final email = (claims?['email'] ??
+                claims?['upn'] ??
+                claims?['preferred_username'] ??
+                claims?['unique_name'] ??
+                widget.args?['email'])?.toString() ??
         "usuario@americanas.io";
-    final nome = _extrairClaim(token, 'nome') ??
-        _extrairClaim(token, 'name') ??
-        email.split('@').first;
+    final nome = _nomeDosClaims(claims, email);
     _session.saveUserInfo(
         email, nome, _session.getUserStore() ?? Constants.defaultStore);
     Navigator.of(context).pushReplacementNamed('/home');
