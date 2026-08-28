@@ -45,22 +45,11 @@ jobs:
             sed -i 's/androidComponents.onVariants {/androidComponents.onVariants(androidComponents.selector().all()) {/' "$FILE"
           fi
 
-      - name: Decode release keystore
-        run: echo "$KEYSTORE_BASE64" | base64 -d > "${{ github.workspace }}/release-key.jks"
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-
       - name: Flutter pub get
         run: flutter pub get
 
       - name: Build release APK (split arm64-v8a, updatable)
         run: flutter build apk --split-per-abi --target-platform android-arm64 --build-number=$BUILD_NUMBER --build-name="1.0.$BUILD_NUMBER"
-        env:
-          KEYSTORE_PATH: ${{ github.workspace }}/release-key.jks
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          BUILD_NUMBER: ${{ github.run_number }}
 
       - name: Upload arm64-v8a APK
         uses: actions/upload-artifact@v4
