@@ -55,7 +55,7 @@ class MaestroDialogs {
     );
   }
 
-  // Dialog de token (retirada na loja)
+  // Dialog de token (digitado pelo operador — iFood, Pegue na Loja, etc.)
   static Future<String?> token(BuildContext context,
       {String nome = '', String numero = ''}) {
     final c = TextEditingController();
@@ -83,13 +83,14 @@ class MaestroDialogs {
           width: double.infinity,
           child: TextField(
             controller: c,
-            keyboardType: TextInputType.number,
-            maxLength: 4,
+            keyboardType: TextInputType.text,
+            textCapitalization: TextCapitalization.characters,
+            maxLength: 20,
             textAlign: TextAlign.center,
             style: const TextStyle(
-                fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 8),
+                fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 4),
             decoration: InputDecoration(
-              hintText: '----',
+              hintText: 'TOKEN',
               border:
                   OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
             ),
@@ -115,6 +116,162 @@ class MaestroDialogs {
                   backgroundColor: const Color(_vermelhoDark)),
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('CANCELAR',
+                  style:
+                      TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Dialog de exibição de token (fluxo EXTERNA: entregador coloca no app; nós confirmamos)
+  static Future<bool?> tokenExibir(BuildContext context, String token,
+      {String instrucao =
+          'Informe o código para o entregador e aguarde a validação para liberar o pedido.'}) {
+    bool liberado = false;
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) {
+          // Libera o botão CONFIRMAR após 4s (animação de validação)
+          Future.delayed(const Duration(seconds: 4), () {
+            if (ctx.mounted && !liberado) set(() => liberado = true);
+          });
+          return AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            contentPadding: const EdgeInsets.all(24),
+            title: const Text('Token de Retirada',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center),
+            content: SizedBox(
+              width: double.infinity,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 18, horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F3F4),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Color(0xFFD1D5DB)),
+                    ),
+                    child: Text(token,
+                        style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 3),
+                        textAlign: TextAlign.center),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(instrucao,
+                      style: const TextStyle(fontSize: 13, color: Color(0xFF555555)),
+                      textAlign: TextAlign.center),
+                  const SizedBox(height: 12),
+                  if (!liberado)
+                    const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  else
+                    const Icon(Icons.check_circle,
+                        color: Color(_verde), size: 22),
+                ],
+              ),
+            ),
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: liberado
+                          ? const Color(_verde)
+                          : const Color(0xFFD1D5DB)),
+                  onPressed: liberado
+                      ? () => Navigator.of(ctx).pop(true)
+                      : null,
+                  child: const Text('CONFIRMAR',
+                      style:
+                          TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(_vermelhoDark)),
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: const Text('CANCELAR',
+                      style:
+                          TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  // Dialog informativo de token de insucesso (somente exibição)
+  static Future<void> tokenExibirInfo(BuildContext context, String token) {
+    return showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.all(24),
+        title: const Text('Token de Insucesso',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center),
+        content: SizedBox(
+          width: double.infinity,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F3F4),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Color(0xFFD1D5DB)),
+                ),
+                child: Text(token,
+                    style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 3),
+                    textAlign: TextAlign.center),
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                  'Token de insucesso gerado!\n\n'
+                  '📍 INFORME AO ENTREGADOR:\n'
+                  '1. Copie este token\n'
+                  '2. Entregue ao entregador\n'
+                  '3. Ele deve inserir no app dele\n'
+                  '4. Após inserir, o pedido será finalizado',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF555555)),
+                  textAlign: TextAlign.center),
+            ],
+          ),
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(_vermelhoDark)),
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('FECHAR',
                   style:
                       TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
@@ -163,144 +320,315 @@ class MaestroDialogs {
     );
   }
 
-  // Diálogo de quantidade (itens sem smartphone)
-  static Future<bool?> quantidadeNovo(
+  // 1º Diálogo: edição de quantidades na separação.
+  // Retorna (mapa codigoSAP->quantidade dos itens selecionados, flag "nenhum item").
+  // null = cancelado.
+  static Future<(Map<String, int>, bool)?> quantidadeNovo(
       BuildContext context, Pedido pedido) {
     final selecionados = <int, bool>{};
     final qtd = <int, int>{};
     for (var i = 0; i < pedido.itens.length; i++) {
-      selecionados[i] = true;
+      selecionados[i] = false;
       qtd[i] = pedido.itens[i].quantidade;
     }
     bool nenhum = false;
-    return showDialog<bool>(
+
+    Color fundoItem(int i, Item it) {
+      final sel = nenhum ? false : (selecionados[i] ?? false);
+      final alterado = (qtd[i] ?? it.quantidade) != it.quantidade;
+      if (!sel) return const Color(0xFFF1F3F4); // GRAY_100
+      if (alterado) return const Color(0xFFFFE5E5); // RED_LIGHT
+      return const Color(0xFFE6F4EA); // GREEN_600 claro
+    }
+
+    return showDialog<(Map<String, int>, bool)>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) {
+          bool temAlteracao = pedido.itens.any((it) {
+            final i = pedido.itens.indexOf(it);
+            return (qtd[i] ?? it.quantidade) != it.quantidade;
+          });
+          bool algumSelecionado = selecionados.values.any((v) => v);
+          bool habilitado = algumSelecionado || nenhum;
+          return AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            contentPadding: EdgeInsets.zero,
+            content: SizedBox(
+              width: double.infinity,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                        'Confirme os itens do pedido #${pedido.codigoExterno}.',
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold)),
+                  ),
+                  const Divider(height: 1),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 340),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          ...pedido.itens.asMap().entries.map((e) {
+                            final i = e.key;
+                            final it = e.value;
+                            final sel = nenhum ? false : (selecionados[i] ?? false);
+                            final alterado =
+                                (qtd[i] ?? it.quantidade) != it.quantidade;
+                            return InkWell(
+                              onTap: () {
+                                if (nenhum) return;
+                                set(() => selecionados[i] = !(selecionados[i] ?? false));
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 10),
+                                decoration: BoxDecoration(
+                                    color: fundoItem(i, it),
+                                    border: const Border(
+                                        bottom: BorderSide(
+                                            color: Color(0xFFCCCCCC)))),
+                                child: Row(
+                                  children: [
+                                    Checkbox(
+                                      value: sel,
+                                      activeColor: const Color(0xFFE61937),
+                                      onChanged: nenhum
+                                          ? null
+                                          : (v) => set(
+                                              () => selecionados[i] = v ?? false),
+                                    ),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                              '${it.quantidade}x ${it.descricao ?? ""}',
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14)),
+                                          Text(
+                                              'EAN: ${it.codigoEAN ?? "---"} / SAP: ${it.codigoSAP ?? "---"}',
+                                              style: const TextStyle(
+                                                  fontSize: 10,
+                                                  color: Color(0xFF555555))),
+                                          if (it.estoque != null)
+                                            Text(
+                                                'Estoque estimado: ${it.estoque}',
+                                                style: const TextStyle(
+                                                    fontSize: 10,
+                                                    color: Color(0xFF1565C0))),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 55,
+                                      child: TextField(
+                                        enabled: !nenhum,
+                                        keyboardType: TextInputType.number,
+                                        textAlign: TextAlign.center,
+                                        decoration: InputDecoration(
+                                          border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8)),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                  vertical: 4),
+                                        ),
+                                        controller: TextEditingController(
+                                            text: '${qtd[i]}'),
+                                        onChanged: (v) {
+                                          final nova =
+                                              int.tryParse(v) ?? 0;
+                                          set(() {
+                                            qtd[i] = nova > it.quantidade
+                                                ? it.quantidade
+                                                : nova;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                          InkWell(
+                            onTap: () =>
+                                set(() => nenhum = !nenhum),
+                            child: Row(
+                              children: [
+                                Checkbox(
+                                  value: nenhum,
+                                  activeColor: const Color(0xFFE61937),
+                                  onChanged: (v) => set(() => nenhum = v ?? false),
+                                ),
+                                const Text('A loja não possui nenhum item.',
+                                    style: TextStyle(
+                                        color: Color(0xFFE61937),
+                                        fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          child: const Text('FECHAR',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF333333))),
+                        ),
+                        const Spacer(),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: temAlteracao
+                                  ? const Color(_vermelho)
+                                  : const Color(_verde)),
+                          onPressed: habilitado
+                              ? () {
+                                  if (nenhum) {
+                                    Navigator.of(ctx)
+                                        .pop((<String, int>{}, true));
+                                    return;
+                                  }
+                                  final result = <String, int>{};
+                                  for (var i = 0;
+                                      i < pedido.itens.length;
+                                      i++) {
+                                    if (selecionados[i] == true) {
+                                      final sap =
+                                          pedido.itens[i].codigoSAP ??
+                                              'idx_$i';
+                                      result[sap] = qtd[i] ?? 0;
+                                    }
+                                  }
+                                  Navigator.of(ctx).pop((result, false));
+                                }
+                              : null,
+                          child: const Text('CONFIRMAR',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // 2º Diálogo (quando houve alteração): confirmação parcial com motivo.
+  // Mostra as quantidades alteradas e pede o motivo da recusa/alteração.
+  static Future<String?> confirmacaoParcial(
+    BuildContext context, {
+    required int totalItens,
+    required List<(String, int, int)> alterados,
+    required List<String> motivos,
+  }) {
+    String? motivo;
+    return showDialog<String>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, set) => AlertDialog(
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          contentPadding: EdgeInsets.zero,
+          contentPadding: const EdgeInsets.all(20),
+          title: Text(
+              'Confirmação Parcial de $totalItens itens. Selecione o motivo para o(s) produto(s) recusado(s):',
+              style:
+                  const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
           content: SizedBox(
             width: double.infinity,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                      'Confirme os itens do pedido #${pedido.codigoExterno}.',
-                      style: const TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.bold)),
-                ),
-                const Divider(height: 1),
                 ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 320),
+                  constraints: const BoxConstraints(maxHeight: 180),
                   child: SingleChildScrollView(
                     child: Column(
-                      children: [
-                        ...pedido.itens.asMap().entries.map((e) {
-                          final i = e.key;
-                          final it = e.value;
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 10),
-                            decoration: const BoxDecoration(
-                                border: Border(
-                                    bottom: BorderSide(
-                                        color: Color(0xFFCCCCCC)))),
-                            child: Row(
-                              children: [
-                                Checkbox(
-                                  value: nenhum ? false : selecionados[i]!,
-                                  activeColor: const Color(0xFFE61937),
-                                  onChanged: (v) =>
-                                      set(() => selecionados[i] = v ?? false),
+                      children: alterados
+                          .map((a) => Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 2),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                        child: Text(a.$1,
+                                            style:
+                                                const TextStyle(fontSize: 12))),
+                                    Text(
+                                        '${a.$2} → ${a.$3}',
+                                        style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFFE61937))),
+                                  ],
                                 ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text('${it.quantidade}x ${it.descricao}',
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14)),
-                                      Text(
-                                          'EAN: ${it.codigoEAN} / SAP: ${it.codigoSAP}',
-                                          style: const TextStyle(
-                                              fontSize: 10,
-                                              color: Color(0xFF555555))),
-                                    ],
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 55,
-                                  child: TextField(
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.center,
-                                    decoration: InputDecoration(
-                                      border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8)),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              vertical: 4),
-                                    ),
-                                    controller: TextEditingController(
-                                        text: '${qtd[i]}'),
-                                    onChanged: (v) =>
-                                        qtd[i] = int.tryParse(v) ?? 0,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                        Row(
-                          children: [
-                            Checkbox(
-                              value: nenhum,
-                              activeColor: const Color(0xFFE61937),
-                              onChanged: (v) => set(() => nenhum = v ?? false),
-                            ),
-                            const Text('A loja não possui nenhum item.',
-                                style: TextStyle(
-                                    color: Color(0xFFE61937),
-                                    fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ],
+                              ))
+                          .toList(),
                     ),
                   ),
                 ),
-                const Divider(height: 1),
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.of(ctx).pop(false),
-                        child: const Text('FECHAR',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF333333))),
-                      ),
-                      const Spacer(),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(_verde)),
-                        onPressed: () => Navigator.of(ctx).pop(true),
-                        child: const Text('CONFIRMAR',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white)),
-                      ),
-                    ],
+                const SizedBox(height: 12),
+                Container(
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Color(0xFFD1D5DB)),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    hint: const Text('Selecione um motivo...'),
+                    value: motivo,
+                    underline: const SizedBox(),
+                    items: motivos
+                        .map((m) => DropdownMenuItem(
+                            value: m,
+                            child: Text(m, style: const TextStyle(fontSize: 14))))
+                        .toList(),
+                    onChanged: (v) => set(() => motivo = v),
                   ),
                 ),
               ],
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('FECHAR',
+                  style: TextStyle(color: Color(0xFF6B7280))),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: motivo != null
+                      ? const Color(_verde)
+                      : const Color(0xFFD1D5DB)),
+              onPressed: motivo != null
+                  ? () => Navigator.of(ctx).pop(motivo)
+                  : null,
+              child: const Text('CONFIRMAR',
+                  style: TextStyle(color: Colors.white)),
+            ),
+          ],
         ),
       ),
     );

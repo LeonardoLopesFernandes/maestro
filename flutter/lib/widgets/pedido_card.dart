@@ -242,10 +242,16 @@ class _DuracaoSeparacaoState extends State<_DuracaoSeparacao> {
     if (tc != null) {
       _baseMs = tc;
     } else {
-      try {
-        final dt = DateTime.parse(widget.pedido.dataInclusao!).toLocal();
-        _baseMs = DateTime.now().millisecondsSinceEpoch - dt.millisecondsSinceEpoch;
-      } catch (_) {
+      final di = widget.pedido.dataInclusao;
+      if (di != null && di.isNotEmpty) {
+        try {
+          final dt = DateTime.parse(di).toLocal();
+          _baseMs =
+              DateTime.now().millisecondsSinceEpoch - dt.millisecondsSinceEpoch;
+        } catch (_) {
+          _baseMs = 0;
+        }
+      } else {
         _baseMs = 0;
       }
     }
@@ -281,9 +287,18 @@ class _DuracaoSeparacaoState extends State<_DuracaoSeparacao> {
       return const SizedBox.shrink();
     }
     final totalMin = _totalMin;
-    final texto = totalMin >= 60
-        ? '${totalMin ~/ 60}h ${totalMin % 60}min'
-        : '$totalMin';
+    late final String texto;
+    if (totalMin < 60) {
+      texto = '$totalMin ${totalMin == 1 ? 'minuto' : 'minutos'}';
+    } else {
+      final h = totalMin ~/ 60;
+      final m = totalMin % 60;
+      final hs = h == 1 ? '1 hora' : '$h horas';
+      final ms = m == 0
+          ? ''
+          : (m == 1 ? ' 1 minuto' : ' $m minutos');
+      texto = '$hs$ms';
+    }
     final verde = totalMin <= _limiteMin;
     final cor = verde ? const Color(0xFF28A745) : const Color(0xFFDC3545);
     final pct = (totalMin / _limiteMin * 100).clamp(0, 100);

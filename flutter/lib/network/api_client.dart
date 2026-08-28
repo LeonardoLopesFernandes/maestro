@@ -53,9 +53,10 @@ class ApiClient {
     return _handle(response);
   }
 
-  Future<dynamic> put(String path, {dynamic body}) async {
+  Future<dynamic> put(String path,
+      {dynamic body, Map<String, String>? query}) async {
     if (session.isDemo()) return _demoWrite(path, body);
-    final uri = Uri.parse(baseUrl + path);
+    final uri = Uri.parse(baseUrl + path).replace(queryParameters: query);
     final response = await _http.put(uri,
         headers: _headers(), body: body == null ? null : jsonEncode(body));
     return _handle(response);

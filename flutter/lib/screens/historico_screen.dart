@@ -23,7 +23,8 @@ class HistoricoScreen extends StatefulWidget {
 }
 
 class _HistoricoScreenState extends State<HistoricoScreen> {
-  List<Pedido> _pedidos = [];
+  List<Pedido> _pedidos = []; // exibidos (já filtrados)
+  List<Pedido> _todos = []; // crus (todas as páginas carregadas)
   int _skip = 0;
   bool _carregando = true;
   bool _temMais = true;
@@ -50,45 +51,65 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
     _carregar(reset: true);
   }
 
-  Map<String, String?> get _params {
+  // Status enviado à API (o filtro por origem/canal é feito client-side,
+  // espelhando o HistoricoActivity do Kotlin).
+  String get _statusParam {
     switch (_filtro) {
       case 'CANCELADO':
-        return {'status': 'CANCELADO', 'find': null};
+        return 'CANCELADO';
       case 'DEVOLVIDO':
-        return {'status': 'DEVOLVIDO', 'find': null};
-      case 'TODOS':
-        return {'status': Constants.statusFinalizado, 'find': null};
+        return 'DEVOLVIDO';
       default:
-        final f = _filtros.firstWhere((e) => e.nome == _filtro);
-        return {'status': Constants.statusFinalizado, 'find': f.find};
+        return Constants.statusFinalizado;
     }
   }
+
+  bool _matchesFilter(Pedido p) {
+    switch (_filtro) {
+      case 'TODOS':
+        return true;
+      case 'PEGUE NA LOJA':
+        return p.origem == 'PEGUE_NA_LOJA_HOJE';
+      case 'DELIVERY':
+        return p.origem != 'PEGUE_NA_LOJA_HOJE' && p.origem != null;
+      case 'IFOOD':
+        return (p.canalDeVendas ?? '').toUpperCase().contains('IFOOD');
+      case 'CANCELADO':
+        return (p.status ?? '').toUpperCase() == 'CANCELADO';
+      case 'DEVOLVIDO':
+        return (p.status ?? '').toUpperCase() == 'DEVOLVIDO';
+      default:
+        return true;
+    }
+  }
+
+  List<Pedido> _filtrar(List<Pedido> lista) =>
+      lista.where(_matchesFilter).toList();
 
   Future<void> _carregar({bool reset = false}) async {
     if (reset) {
       _skip = 0;
+      _todos = [];
       _pedidos = [];
       _temMais = true;
     }
     if (!_temMais) return;
     setState(() => _carregando = true);
     try {
-      final p = _params;
       final resp = await widget.apiService.getPedidosPaged(
         skip: _skip,
         limit: _limit,
-        status: p['status']!,
-        minDias: 90,
+        status: _statusParam,
+        minDias: 0,
         ordemDataInclusao: false,
-        find: _busca.text.isNotEmpty
-            ? _busca.text
-            : (p['find'] != null ? p['find'] : null),
+        find: _busca.text.isNotEmpty ? _busca.text : null,
       );
       if (mounted) {
         setState(() {
-          _pedidos.addAll(resp.pedidos);
+          _todos.addAll(resp.pedidos);
           _skip += resp.pedidos.length;
           _temMais = resp.pedidos.length >= _limit;
+          _pedidos = _filtrar(_todos);
         });
       }
     } catch (e) {
@@ -229,7 +250,8 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
         itemCount: _pedidos.length + (_temMais ? 1 : 0),
         itemBuilder: (context, i) {
           if (i >= _pedidos.length) {
-            _carregar();
+            WidgetsBinding.instance
+                .addPostFrameCallback((_) => _carregar());
             return const Padding(
               padding: EdgeInsets.all(16),
               child: Center(child: CircularProgressIndicator()),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:async';
 import '../models/pedido.dart';
 import '../network/api_service.dart';
 import '../network/session_manager.dart';
@@ -37,6 +38,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _mostrarAcao = false;
   bool _didInitFim = false;
+  Timer? _pollingEntregador;
 
   @override
   void initState() {
@@ -79,6 +81,48 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     } catch (_) {
       if (mounted) setState(() => _erro = true);
     }
+  }
+
+  @override
+  void dispose() {
+    _pollingEntregador?.cancel();
+    super.dispose();
+  }
+
+  // Polling de confirmação do entregador (fluxo EXTERNA / reserva), espelha
+  // iniciarPollingConfirmacaoEntregador do Kotlin: a cada 5s (máx. 60
+  // rodadas) consulta o pedido; quando o entregador confirma no app dele o
+  // status vira SAIU_PARA_ENTREGA/FINALIZADO/ENTREGUE e avisamos o operador.
+  void _iniciarPollingEntregador() {
+    _pollingEntregador?.cancel();
+    int rodadas = 0;
+    _pollingEntregador = Timer.periodic(const Duration(seconds: 5), (t) async {
+      rodadas++;
+      if (rodadas > 60) {
+        t.cancel();
+        return;
+      }
+      try {
+        final p = await widget.apiService.getPedidoById(_pedido.numero);
+        final status = (p.status).toUpperCase();
+        if (status == 'SAIU_PARA_ENTREGA' ||
+            status == 'FINALIZADO' ||
+            status == 'ENTREGUE') {
+          t.cancel();
+          if (mounted) {
+            setState(() => _pedido = p);
+            _carregarTokens();
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content:
+                  Text('✅ Entregador confirmou a coleta! Toque em CONFIRMAR.'),
+              duration: Duration(seconds: 4),
+            ));
+          }
+        }
+      } catch (_) {
+        // mantém o polling até o limite de rodadas
+      }
+    });
   }
 
   Future<void> _carregarTokens() async {
@@ -324,52 +368,42 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         ),
       );
 
-  ({String icon, Color cor}) _timelineStyle(String nome) {
+  ({String label, String icon, Color cor, bool tint}) _timelineInfo(String nome) {
     final n = nome.toUpperCase();
-    if (n.contains('NOVO') ||
-        n.contains('INCLUIDO') ||
-        n.contains('CHEGADA') ||
-        n.contains('VISUALIZ') ||
-        n.contains('CRIADO')) {
-      return (icon: 'assets/icons/criado.png', cor: const Color(0xFF12CD0C));
+    if (n.contains('NOVO') || n.contains('INCLUIDO') || n.contains('CHEGADA'))
+      return (label: 'Chegada', icon: 'assets/icons/criado.png', cor: const Color(0xFF12CD0C), tint: true);
+    if (n.contains('VISUALIZ'))
+      return (label: 'Visualizado', icon: 'assets/icons/criado.png', cor: const Color(0xFF12CD0C), tint: true);
+    if (n.contains('CRIADO'))
+      return (label: 'Criado', icon: 'assets/icons/criado.png', cor: const Color(0xFF12CD0C), tint: true);
+    if (n.contains('SEPARACAO'))
+      return (label: 'Em Separação', icon: 'assets/icons/em_separacao.png', cor: const Color(0xFF00CBFE), tint: true);
+    if (n.contains('EDITADO'))
+      return (label: 'Editado', icon: 'assets/icons/editado.png', cor: const Color(0xFFED7D31), tint: false);
+    if (n.contains('PRONTO'))
+      return (label: 'Pronto para Retirada', icon: 'assets/icons/pronto_para_retirada.png', cor: const Color(0xFFFFAA02), tint: true);
+    if (n.contains('ENTREGA'))
+      return (label: 'Saiu para Entrega', icon: 'assets/icons/saiu_para_entrega.png', cor: const Color(0xFFCE00FF), tint: true);
+    if (n.contains('RETORNAR'))
+      return (label: 'Retornar para Estoque', icon: 'assets/icons/retornar_para_estoque.png', cor: const Color(0xFFDC2626), tint: true);
+    if (n.contains('CANCEL'))
+      return (label: 'Cancelado', icon: 'assets/icons/cancelado.png', cor: const Color(0xFFDC2626), tint: true);
+    if (n.contains('DEVOLV'))
+      return (label: 'Devolvido', icon: 'assets/icons/devolvido.png', cor: const Color(0xFFDC2626), tint: true);
+    if (n.contains('ENTREGUE') || n.contains('FINALIZ'))
+      return (label: 'Entregue', icon: 'assets/icons/entregue.png', cor: const Color(0xFF12CD0C), tint: true);
+    return (label: nome, icon: 'assets/icons/criado.png', cor: const Color(0xFF9CA3AF), tint: true);
+  }
+
+  String _formatarDataBr(String? data) {
+    if (data == null || data.isEmpty) return '';
+    try {
+      final dt = DateTime.parse(data).toLocal();
+      final p = (int v) => v.toString().padLeft(2, '0');
+      return '${p(dt.day)}/${p(dt.month)}/${dt.year} ${p(dt.hour)}:${p(dt.minute)}';
+    } catch (_) {
+      return data;
     }
-    if (n.contains('SEPARACAO')) {
-      return (
-        icon: 'assets/icons/em_separacao.png',
-        cor: const Color(0xFF00CBFE)
-      );
-    }
-    if (n.contains('EDITADO')) {
-      return (icon: 'assets/icons/editado.png', cor: const Color(0xFFED7D31));
-    }
-    if (n.contains('PRONTO')) {
-      return (
-        icon: 'assets/icons/pronto_para_retirada.png',
-        cor: const Color(0xFFFFAA02)
-      );
-    }
-    if (n.contains('ENTREGA')) {
-      return (
-        icon: 'assets/icons/saiu_para_entrega.png',
-        cor: const Color(0xFFCE00FF)
-      );
-    }
-    if (n.contains('RETORNAR')) {
-      return (
-        icon: 'assets/icons/retornar_para_estoque.png',
-        cor: const Color(0xFFDC2626)
-      );
-    }
-    if (n.contains('CANCEL')) {
-      return (icon: 'assets/icons/cancelado.png', cor: const Color(0xFFDC2626));
-    }
-    if (n.contains('DEVOLV')) {
-      return (icon: 'assets/icons/devolvido.png', cor: const Color(0xFFDC2626));
-    }
-    if (n.contains('ENTREGUE') || n.contains('FINALIZ')) {
-      return (icon: 'assets/icons/entregue.png', cor: const Color(0xFF12CD0C));
-    }
-    return (icon: 'assets/icons/criado.png', cor: const Color(0xFF9CA3AF));
   }
 
   Widget _timeline() {
@@ -379,36 +413,33 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: passos.map((t) {
-          final style = _timelineStyle(t.nome ?? '');
+          final info = _timelineInfo(t.nome ?? '');
+          final dataBr = _formatarDataBr(t.data);
           return Container(
-            width: 86,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
+            width: 92,
+            padding: const EdgeInsets.symmetric(horizontal: 6),
             child: Column(
               children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: style.cor.withOpacity(0.12),
-                    border: Border.all(color: style.cor, width: 2),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(9),
-                    child: Image.asset(style.icon, color: style.cor),
+                Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Image.asset(
+                    info.icon,
+                    width: 30,
+                    height: 30,
+                    color: info.tint ? info.cor : null,
                   ),
                 ),
-                const SizedBox(height: 5),
-                Text(t.nome ?? '',
+                const SizedBox(height: 4),
+                Text(info.label,
                     style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: style.cor),
+                        color: info.cor),
                     textAlign: TextAlign.center),
-                if (t.data != null && t.data!.isNotEmpty)
+                if (dataBr.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
-                    child: Text(t.data!,
+                    child: Text(dataBr,
                         style: const TextStyle(
                             fontSize: 9, color: Color(0xFF9CA3AF)),
                         textAlign: TextAlign.center),
@@ -498,84 +529,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         ),
       );
 
-  Widget _itemRow(Item i) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 45,
-                  child: Text('${i.quantidade}x',
-                      style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2B2B2B))),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(i.descricao ?? '',
-                          style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF4A4A4A))),
-                      Text(
-                          'EAN: ${i.codigoEAN ?? ''} / SAP: ${i.codigoSAP ?? ''}',
-                          style: const TextStyle(
-                              fontSize: 11, color: Color(0xFF888888))),
-                      if (i.imeis.isNotEmpty)
-                        Text('IMEI: ${i.imeis.expand((e) => e).join(", ")}',
-                            style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFFD32F2F),
-                                fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  width: 110,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('R\$ ${CurrencyFormatter.format(i.valorTotal)}',
-                          style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF2B2B2B))),
-                      Text('${i.quantidade}x R\$ ${CurrencyFormatter.format(i.valorUnitario)}',
-                          style: const TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF555555),
-                              fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (i.estoque != null)
-              Align(
-                alignment: Alignment.centerRight,
-                child: Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF29CC39),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text('Estoque estimado: ${i.estoque}',
-                      style: const TextStyle(
-                          color: Colors.white, fontSize: 11)),
-                ),
-              ),
-            const Divider(height: 16, color: Color(0xFFDDDDDD)),
-          ],
-        ),
-      );
+  Widget _itemRow(Item i) => _ItemRowDetalhe(item: i);
 
   Widget _cardTokens() => _card(
         titulo: 'Tokens do pedido',
@@ -712,6 +666,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         decoration: BoxDecoration(
             color: cor, borderRadius: BorderRadius.circular(24)),
         child: Material(
+
           color: Colors.transparent,
           child: InkWell(
             borderRadius: BorderRadius.circular(24),
@@ -726,6 +681,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           ),
         ),
       );
+
+  String _normOrigem(String? origem) =>
+      (origem ?? 'SHIP_FROM_STORE').trim().replaceAll(' ', '_').toUpperCase();
 
   void _sucesso(String msg) {
     showDialog(
@@ -750,7 +708,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   Future<void> _acaoSeparar() async {
     try {
       await widget.apiService.separarPedido(
-          _pedido.origem ?? '', _pedido.codigoExterno ?? _pedido.numero);
+          _normOrigem(_pedido.origem), _pedido.codigoExterno ?? _pedido.numero);
       _sucesso('Pedido em separação.');
     } catch (e) {
       _erroMsg(e);
@@ -758,32 +716,231 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoConfirmar() async {
-    final ok = await MaestroDialogs.quantidadeNovo(context, _pedido);
-    if (ok != true) return;
-    final conf = await MaestroDialogs.tudoCerto(
-        context, _pedido.itens.length);
+    final res = await MaestroDialogs.quantidadeNovo(context, _pedido);
+    if (res == null) return;
+    final (quantidadesEditadas, nenhum) = res;
+    final itens = _pedido.itens;
+    final origem = _normOrigem(_pedido.origem);
+    final codigoExterno = _pedido.codigoExterno ?? _pedido.numero;
+    final numero = _pedido.numero;
+
+    int novaQtd(Item it) {
+      final sap = it.codigoSAP ?? '';
+      if (nenhum) return 0;
+      return quantidadesEditadas[sap] ?? it.quantidade;
+    }
+
+    // Recusa total: todos os itens com quantidade 0
+    final recusaTotal = nenhum ||
+        itens.isNotEmpty &&
+            itens.every((it) => novaQtd(it) == 0);
+
+    if (recusaTotal) {
+      final motivos = await _carregarMotivosRecusa(origem, _pedido.status ?? '');
+      final motivo = motivos.isEmpty
+          ? 'RECUSA_TOTAL'
+          : await MaestroDialogs.motivoRadio(
+              context, titulo: 'Selecione o motivo da recusa', opcoes: motivos);
+      if (motivo == null || motivo.isEmpty) return;
+      try {
+        await widget.apiService.updateInventory(numero, [], 0.0,
+            corpoVazio: true);
+        await widget.apiService.recusarPedido(origem, codigoExterno, motivo);
+        _sucesso('Pedido recusado.');
+      } catch (e) {
+        _erroMsg(e);
+      }
+      return;
+    }
+
+    final houveAlteracao =
+        itens.any((it) => novaQtd(it) != it.quantidade);
+
+    if (houveAlteracao) {
+      // 2º diálogo: confirmação parcial com motivo
+      final alterados = <(String, int, int)>[];
+      for (final it in itens) {
+        final n = novaQtd(it);
+        if (n != it.quantidade) {
+          alterados.add((it.codigoSAP ?? it.descricao ?? 'item', it.quantidade, n));
+        }
+      }
+      final total = itens.fold<int>(0, (s, it) => s + novaQtd(it));
+      final motivos = await _carregarMotivosRecusa(origem, _pedido.status ?? '');
+      final motivo = motivos.isEmpty
+          ? null
+          : await MaestroDialogs.confirmacaoParcial(context,
+              totalItens: total, alterados: alterados, motivos: motivos);
+      if (motivo == null) return;
+      // atualiza inventário (somente itens alterados) e confirma
+      try {
+        final itensComErro = _buildItensBody(itens, novaQtd)
+            .where((m) {
+              final sap = m['codigoSAP'] ?? '';
+              final it = itens.firstWhere(
+                  (x) => (x.codigoSAP ?? '') == sap,
+                  orElse: () => itens.first);
+              return novaQtd(it) != it.quantidade;
+            })
+            .toList();
+        final novoValorTotal = _calcularValorTotal(itens, novaQtd);
+        await widget.apiService.updateInventory(numero, itensComErro, novoValorTotal);
+        await _executarConfirmacao(origem, codigoExterno, itens, novaQtd,
+            editado: true, motivo: motivo);
+      } catch (e) {
+        _erroMsg(e);
+      }
+      return;
+    }
+
+    // Sem alteração: diálogo "tudo certo"
+    final conf = await MaestroDialogs.tudoCerto(context, itens.length);
     if (conf != true) return;
     try {
-      await widget.apiService.confirmarPedido(
-          _pedido.origem ?? '', _pedido.codigoExterno ?? _pedido.numero);
+      await _executarConfirmacao(origem, codigoExterno, itens, novaQtd,
+          editado: false, motivo: null);
       _sucesso('Separação confirmada.');
     } catch (e) {
       _erroMsg(e);
     }
   }
 
-  Future<void> _acaoRetirar() async {
-    final codigo = await MaestroDialogs.token(context,
-        nome: _pedido.cliente?.nome ?? '',
-        numero: _pedido.codigoExterno ?? _pedido.numero);
-    if (codigo == null || codigo.isEmpty) return;
+  List<Map<String, dynamic>> _buildItensBody(
+      List<Item> itens, int Function(Item) novaQtd) {
+    return itens.map((it) {
+      final n = novaQtd(it);
+      final valorUnitario = it.valorUnitario;
+      return <String, dynamic>{
+        'codigoEAN': it.codigoEAN ?? '',
+        'codigoSAP': it.codigoSAP ?? '',
+        'descricao': it.descricao ?? '',
+        'quantidade': it.quantidade,
+        'quantidadeTotal': n,
+        'valorUnitario': valorUnitario,
+        'valorTotal': valorUnitario * n,
+        'estoque': it.estoque ?? 0,
+        'estoqueInicial': it.estoque ?? 0,
+        'precoVenda': it.precoVenda ?? 0.0,
+        'peso': 0.0,
+        'quantidadeImeis': it.quantidadeImeis,
+        'imeis': const <List<String>>[],
+        'preVenda': false,
+      };
+    }).toList();
+  }
+
+  double _calcularValorTotal(List<Item> itens, int Function(Item) novaQtd) {
+    final subtotal =
+        itens.fold<double>(0.0, (s, it) => s + it.valorUnitario * novaQtd(it));
+    return subtotal -
+        (_pedido.valorDesconto ?? 0.0) +
+        (_pedido.valorEntrega ?? 0.0);
+  }
+
+  Future<void> _executarConfirmacao(
+      String origem,
+      String codigoExterno,
+      List<Item> itens,
+      int Function(Item) novaQtd,
+      {required bool editado,
+      String? motivo}) async {
+    final itensAtualizados = _buildItensBody(itens, novaQtd);
+    final novoValorTotal = _calcularValorTotal(itens, novaQtd);
+    final codigosSapAlterados = <String>[];
+    for (final it in itens) {
+      if (novaQtd(it) != it.quantidade) {
+        codigosSapAlterados.add(it.codigoSAP ?? '');
+      }
+    }
+    final body = <String, dynamic>{
+      'valorTotal': novoValorTotal,
+      'valorDesconto': _pedido.valorDesconto,
+      'valorEntrega': _pedido.valorEntrega,
+      'editado': editado,
+      'recusado': null,
+      'retry': false,
+      'itens': itensAtualizados,
+      if (motivo != null) 'motivo': motivo,
+    };
+    final itensQuery =
+        codigosSapAlterados.isNotEmpty ? codigosSapAlterados.join(',') : null;
+    await widget.apiService.confirmarPedido(origem, codigoExterno,
+        body: body,
+        editado: editado,
+        motivo: motivo,
+        itens: itensQuery);
+    _sucesso('Separação confirmada.');
+  }
+
+  Future<List<String>> _carregarMotivosRecusa(String origem, String status) async {
     try {
-      await widget.apiService.retirarPedidoShipFromStore(
-          _pedido.codigoExterno ?? _pedido.numero);
-      _sucesso('Pedido retirado.');
+      return await widget.apiService.getMotivosRecusa();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> _acaoRetirar() async {
+    final numero = _pedido.numero;
+    final tipo = (_pedido.tipoEntrega ?? '').toUpperCase();
+    final canal = (_pedido.canalDeVendas ?? '').toUpperCase();
+    // EXTERNA + Americanas/Magazine => fluxo inverso (exibimos o token p/ o entregador)
+    final isReserva = tipo == 'EXTERNA' &&
+        (canal.contains('MAGAZINE') || canal.contains('AMERICANAS'));
+
+    String? tokenRetirada;
+    String? tokenInsucesso;
+    try {
+      final tokens = await widget.apiService.getDeliveryTokens(numero);
+      tokenRetirada = tokens['tokenRetirada']?.toString();
+      tokenInsucesso = tokens['tokenInsucesso']?.toString();
+    } catch (_) {}
+    tokenRetirada ??= _pedido.deliveryToken?.tokenRetirada;
+    tokenInsucesso ??= _pedido.deliveryToken?.tokenInsucesso;
+
+    try {
+      if (isReserva) {
+        // Americanas/Magazine Delivery: mostramos o token alfa-numérico p/ o
+        // entregador colocar no app dele; nós confirmamos -> SAIU_PARA_ENTREGA
+        final tk = (tokenRetirada?.isNotEmpty == true)
+            ? tokenRetirada!
+            : (tokenInsucesso?.isNotEmpty == true ? tokenInsucesso! : '---');
+        final ok = await MaestroDialogs.tokenExibir(context, tk);
+        if (ok != true) return;
+        await _confirmarRetirada();
+        _iniciarPollingEntregador();
+      } else if (tokenInsucesso != null && tokenInsucesso!.isNotEmpty) {
+        // Já existe token de insucesso: apenas exibe (não dispara)
+        await MaestroDialogs.tokenExibirInfo(context, tokenInsucesso!);
+      } else {
+        // iFood Delivery / Pegue na Loja Hoje: digitamos o token informado
+        final codigo = await MaestroDialogs.token(context,
+            nome: _pedido.cliente?.nome ?? '',
+            numero: _pedido.codigoExterno ?? _pedido.numero);
+        if (codigo == null || codigo.isEmpty) return;
+        final valido =
+            await widget.apiService.validarCodigoRetirada(codigo, numero);
+        if (!valido) {
+          _erroMsg('Código inválido!');
+          return;
+        }
+        await _confirmarRetirada();
+      }
     } catch (e) {
       _erroMsg(e);
     }
+  }
+
+  Future<void> _confirmarRetirada() async {
+    final origem = _pedido.origem ?? 'SHIP_FROM_STORE';
+    if (origem == 'PEGUE_NA_LOJA_HOJE') {
+      await widget.apiService.retirarPedidoPackk(
+          _pedido.codigoExterno ?? _pedido.numero);
+    } else {
+      await widget.apiService.retirarPedidoShipFromStore(
+          _pedido.codigoExterno ?? _pedido.numero);
+    }
+    _sucesso('Pedido retirado.');
   }
 
   Future<void> _acaoCancelarRetirada() async {
@@ -795,7 +952,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     if (ok != true) return;
     try {
       await widget.apiService.cancelarPedido(
-          _pedido.origem ?? '', _pedido.codigoExterno ?? _pedido.numero,
+          _normOrigem(_pedido.origem), _pedido.codigoExterno ?? _pedido.numero,
           'Cancelado pelo usuário', 'CANCELAMENTO');
       _sucesso('Pedido cancelado.');
     } catch (e) {
@@ -815,7 +972,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     if (res == null) return;
     try {
       await widget.apiService.devolverPedido(
-          _pedido.origem ?? '',
+          _normOrigem(_pedido.origem),
           _pedido.codigoExterno ?? _pedido.numero,
           recaptchaToken: res.$3,
           observacao: res.$2);
@@ -830,7 +987,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     if (res == null) return;
     try {
       await widget.apiService.retornarParaEstoque(
-          _pedido.origem ?? '',
+          _normOrigem(_pedido.origem),
           _pedido.codigoExterno ?? _pedido.numero,
           captchaToken: res.$2,
           motivo: res.$1);
@@ -845,7 +1002,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     if (res == null) return;
     try {
       await widget.apiService.cancelarPedido(
-          _pedido.origem ?? '',
+          _normOrigem(_pedido.origem),
           _pedido.codigoExterno ?? _pedido.numero,
           res.$1,
           'CANCELAMENTO');
@@ -860,3 +1017,139 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         .showSnackBar(SnackBar(content: Text('Erro: $e')));
   }
 }
+
+  class _ItemRowDetalhe extends StatefulWidget {
+    final Item item;
+    const _ItemRowDetalhe({required this.item});
+    @override
+    State<_ItemRowDetalhe> createState() => _ItemRowDetalheState();
+  }
+
+  class _ItemRowDetalheState extends State<_ItemRowDetalhe> {
+    bool _expanded = false;
+    late final List<String> _secundarios;
+
+    @override
+    void initState() {
+      super.initState();
+      final ean = widget.item.codigoEAN;
+      _secundarios = widget.item.eans
+          .where((e) => ean == null || ean.isEmpty || e != ean)
+          .toList();
+    }
+
+    @override
+    Widget build(BuildContext context) {
+      final i = widget.item;
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 45,
+                  child: Text('${i.quantidade}x',
+                      style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2B2B2B))),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(i.descricao ?? '',
+                          style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF4A4A4A))),
+                      InkWell(
+                        onTap: _secundarios.isNotEmpty
+                            ? () => setState(() => _expanded = !_expanded)
+                            : null,
+                        child: Row(
+                          children: [
+                            Icon(
+                                _secundarios.isEmpty
+                                    ? Icons.qr_code
+                                    : (_expanded
+                                        ? Icons.keyboard_arrow_up
+                                        : Icons.keyboard_arrow_down),
+                                size: 16,
+                                color: const Color(0xFF6B7280)),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                  'EAN: ${i.codigoEAN ?? ''}  /  SAP: ${i.codigoSAP ?? ''}',
+                                  style: const TextStyle(
+                                      fontSize: 11, color: Color(0xFF888888))),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_expanded && _secundarios.isNotEmpty)
+                        ..._secundarios
+                            .map((e) => Padding(
+                                  padding: const EdgeInsets.only(left: 22, top: 3),
+                                  child: Text('EAN: $e',
+                                      style: const TextStyle(
+                                          fontSize: 11,
+                                          color: Color(0xFF888888))),
+                                ))
+                            .toList(),
+                      if (i.imeis.isNotEmpty)
+                        Text('IMEI: ${i.imeis.expand((e) => e).join(", ")}',
+                            style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFFD32F2F),
+                                fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  width: 110,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('R\$ ${CurrencyFormatter.format(i.valorTotal)}',
+                          style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2B2B2B))),
+                      Text(
+                          '${i.quantidade}x R\$ ${CurrencyFormatter.format(i.valorUnitario)}',
+                          style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF555555),
+                              fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (i.estoque != null)
+              Align(
+                alignment: Alignment.centerRight,
+                child: Container(
+                  margin: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF29CC39),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text('Estoque estimado: ${i.estoque}',
+                      style: const TextStyle(
+                          color: Colors.white, fontSize: 11)),
+                ),
+              ),
+            const Divider(height: 16, color: Color(0xFFDDDDDD)),
+          ],
+        ),
+      );
+    }
+  }
+

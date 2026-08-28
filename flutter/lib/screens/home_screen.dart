@@ -146,6 +146,28 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Texto do badge abaixo do header, ex: "1 Novo", "2 Em Separação",
+  // "X Pronto para Retirada", "XXXX em Histórico".
+  String _contagemTexto(int index) {
+    final n = _contagemPara(index);
+    switch (index) {
+      case 0:
+        return '$n ${n == 1 ? 'Novo' : 'Novos'}';
+      case 1:
+        return '$n Em Separação';
+      case 2:
+        return '$n Pronto para Retirada';
+      case 3:
+        return '$n Saiu Para Entrega';
+      case 4:
+        return '$n Retornar ao Estoque';
+      case 5:
+        return '$n em Histórico';
+      default:
+        return '$n';
+    }
+  }
+
   void _onNavTap(int i) => setState(() => _currentIndex = i);
 
   Color get _corAba => Color(_tabColors[_currentIndex]);
@@ -386,7 +408,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '${_contagemPara(0)} Novos Pedidos',
+                    _contagemTexto(_currentIndex),
                     style: const TextStyle(
                         color: Colors.white,
                         fontSize: 13,
@@ -456,6 +478,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             top: -8,
                             right: -10,
                             child: Container(
+                              alignment: Alignment.center,
                               constraints: const BoxConstraints(
                                   minWidth: 16, minHeight: 16),
                               padding:
@@ -464,7 +487,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: cor,
                                 shape: BoxShape.circle,
                               ),
-                              child: Text('$count',
+                              child: Text(
+                                  count > 99 ? '99+' : '$count',
                                   style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 9,

@@ -43,18 +43,53 @@ class ApiService {
   }
 
   // ---------- Ações por status ----------
-  Future<Map<String, dynamic>> _putStatus(
-      String path, Map<String, dynamic> body) async {
-    final json = await client.put('v2/backend/$path', body: body)
-        as Map<String, dynamic>;
+  Future<Map<String, dynamic>> _putStatus(String path, Map<String, dynamic> body,
+      {Map<String, String>? query}) async {
+    final json = await client.put('v2/backend/$path',
+        body: body, query: query) as Map<String, dynamic>;
     return json;
   }
 
   Future<void> separarPedido(String origem, String codigoExterno) =>
       _putStatus('api/pedidos/$origem/$codigoExterno/emSeparacao', {});
 
-  Future<void> confirmarPedido(String origem, String codigoExterno) =>
-      _putStatus('api/pedidos/$origem/$codigoExterno/prontoParaSair', {});
+  Future<void> confirmarPedido(
+    String origem,
+    String codigoExterno, {
+    required Map<String, dynamic> body,
+    bool editado = false,
+    String? recusado,
+    String? motivo,
+    String? itens,
+  }) {
+    final query = <String, String>{
+      'editado': editado.toString(),
+      'retry': 'false',
+      if (recusado != null) 'recusado': recusado,
+      if (motivo != null) 'motivo': motivo,
+      if (itens != null) 'itens': itens,
+    };
+    return _putStatus('api/pedidos/$origem/$codigoExterno/prontoParaSair',
+        body,
+        query: query);
+  }
+
+  Future<void> updateInventory(String numero, List<Map<String, dynamic>> itens,
+      double valorTotal,
+      {bool corpoVazio = false}) {
+    final body = corpoVazio
+        ? <String, dynamic>{'itens': [], 'valorTotal': 0.0}
+        : <String, dynamic>{
+            'itens': itens,
+            'valorTotal': valorTotal,
+          };
+    return _putStatus('pedido/$numero/update-inventory', body);
+  }
+
+  Future<void> recusarPedido(String origem, String codigoExterno,
+          String motivo) =>
+      cancelarPedido(origem, codigoExterno, motivo, 'recusa',
+          recusado: true);
 
   Future<void> retirarPedidoShipFromStore(String codigoExterno) =>
       _putStatus('api/pedidos/SHIP_FROM_STORE/$codigoExterno/saiuParaEntrega', {});
@@ -62,10 +97,14 @@ class ApiService {
   Future<void> retirarPedidoPackk(String codigoExterno) =>
       _putStatus('api/pedidos/PEGUE_NA_LOJA_HOJE/$codigoExterno/finalizado', {});
 
-  Future<void> cancelarPedido(String origem, String codigoExterno,
-          String motivo, String ocorrencia) =>
-      _putStatus('api/pedidos/$origem/$codigoExterno/cancelado',
-          {'motivo': motivo, 'ocorrencia': ocorrencia});
+  Future<void> cancelarPedido(String origem, String codigoExterno, String motivo,
+      String ocorrencia,
+      {bool recusado = false}) =>
+      _putStatus('api/pedidos/$origem/$codigoExterno/cancelado', {
+        'motivo': motivo,
+        'ocorrencia': ocorrencia,
+        if (recusado) 'recusado': true,
+      });
 
   Future<void> cancelarPedidoProntoRetirada(
           String origem, String codigoExterno) =>
@@ -109,11 +148,47 @@ class ApiService {
       (await client.get('v2/backend/pedido/codigo/$codigo'))
           as Map<String, dynamic>;
 
-  Future<List<dynamic>> getMotivosInsucesso() async =>
-      (await client.get('v2/backend/pedido/motivo/insucesso')) as List<dynamic>;
+  Future<bool> validarCodigoRetirada(String codigo, String numero) async {
+    try {
+      final json = await client.get('v2/backend/pedido/codigo/$codigo',
+          query: {'numero': numero}) as Map<String, dynamic>;
+      final data = json['data'];
+      if (data is Map) return data['codigoStatus'] == true;
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
 
-  Future<List<dynamic>> getMotivosRecusa() async =>
-      (await client.get('v2/backend/pedido/motivo/recusa')) as List<dynamic>;
+  Future<List<String>> getMotivosInsucesso() async {
+    final json = await client.get('v2/backend/pedido/motivo/insucesso')
+        as Map<String, dynamic>;
+    final data = json['data'];
+    if (data is List) {
+      return data
+          .map<String>((e) => (e is Map
+              ? (e['nome'] ?? e['motivo'] ?? '')
+              : e.toString()))
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+    return [];
+  }
+
+  Future<List<String>> getMotivosRecusa() async {
+    final json = await client.get('v2/backend/pedido/motivo/recusa')
+        as Map<String, dynamic>;
+    final data = json['data'];
+    if (data is List) {
+      return data
+          .map<String>((e) => (e is Map
+              ? (e['nome'] ?? e['description'] ?? e['motivo'] ?? '')
+              : e.toString()))
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+    return [];
+  }
 
   // ---------- DANFE ----------
   Future<Uint8List> getDanfe(String chave) async {

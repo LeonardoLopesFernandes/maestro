@@ -11,9 +11,11 @@ import 'screens/visualizar_danfe_screen.dart';
 import 'screens/scanner_imei_screen.dart';
 import 'screens/price_tags_screen.dart';
 import 'utils/constants.dart';
+import 'utils/crash_logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await CrashLogger.init();
   final session = await SessionManager.create();
   final apiService = ApiService(ApiClient(session: session));
   runApp(MaestroApp(session: session, apiService: apiService));
@@ -28,6 +30,34 @@ class MaestroApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ErrorWidget.builder = (details) {
+      CrashLogger.init();
+      Future.microtask(() => CrashLogger.logError(details.exception, details.stack));
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 12),
+                const Text('Ocorreu um erro inesperado.',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text(details.exception.toString(),
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    textAlign: TextAlign.center),
+                const SizedBox(height: 8),
+                const Text('O log foi salvo na pasta Download (maestro_crash.log).',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    textAlign: TextAlign.center),
+              ],
+            ),
+          ),
+        ),
+      );
+    };
     return Provider<ApiService>.value(
       value: apiService,
       child: MaterialApp(
