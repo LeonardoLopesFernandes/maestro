@@ -105,6 +105,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onNavTap(int i) => setState(() => _currentIndex = i);
 
+  Color get _corAba => Color(_tabColors[_currentIndex]);
+
   Future<void> _abrirFiltro() async {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -292,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _header() => Container(
         height: 56,
-        color: const Color(_red),
+        color: _corAba,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
@@ -352,7 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    color: const Color(_red),
+                    color: _corAba,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -372,7 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style:
                           TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                   style: TextButton.styleFrom(
-                    backgroundColor: const Color(_redDark),
+                    backgroundColor: _corAba,
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(17)),
