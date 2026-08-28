@@ -137,7 +137,7 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
         return true;
       },
       child: Scaffold(
-        backgroundColor: const Color(Constants.RED_600),
+        backgroundColor: const Color(0xFFE60000),
         body: Stack(
           children: [
             if (_pronto)
@@ -158,7 +158,7 @@ class _CarregamentoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(Constants.RED_600),
+      color: const Color(0xFFE60000),
       child: const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
