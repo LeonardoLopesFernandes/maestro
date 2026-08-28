@@ -33,7 +33,8 @@ class MaestroDialogs {
                   ElevatedButton.styleFrom(backgroundColor: const Color(_vermelho)),
               onPressed: () => Navigator.of(context).pop(true),
               child: Text(textoSim,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(height: 8),
@@ -44,7 +45,8 @@ class MaestroDialogs {
                   backgroundColor: const Color(_verdeEscuro)),
               onPressed: () => Navigator.of(context).pop(false),
               child: Text(textoNao,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -100,7 +102,8 @@ class MaestroDialogs {
                   backgroundColor: const Color(_verdeEscuro)),
               onPressed: () => Navigator.of(context).pop(c.text.trim()),
               child: const Text('CONFIRMAR',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+                  style:
+                      TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(height: 8),
@@ -111,7 +114,8 @@ class MaestroDialogs {
                   backgroundColor: const Color(_vermelhoDark)),
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('CANCELAR',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+                  style:
+                      TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -137,7 +141,8 @@ class MaestroDialogs {
                   backgroundColor: const Color(_vermelho)),
               onPressed: () => Navigator.of(context).pop(false),
               child: const Text('Cancelar',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+                  style:
+                      TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(height: 8),
@@ -148,7 +153,8 @@ class MaestroDialogs {
                   backgroundColor: const Color(_verde)),
               onPressed: () => Navigator.of(context).pop(true),
               child: const Text('Confirmar',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
+                  style:
+                      TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -335,7 +341,7 @@ class MaestroDialogs {
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
               child: const Text('CANCELAR',
-                  style: TextStyle(color: Color(0xFFDC2626))),
+                  style: TextStyle(color: Color(0xFF6B7280))),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -415,7 +421,7 @@ class MaestroDialogs {
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
               child: const Text('CANCELAR',
-                  style: TextStyle(color: Color(0xFFDC2626))),
+                  style: TextStyle(color: Color(0xFF6B7280))),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -498,8 +504,8 @@ class MaestroDialogs {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(_vermelho)),
+                    backgroundColor: const Color(0xFF9CA3AF),
+                    foregroundColor: Colors.white),
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: const Text('Cancelar',
                     style: TextStyle(fontWeight: FontWeight.bold)),
@@ -579,8 +585,8 @@ class MaestroDialogs {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(_vermelho)),
+                    backgroundColor: const Color(0xFF9CA3AF),
+                    foregroundColor: Colors.white),
                 onPressed: () => Navigator.of(ctx).pop(),
                 child: const Text('NÃO',
                     style: TextStyle(fontWeight: FontWeight.bold)),

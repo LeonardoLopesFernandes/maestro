@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../models/pedido.dart';
 import '../network/api_service.dart';
 import '../network/session_manager.dart';
@@ -265,8 +266,12 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
               onTap: () => setState(() => _timelineAberta = !_timelineAberta),
               child: Row(
                 children: [
-                  Icon(_timelineAberta ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                      color: const Color(0xFF64748B)),
+                  Transform.rotate(
+                    angle: _timelineAberta ? 3.14159 : 0,
+                    child: SvgPicture.asset('assets/vectors/ic_arrow_down.svg',
+                        width: 20, height: 20,
+                        color: const Color(0xFF64748B)),
+                  ),
                   const Text('Linha do Tempo',
                       style: TextStyle(
                           fontSize: 13,
@@ -305,7 +310,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                   color: ativo ? _statusBadge.cor : const Color(0xFFD1D5DB),
                 ),
                 child: ativo
-                    ? const Icon(Icons.check, size: 12, color: Colors.white)
+                    ? SvgPicture.asset('assets/vectors/ic_check_confirm.svg',
+                        width: 12, height: 12, color: Colors.white)
                     : null,
               ),
               const SizedBox(height: 4),
