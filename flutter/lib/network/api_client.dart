@@ -47,7 +47,7 @@ class ApiClient {
 
   // GET de bytes por URL completa (ex.: DANFE em host externo)
   Future<Uint8List> getBytesDirect(String url, {bool withAuth = true}) async {
-    if (session.isDemo()) return <int>[];
+    if (session.isDemo()) return Uint8List(0);
     final uri = Uri.parse(url);
     final response = await _http.get(
       uri,

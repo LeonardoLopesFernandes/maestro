@@ -55,6 +55,7 @@ class Pedido {
       this.canalDeVendas,
       this.searchtext,
       this.notaFiscalChave,
+      this.notaFiscalUrl,
       this.transportadora,
       this.tempoConfirmacao,
       this.motivo,
