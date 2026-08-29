@@ -69,8 +69,7 @@ Future<void> _notificar(dynamic counts) async {
 
 // Registra a tarefa periódica (15 min). Deve ser chamado uma vez na inicialização.
 Future<void> inicializarPolling() async {
-  await Workmanager().initialize(pollingCallbackDispatcher,
-      isInDebugMode: false);
+  await Workmanager().initialize(pollingCallbackDispatcher);
   final session = await SessionManager.create();
   if (session.isLoggedIn()) {
     await Workmanager().registerPeriodicTask(
@@ -78,7 +77,7 @@ Future<void> inicializarPolling() async {
       kPollingTask,
       frequency: const Duration(minutes: 15),
       constraints: Constraints(networkType: NetworkType.connected),
-      existingWorkPolicy: ExistingWorkPolicy.replace,
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.replace,
     );
   }
 }

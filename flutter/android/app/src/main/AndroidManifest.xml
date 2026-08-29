@@ -40,17 +40,6 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-
-        <!-- Workmanager (polling em background) -->
-        <provider
-            android:name="androidx.startup.InitializationProvider"
-            android:authorities="${applicationId}.androidx-startup"
-            android:exported="false"
-            tools:node="replace">
-            <meta-data
-                android:name="flutter_workmanager"
-                android:value="androidx.startup" />
-        </provider>
     </application>
 
     <queries>
