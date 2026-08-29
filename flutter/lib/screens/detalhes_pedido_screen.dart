@@ -1306,6 +1306,24 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     tokenRetirada ??= _pedido.deliveryToken?.tokenRetirada;
     tokenInsucesso ??= _pedido.deliveryToken?.tokenInsucesso;
 
+    // Kotlin: se há tokenRetirada, valida o código localmente (sem rede);
+    // caso contrário, chama a API de verificação.
+    Future<bool> validarCodigo(String codigo) async {
+      if (tokenRetirada != null && tokenRetirada!.isNotEmpty) {
+        if (codigo != tokenRetirada) {
+          _erroMsg('Código inválido!');
+          return false;
+        }
+        return true;
+      }
+      final v = await widget.apiService.validarCodigoRetirada(codigo, numero);
+      if (!v) {
+        _erroMsg('Código inválido!');
+        return false;
+      }
+      return true;
+    }
+
     try {
       if (isReserva) {
         // Americanas/Magazine Delivery: mostramos o token alfa-numérico p/ o
@@ -1325,28 +1343,20 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             nome: _pedido.cliente?.nome ?? '',
             numero: _pedido.codigoExterno ?? _pedido.numero);
         if (codigo == null || codigo.isEmpty) return;
-        final valido =
-            await widget.apiService.validarCodigoRetirada(codigo, numero);
-        if (!valido) {
-          _erroMsg('Código inválido!');
-          return;
-        }
+        if (!await validarCodigo(codigo)) return;
         await _confirmarRetirada();
       } else if (tokenInsucesso != null && tokenInsucesso!.isNotEmpty) {
-        // Já existe token de insucesso (demais deliveries): apenas exibe
+        // Demais deliveries (ex.: iFood EXTERNA): token de insucesso é
+        // informativo; ao fechar, volta para a lista (Kotlin finaliza a activity).
         await MaestroDialogs.tokenExibirInfo(context, tokenInsucesso!);
+        Navigator.of(context).maybePop();
       } else {
-        // iFood Delivery: digitamos o token informado
+        // iFood Delivery (sem token de insucesso): digitamos o token informado
         final codigo = await MaestroDialogs.token(context,
             nome: _pedido.cliente?.nome ?? '',
             numero: _pedido.codigoExterno ?? _pedido.numero);
         if (codigo == null || codigo.isEmpty) return;
-        final valido =
-            await widget.apiService.validarCodigoRetirada(codigo, numero);
-        if (!valido) {
-          _erroMsg('Código inválido!');
-          return;
-        }
+        if (!await validarCodigo(codigo)) return;
         await _confirmarRetirada();
       }
     } catch (e) {
