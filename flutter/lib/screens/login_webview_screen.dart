@@ -255,8 +255,9 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
     _tokenCapturado = true;
     _pollTimer?.cancel();
     if (mounted) setState(() => _carregando = true);
-    _session.saveToken(token);
     final claims = _decodificarClaims(token);
+    _session.saveToken(
+        token, expiryEpochSeconds: claims?['exp'] is int ? claims!['exp'] as int : null);
     final email = (claims?['email'] ??
                 claims?['upn'] ??
                 claims?['preferred_username'] ??
