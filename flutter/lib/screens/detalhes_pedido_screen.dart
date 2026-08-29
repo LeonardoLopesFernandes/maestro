@@ -486,14 +486,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                     const SizedBox(height: 4),
                     ConstrainedBox(
                       constraints: const BoxConstraints(minWidth: 64),
-                      child: Text(info.label,
-                          style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: info.cor),
-                          textAlign: TextAlign.center,
-                          softWrap: false,
-                          overflow: TextOverflow.visible),
+                      child: _textoDestacado(info.label, info.cor),
                     ),
                     if (dataBr.isNotEmpty)
                       Padding(
@@ -537,6 +530,30 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       return null;
     }
   }
+
+  // Texto com contorno (borda) para destacar os rótulos da linha do tempo
+  // (Criado, Chegada, etc.) sobre o círculo branco, sem alterar o layout.
+  Widget _textoDestacado(String texto, Color cor) => Stack(
+        alignment: Alignment.center,
+        children: [
+          Text(
+            texto,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              foreground: Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 1.5
+                ..color = const Color(0xFF1F2937),
+            ),
+          ),
+          Text(
+            texto,
+            style: TextStyle(
+                fontSize: 10, fontWeight: FontWeight.bold, color: cor),
+          ),
+        ],
+      );
 
   Widget _badgeTempoTotal() {
     final passos = _pedido.timelines;
@@ -1300,11 +1317,26 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         if (ok != true) return;
         await _confirmarRetirada();
         _iniciarPollingEntregador();
+      } else if (isPegueNaLoja) {
+        // Pegue na Loja Hoje (cliente retira na loja): a loja DIGITA o código
+        // informado pelo cliente e finaliza (Packk/FINALIZADO). Nunca exibe o
+        // dialog de token de insucesso (esse é para fluxo de entrega/entregador).
+        final codigo = await MaestroDialogs.token(context,
+            nome: _pedido.cliente?.nome ?? '',
+            numero: _pedido.codigoExterno ?? _pedido.numero);
+        if (codigo == null || codigo.isEmpty) return;
+        final valido =
+            await widget.apiService.validarCodigoRetirada(codigo, numero);
+        if (!valido) {
+          _erroMsg('Código inválido!');
+          return;
+        }
+        await _confirmarRetirada();
       } else if (tokenInsucesso != null && tokenInsucesso!.isNotEmpty) {
-        // Já existe token de insucesso: apenas exibe (não dispara)
+        // Já existe token de insucesso (demais deliveries): apenas exibe
         await MaestroDialogs.tokenExibirInfo(context, tokenInsucesso!);
       } else {
-        // iFood Delivery / Pegue na Loja Hoje: digitamos o token informado
+        // iFood Delivery: digitamos o token informado
         final codigo = await MaestroDialogs.token(context,
             nome: _pedido.cliente?.nome ?? '',
             numero: _pedido.codigoExterno ?? _pedido.numero);
@@ -1486,10 +1518,15 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                       if (_expanded && _secundarios.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(left: 22, top: 3),
-                          child: Text(
-                              'EANs: ${_secundarios.join(', ')}',
-                              style: const TextStyle(
-                                  fontSize: 11, color: Color(0xFF888888))),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: _secundarios
+                                .map((e) => Text('EAN: $e',
+                                    style: const TextStyle(
+                                        fontSize: 11,
+                                        color: Color(0xFF888888))))
+                                .toList(),
+                          ),
                         ),
                       Text('SAP: ${i.codigoSAP ?? ''}',
                           style: const TextStyle(
