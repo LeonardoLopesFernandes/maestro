@@ -16,11 +16,20 @@ import 'utils/crash_logger.dart';
 import 'background/polling_worker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+// Chave global do navigator para redirecionar ao login a partir de qualquer
+// lugar (ex.: quando a API responde 401 com token vencido).
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await CrashLogger.init();
   final session = await SessionManager.create();
   final apiService = ApiService(ApiClient(session: session));
+  // Token vencido no servidor (401): limpa a sessão e volta para o login.
+  ApiClient.onUnauthorized = () {
+    session.clearToken();
+    appNavigatorKey.currentState?.pushReplacementNamed('/login');
+  };
   // Polling em background (notificações de novos pedidos) — equiv. PedidoPollingWorker
   await inicializarPolling();
   // Permite notificações (Android 13+ exige permissão em runtime)
@@ -72,6 +81,7 @@ class MaestroApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Maestro',
         debugShowCheckedModeBanner: false,
+        navigatorKey: appNavigatorKey,
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,

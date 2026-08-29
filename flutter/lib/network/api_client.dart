@@ -6,6 +6,10 @@ import '../utils/constants.dart';
 import 'mock_data.dart';
 
 class ApiClient {
+  // Disparado quando a API responde 401 (token vencido no servidor), para o
+  // app redirecionar sozinho ao login. Definido em main.dart.
+  static void Function()? onUnauthorized;
+
   final String baseUrl;
   final SessionManager session;
   final http.Client _http;
@@ -118,6 +122,7 @@ class ApiClient {
   }
 
   dynamic _handle(http.Response response) {
+    if (response.statusCode == 401) onUnauthorized?.call();
     final body = utf8.decode(response.bodyBytes);
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (body.isEmpty) return {};
