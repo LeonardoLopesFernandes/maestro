@@ -1,18 +1,5 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp"
-    android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
-    <!-- Círculo branco de fundo -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M12,2a10,10 0 1,0 0,20a10,10 0 1,0 0,-20z" />
-    <!-- "m" minúsculo em vermelho da marca (visível no painel expandido) -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#F80032"
-        android:strokeWidth="2.2"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M6.5,17 L6.5,10 Q6.5,7.6 8.7,7.6 Q10.9,7.6 10.9,10 L10.9,17 M10.9,10 Q10.9,7.6 13.1,7.6 Q15.3,7.6 15.3,10 L15.3,17" />
-</vector>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@android:color/white" />
+    <foreground android:drawable="@drawable/ic_maestro_fg" />
+    <monochrome android:drawable="@drawable/ic_maestro_mono" />
+</adaptive-icon>

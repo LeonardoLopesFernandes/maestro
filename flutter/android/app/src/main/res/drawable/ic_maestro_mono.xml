@@ -1,0 +1,11 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Círculo branco com o "m" recortado (transparente) para a camada monochrome -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M12,2a10,10 0 1,0 0,20a10,10 0 1,0 0,-20z M6,17 L6,9 L8,9 Q9.5,7 11,12 L11,17 L13,17 L13,12 Q14.5,7 16,9 L18,9 L18,17 Z" />
+</vector>
