@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'network/session_manager.dart';
 import 'network/api_client.dart';
@@ -63,6 +64,16 @@ class MaestroApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Maestro',
         debugShowCheckedModeBanner: false,
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('pt', 'BR'),
+          Locale('en', 'US'),
+        ],
+        locale: const Locale('pt', 'BR'),
         theme: ThemeData(
           primaryColor: const Color(Constants.RED_600),
           colorScheme: ColorScheme.fromSwatch()

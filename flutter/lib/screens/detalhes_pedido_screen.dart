@@ -1260,11 +1260,13 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     final tipo = (_pedido.tipoEntrega ?? '').toUpperCase();
     final canal = (_pedido.canalDeVendas ?? '').toUpperCase();
     final origem = _normOrigem(_pedido.origem);
-    // Pegue na Loja Hoje (cliente retira na loja) NUNCA é reserva: nós
-    // digitamos o token informado e confirmamos a entrega (FINALIZADO).
-    final isPegueNaLoja = origem == 'PEGUE_NA_LOJA_HOJE';
-    // EXTERNA + Americanas/Magazine => fluxo inverso (exibimos o token p/ o
-    // entregador que vem buscar; ao confirmar dele, status SAIU_PARA_ENTREGA.
+    // "Pegue na Loja Hoje" (cliente retira na loja) é o fluxo da loja: nós
+    // digitamos o token informado e finalizamos (Packk/FINALIZADO). Corresponde
+    // a tipoEntrega == 'RETIRADA' ou origem == 'PEGUE_NA_LOJA_HOJE'.
+    final isPegueNaLoja =
+        tipo == 'RETIRADA' || origem == 'PEGUE_NA_LOJA_HOJE';
+    // EXTERNA + Americanas/Magazine (e NÃO Pegue na Loja) => fluxo inverso:
+    // exibimos o token para o entregador que vem buscar (SAIU_PARA_ENTREGA).
     final isReserva = !isPegueNaLoja &&
         tipo == 'EXTERNA' &&
         (canal.contains('MAGAZINE') || canal.contains('AMERICANAS'));
@@ -1313,8 +1315,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _confirmarRetirada() async {
-    final origem = _pedido.origem ?? 'SHIP_FROM_STORE';
-    if (origem == 'PEGUE_NA_LOJA_HOJE') {
+    final isLoja = _normOrigem(_pedido.origem) == 'PEGUE_NA_LOJA_HOJE' ||
+        (_pedido.tipoEntrega ?? '').toUpperCase() == 'RETIRADA';
+    if (isLoja) {
       await widget.apiService.retirarPedidoPackk(
           _pedido.codigoExterno ?? _pedido.numero);
     } else {
