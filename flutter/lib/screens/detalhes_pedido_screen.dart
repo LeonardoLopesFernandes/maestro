@@ -983,7 +983,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       );
 
   Widget _badgeAcao(String texto, Color cor, VoidCallback onTap,
-          {double raio = 24}) =>
+          {double raio = 8}) =>
       Container(
         width: double.infinity,
         height: 48,
