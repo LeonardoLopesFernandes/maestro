@@ -926,12 +926,19 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 ),
               ));
             },
-            child: const Center(
-              child: Text('NOTA FISCAL',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold)),
+            child: Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.description, color: Colors.white, size: 20),
+                  SizedBox(width: 8),
+                  Text('NOTA FISCAL',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold)),
+                ],
+              ),
             ),
           ),
         ),
