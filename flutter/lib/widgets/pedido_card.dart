@@ -216,9 +216,11 @@ class PedidoCard extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 8),
                     child: _DuracaoSeparacao(pedido),
                   ),
-                // Bloco F: token de retirada (ENTREGUE / FINALIZADO)
+                // Bloco F: token de retirada (ENTREGUE / FINALIZADO / em rota)
                 if ((_statusNormalizado == 'ENTREGUE' ||
-                        _statusNormalizado == 'FINALIZADO') &&
+                        _statusNormalizado == 'FINALIZADO' ||
+                        _statusNormalizado == 'SAIU_PARA_ENTREGA' ||
+                        _statusNormalizado == 'PRONTO_PARA_SAIR') &&
                     tokenRetirada != null &&
                     tokenRetirada!.isNotEmpty)
                   Padding(
