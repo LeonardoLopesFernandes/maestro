@@ -7,9 +7,16 @@ class PedidoCard extends StatelessWidget {
   final Pedido pedido;
   final VoidCallback onTap;
   final VoidCallback? onAcao;
+  // Token de retirada (entregador) persistido/exibido quando o pedido está
+  // ENTREGUE/FINALIZADO — espelha o token salvo na retirada (Kotlin).
+  final String? tokenRetirada;
 
   const PedidoCard(
-      {super.key, required this.pedido, required this.onTap, this.onAcao});
+      {super.key,
+      required this.pedido,
+      required this.onTap,
+      this.onAcao,
+      this.tokenRetirada});
 
   String get _statusNormalizado =>
       (pedido.status ?? '').toUpperCase().trim();
@@ -208,6 +215,29 @@ class PedidoCard extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: _DuracaoSeparacao(pedido),
+                  ),
+                // Bloco F: token de retirada (ENTREGUE / FINALIZADO)
+                if ((_statusNormalizado == 'ENTREGUE' ||
+                        _statusNormalizado == 'FINALIZADO') &&
+                    tokenRetirada != null &&
+                    tokenRetirada!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.vpn_key,
+                            size: 14, color: Color(0xFF64748B)),
+                        const SizedBox(width: 6),
+                        const Text('Token: ',
+                            style: TextStyle(
+                                fontSize: 12, color: Color(0xFF64748B))),
+                        Text(tokenRetirada!,
+                            style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B))),
+                      ],
+                    ),
                   ),
               ],
             ),

@@ -543,7 +543,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
               fontWeight: FontWeight.bold,
               foreground: Paint()
                 ..style = PaintingStyle.stroke
-                ..strokeWidth = 1.5
+                ..strokeWidth = 0.8
                 ..color = const Color(0xFF1F2937),
             ),
           ),
@@ -777,7 +777,12 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             'tokenRetirada': dt.tokenRetirada,
             'tokenInsucesso': dt.tokenInsucesso,
           }[k];
-    final v = _tokens?[k] ?? doPedido;
+    var v = _tokens?[k] ?? doPedido;
+    // Fallback: token persistido localmente na retirada (Kotlin getDeliveryToken)
+    if ((v == null || v.toString().isEmpty) && k == 'tokenRetirada') {
+      final salvo = widget.session.getDeliveryToken(_pedido.numero);
+      if (salvo != null && salvo.isNotEmpty) v = salvo;
+    }
     return (v == null || v.toString().isEmpty) ? '--' : v.toString();
   }
 
@@ -1327,14 +1332,19 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     try {
       if (isReserva) {
         // Americanas/Magazine Delivery: mostramos o token alfa-numérico p/ o
-        // entregador colocar no app dele; nós confirmamos -> SAIU_PARA_ENTREGA
+        // entregador colocar no app dele; nós confirmamos -> SAIU_PARA_ENTREGA.
+        // Kotlin inicia o polling ANTES de confirmar (aguarda o entregador).
         final tk = (tokenRetirada?.isNotEmpty == true)
             ? tokenRetirada!
             : (tokenInsucesso?.isNotEmpty == true ? tokenInsucesso! : '---');
-        final ok = await MaestroDialogs.tokenExibir(context, tk);
-        if (ok != true) return;
-        await _confirmarRetirada();
         _iniciarPollingEntregador();
+        final ok = await MaestroDialogs.tokenInsucesso(context, tk,
+            reserva: true);
+        if (ok != true) {
+          _pollingEntregador?.cancel();
+          return;
+        }
+        await _confirmarRetirada(token: tk);
       } else if (isPegueNaLoja) {
         // Pegue na Loja Hoje (cliente retira na loja): a loja DIGITA o código
         // informado pelo cliente e finaliza (Packk/FINALIZADO). Nunca exibe o
@@ -1344,11 +1354,12 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             numero: _pedido.codigoExterno ?? _pedido.numero);
         if (codigo == null || codigo.isEmpty) return;
         if (!await validarCodigo(codigo)) return;
-        await _confirmarRetirada();
+        await _confirmarRetirada(token: codigo);
       } else if (tokenInsucesso != null && tokenInsucesso!.isNotEmpty) {
         // Demais deliveries (ex.: iFood EXTERNA): token de insucesso é
         // informativo; ao fechar, volta para a lista (Kotlin finaliza a activity).
-        await MaestroDialogs.tokenExibirInfo(context, tokenInsucesso!);
+        await MaestroDialogs.tokenInsucesso(context, tokenInsucesso!,
+            reserva: false);
         Navigator.of(context).maybePop();
       } else {
         // iFood Delivery (sem token de insucesso): digitamos o token informado
@@ -1357,14 +1368,14 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             numero: _pedido.codigoExterno ?? _pedido.numero);
         if (codigo == null || codigo.isEmpty) return;
         if (!await validarCodigo(codigo)) return;
-        await _confirmarRetirada();
+        await _confirmarRetirada(token: codigo);
       }
     } catch (e) {
       _erroMsg(e);
     }
   }
 
-  Future<void> _confirmarRetirada() async {
+  Future<void> _confirmarRetirada({String? token}) async {
     final isLoja = _normOrigem(_pedido.origem) == 'PEGUE_NA_LOJA_HOJE' ||
         (_pedido.tipoEntrega ?? '').toUpperCase() == 'RETIRADA';
     if (isLoja) {
@@ -1373,6 +1384,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     } else {
       await widget.apiService.retirarPedidoShipFromStore(
           _pedido.codigoExterno ?? _pedido.numero);
+    }
+    // Persiste o token digitado/validado (Kotlin: salvarTokenEPedido) para
+    // exibir depois (ex.: histórico como ENTREGUE).
+    if (token != null && token.isNotEmpty) {
+      widget.session.saveDeliveryToken(_pedido.numero, token);
     }
     _sucesso('Pedido retirado.');
   }

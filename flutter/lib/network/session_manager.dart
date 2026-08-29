@@ -10,6 +10,7 @@ class SessionManager {
   static const String _keyRememberLogin = "REMEMBER_LOGIN";
   static const String _keyMsPassword = "MS_PASSWORD";
   static const String _keyDemo = "DEMO_MODE";
+  static const String _keyDeliveryTokenPrefix = "DELIVERY_TOKEN_";
   static const int _tokenExpiryDays = 14;
 
   final SharedPreferences _prefs;
@@ -97,4 +98,14 @@ class SessionManager {
   void disableDemo() => _prefs.setBool(_keyDemo, false);
 
   bool isDemo() => _prefs.getBool(_keyDemo) ?? false;
+
+  // ---------- Token de retirada (entregador) persistido por pedido ----------
+  // Espelha o saveDeliveryToken/getDeliveryToken do Kotlin: o token digitado/
+  // validado na retirada é salvo para ser exibido depois (ex.: histórico ENTREGUE).
+  void saveDeliveryToken(String numero, String token) {
+    _prefs.setString("$_keyDeliveryTokenPrefix$numero", token);
+  }
+
+  String? getDeliveryToken(String numero) =>
+      _prefs.getString("$_keyDeliveryTokenPrefix$numero");
 }

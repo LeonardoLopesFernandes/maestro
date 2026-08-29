@@ -56,224 +56,339 @@ class MaestroDialogs {
   }
 
   // Dialog de token (digitado pelo operador — iFood, Pegue na Loja, etc.)
+  // Dialog de digitação de token (Pegue na Loja / iFood) — igual ao XML dialog_token.
+  // Campo numérico limitado a 4 dígitos; CONFIRMAR habilita só com código preenchido.
   static Future<String?> token(BuildContext context,
       {String nome = '', String numero = ''}) {
     final c = TextEditingController();
+    bool habilitado = false;
     return showDialog<String>(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        contentPadding: const EdgeInsets.all(24),
-        title: Column(
-          children: [
-            if (nome.isNotEmpty)
-              Text(nome,
-                  style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(_vermelhoDark)),
-                  textAlign: TextAlign.center),
-            if (numero.isNotEmpty)
-              Text('#$numero',
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: SizedBox(
-          width: double.infinity,
-          child: TextField(
-            controller: c,
-            keyboardType: TextInputType.text,
-            textCapitalization: TextCapitalization.characters,
-            maxLength: 20,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-                fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 4),
-            decoration: InputDecoration(
-              hintText: 'TOKEN',
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-            ),
-          ),
-        ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(_verdeEscuro)),
-              onPressed: () => Navigator.of(context).pop(c.text.trim()),
-              child: const Text('CONFIRMAR',
-                  style:
-                      TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(_vermelhoDark)),
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('CANCELAR',
-                  style:
-                      TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Dialog de exibição de token (fluxo EXTERNA: entregador coloca no app; nós confirmamos)
-  static Future<bool?> tokenExibir(BuildContext context, String token,
-      {String instrucao =
-          'Informe o código para o entregador e aguarde a validação para liberar o pedido.'}) {
-    bool liberado = false;
-    return showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, set) {
-          // Libera o botão CONFIRMAR após 4s (animação de validação)
-          Future.delayed(const Duration(seconds: 4), () {
-            if (ctx.mounted && !liberado) set(() => liberado = true);
-          });
-          return AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            contentPadding: const EdgeInsets.all(24),
-            title: const Text('Token de Retirada',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center),
-            content: SizedBox(
-              width: double.infinity,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 18, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F3F4),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Color(0xFFD1D5DB)),
-                    ),
-                    child: Text(token,
-                        style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 3),
-                        textAlign: TextAlign.center),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(instrucao,
-                      style: const TextStyle(fontSize: 13, color: Color(0xFF555555)),
-                      textAlign: TextAlign.center),
-                  const SizedBox(height: 12),
-                  if (!liberado)
-                    const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  else
-                    const Icon(Icons.check_circle,
-                        color: Color(_verde), size: 22),
-                ],
+        builder: (ctx, set) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          contentPadding: const EdgeInsets.all(24),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (nome.isNotEmpty) ...[
+                Text(nome,
+                    style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Color(_vermelhoDark)),
+                    textAlign: TextAlign.center),
+                const SizedBox(height: 4),
+              ],
+              if (numero.isNotEmpty) ...[
+                Text('#$numero',
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
+                    textAlign: TextAlign.center),
+                const SizedBox(height: 24),
+              ],
+              TextField(
+                controller: c,
+                keyboardType: TextInputType.number,
+                maxLength: 4,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black),
+                decoration: InputDecoration(
+                  hintText: 'Insira o código de retirada',
+                  hintStyle: const TextStyle(
+                      color: Color(0xFF8C8C8C), fontSize: 18),
+                  counterText: '',
+                  contentPadding: const EdgeInsets.symmetric(
+                      vertical: 16, horizontal: 16),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(color: Color(0xFF5A7EB0))),
+                  enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      borderSide: const BorderSide(color: Color(0xFF5A7EB0))),
+                ),
+                onChanged: (v) => set(() => habilitado = v.trim().isNotEmpty),
               ),
-            ),
-            actions: [
+              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
+                height: 48,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: liberado
-                          ? const Color(_verde)
-                          : const Color(0xFFD1D5DB)),
-                  onPressed: liberado
-                      ? () => Navigator.of(ctx).pop(true)
+                      backgroundColor: const Color(_verdeEscuro),
+                      disabledBackgroundColor: const Color(0xFF9E9E9E)),
+                  onPressed: habilitado
+                      ? () => Navigator.of(ctx).pop(c.text.trim())
                       : null,
                   child: const Text('CONFIRMAR',
-                      style:
-                          TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15)),
                 ),
               ),
               const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
+                height: 48,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(_vermelhoDark)),
-                  onPressed: () => Navigator.of(ctx).pop(false),
+                  onPressed: () => Navigator.of(ctx).pop(),
                   child: const Text('CANCELAR',
-                      style:
-                          TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15)),
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Dialog de token (fluxo EXTERNA) — igual ao XML dialog_token_insucesso.
+  // reserva=true  => Americanas/Magazine: entregador valida; libera CONFIRMAR RETIRADA
+  // reserva=false => iFood/demais: token de insucesso informativo; FECHAR volta p/ lista
+  static Future<bool?> tokenInsucesso(BuildContext context, String token,
+      {bool reserva = false}) {
+    final instrucao = reserva
+        ? 'Informe o código para o entregador e aguarde a validação para liberar o pedido.'
+        : 'Token de insucesso gerado!\n\n'
+            '📍 INFORME AO ENTREGADOR:\n'
+            '1. Copie este token\n'
+            '2. Entregue ao entregador\n'
+            '3. Ele deve inserir no app dele\n'
+            '4. Após inserir, o pedido será finalizado';
+    bool validado = false;
+    bool liberado = false;
+    bool confirmarHabilitado = false;
+    bool ajudaAberta = false;
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) {
+          if (reserva) {
+            Future.delayed(const Duration(seconds: 2), () {
+              if (ctx.mounted && !validado) set(() => validado = true);
+            });
+            Future.delayed(const Duration(seconds: 4), () {
+              if (ctx.mounted && !confirmarHabilitado) {
+                set(() {
+                  liberado = true;
+                  confirmarHabilitado = true;
+                });
+              }
+            });
+          }
+          final fecharTexto = reserva ? 'CANCELAR' : 'FECHAR';
+          return AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            contentPadding: const EdgeInsets.all(20),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                  const SizedBox(height: 20),
+                  // Código de retirada em destaque (com check verde)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F5F5),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.check_circle,
+                            color: Color(_verde), size: 24),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text('Código de retirada:',
+                              style: TextStyle(
+                                  fontSize: 15, color: Color(0xFF333333))),
+                        ),
+                        Text(token,
+                            style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF222222))),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(instrucao,
+                      style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF333333)),
+                      textAlign: TextAlign.left),
+                  const SizedBox(height: 20),
+                  _statusRetirada(
+                    feito: validado,
+                    titulo: 'Validação do código de retirada',
+                    detalhe: validado
+                        ? 'Entregador validou o código'
+                        : 'Aguardando o entregador',
+                  ),
+                  const SizedBox(height: 12),
+                  _statusRetirada(
+                    feito: liberado,
+                    titulo: 'Pedido liberado para entrega',
+                    detalhe: liberado
+                        ? 'Pedido liberado para entrega'
+                        : 'Aguardando validação',
+                  ),
+                  const SizedBox(height: 24),
+                  // Ajuda / SAL (expansível)
+                  InkWell(
+                    onTap: () => set(() => ajudaAberta = !ajudaAberta),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Se houver problemas na validação ou na retirada do pacote, entre em contato com o SAL.',
+                            style: const TextStyle(
+                                fontSize: 13, color: Color(0xFF666666)),
+                          ),
+                        ),
+                        Icon(
+                            ajudaAberta
+                                ? Icons.keyboard_arrow_up
+                                : Icons.keyboard_arrow_down,
+                            size: 12,
+                            color: const Color(0xFF666666)),
+                      ],
+                    ),
+                  ),
+                  if (ajudaAberta)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 40, top: 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text('WhatsApp: (11) 99149-2204',
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF333333))),
+                          SizedBox(height: 4),
+                          Text(
+                              'Segunda a Sexta, das 09h às 21h Sábado, das 09h as 19h.',
+                              style: TextStyle(
+                                  fontSize: 14, color: Color(0xFF666666))),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+                  const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 44,
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                  color: Color(0xFFB32645), width: 1.5),
+                              foregroundColor: const Color(0xFFB32645),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4)),
+                            ),
+                            onPressed: () => Navigator.of(ctx).pop(false),
+                            child: Text(fecharTexto,
+                                style: const TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ),
+                      if (reserva) ...[
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: SizedBox(
+                            height: 44,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: confirmarHabilitado
+                                    ? const Color(_verde)
+                                    : const Color(0xFFE0E0E0),
+                                foregroundColor: confirmarHabilitado
+                                    ? Colors.white
+                                    : const Color(0xFF999999),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4)),
+                              ),
+                              onPressed: confirmarHabilitado
+                                  ? () => Navigator.of(ctx).pop(true)
+                                  : null,
+                              child: const Text('CONFIRMAR RETIRADA',
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
           );
         },
       ),
     );
   }
 
-  // Dialog informativo de token de insucesso (somente exibição)
-  static Future<void> tokenExibirInfo(BuildContext context, String token) {
-    return showDialog<void>(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        contentPadding: const EdgeInsets.all(24),
-        title: const Text('Token de Insucesso',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center),
-        content: SizedBox(
-          width: double.infinity,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F3F4),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Color(0xFFD1D5DB)),
-                ),
-                child: Text(token,
-                    style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 3),
-                    textAlign: TextAlign.center),
-              ),
-              const SizedBox(height: 14),
-              const Text(
-                  'Token de insucesso gerado!\n\n'
-                  '📍 INFORME AO ENTREGADOR:\n'
-                  '1. Copie este token\n'
-                  '2. Entregue ao entregador\n'
-                  '3. Ele deve inserir no app dele\n'
-                  '4. Após inserir, o pedido será finalizado',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF555555)),
-                  textAlign: TextAlign.center),
-            ],
-          ),
-        ),
-        actions: [
+  static Widget _statusRetirada(
+      {required bool feito,
+      required String titulo,
+      required String detalhe}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5F5),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        children: [
           SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(_vermelhoDark)),
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('FECHAR',
-                  style:
-                      TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            width: 26,
+            height: 26,
+            child: feito
+                ? const Icon(Icons.check_circle,
+                    color: Color(_verde), size: 26)
+                : const CircularProgressIndicator(
+                    strokeWidth: 2, color: Color(0xFF9E9E9E)),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(titulo,
+                    style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF333333))),
+                const SizedBox(height: 2),
+                Text(detalhe,
+                    style: const TextStyle(
+                        fontSize: 12, color: Color(0xFF999999))),
+              ],
             ),
           ),
         ],
