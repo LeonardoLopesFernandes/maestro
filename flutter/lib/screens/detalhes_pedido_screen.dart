@@ -543,14 +543,16 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
               fontWeight: FontWeight.bold,
                 foreground: Paint()
                 ..style = PaintingStyle.stroke
-                ..strokeWidth = 0.4
+                ..strokeWidth = 0.25
                 ..color = const Color(0xFF1F2937),
             ),
           ),
           Text(
             texto,
-            style: TextStyle(
-                fontSize: 10, fontWeight: FontWeight.bold, color: cor),
+            style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1F2937)),
           ),
         ],
       );
@@ -918,7 +920,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           children: [
             Expanded(child: _badgeAcaoNotaFiscal()),
             const SizedBox(width: 8),
-            Expanded(flex: 2, child: badges.first),
+            Expanded(child: badges.first),
           ],
         ));
       } else {
@@ -1448,14 +1450,16 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoDevolverEstoque() async {
-    final res = await MaestroDialogs.retornarEstoque(context);
-    if (res == null) return;
+    final numero = _pedido.codigoExterno ?? _pedido.numero;
+    final ok = await MaestroDialogs.confirmar(context,
+        titulo: 'Devolver ao estoque',
+        mensagem:
+            'Deseja realmente cancelar este pedido e devolvê-lo ao estoque?\n\nPedido: $numero',
+        textoSim: 'SIM, CANCELAR');
+    if (ok != true) return;
     try {
       await widget.apiService.retornarParaEstoque(
-          _normOrigem(_pedido.origem),
-          _pedido.codigoExterno ?? _pedido.numero,
-          captchaToken: res.$2,
-          motivo: res.$1);
+          _normOrigem(_pedido.origem), numero);
       _sucesso('Pedido devolvido ao estoque.');
     } catch (e) {
       _erroMsg(e);
@@ -1537,6 +1541,13 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                             : null,
                         child: Row(
                           children: [
+                            Expanded(
+                              child: Text('EAN: ${i.codigoEAN ?? ''}',
+                                  style: const TextStyle(
+                                      fontSize: 11, color: Color(0xFF888888))),
+                            ),
+                            if (_secundarios.isNotEmpty)
+                              const SizedBox(width: 6),
                             if (_secundarios.isNotEmpty)
                               Icon(
                                   _expanded
@@ -1544,13 +1555,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                                       : Icons.keyboard_arrow_down,
                                   size: 16,
                                   color: const Color(0xFF6B7280)),
-                            if (_secundarios.isNotEmpty)
-                              const SizedBox(width: 6),
-                            Expanded(
-                              child: Text('EAN: ${i.codigoEAN ?? ''}',
-                                  style: const TextStyle(
-                                      fontSize: 11, color: Color(0xFF888888))),
-                            ),
                           ],
                         ),
                       ),
