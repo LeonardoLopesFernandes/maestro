@@ -22,6 +22,13 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _init();
+    // Se veio de um 401, abre direto o diálogo de token (pula a tela de login).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      if (args is Map && args['abrirToken'] == true && mounted) {
+        _entrarComToken();
+      }
+    });
   }
 
   Future<void> _init() async {

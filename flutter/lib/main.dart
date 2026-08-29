@@ -25,10 +25,12 @@ void main() async {
   await CrashLogger.init();
   final session = await SessionManager.create();
   final apiService = ApiService(ApiClient(session: session));
-  // Token vencido no servidor (401): limpa a sessão e volta para o login.
+  // Token vencido no servidor (401): limpa a sessão e vai direto ao diálogo
+  // de token (pula a tela de login).
   ApiClient.onUnauthorized = () {
     session.clearToken();
-    appNavigatorKey.currentState?.pushReplacementNamed('/login');
+    appNavigatorKey.currentState
+        ?.pushReplacementNamed('/login', arguments: {'abrirToken': true});
   };
   // Polling em background (notificações de novos pedidos) — equiv. PedidoPollingWorker
   await inicializarPolling();
