@@ -269,8 +269,14 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
             backgroundColor: Colors.white,
             headerBackgroundColor: const Color(0xFFF80032),
             headerForegroundColor: Colors.white,
-            todayForegroundColor:
-                WidgetStateColor.resolveWith((_) => const Color(0xFFF80032)),
+            todayForegroundColor: WidgetStateColor.resolveWith((s) =>
+                s.contains(WidgetState.selected)
+                    ? Colors.white
+                    : const Color(0xFFF80032)),
+            todayBackgroundColor: WidgetStateColor.resolveWith((s) =>
+                s.contains(WidgetState.selected)
+                    ? const Color(0xFFF80032)
+                    : Colors.transparent),
             dayForegroundColor:
                 WidgetStateColor.resolveWith((s) => s.contains(WidgetState.selected)
                     ? Colors.white
