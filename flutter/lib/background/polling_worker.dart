@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/material.dart' show Color;
 import 'package:workmanager/workmanager.dart';
 import '../network/api_client.dart';
 import '../network/api_service.dart';
@@ -44,14 +45,16 @@ Future<void> _verificarPedidos() async {
 
 Future<void> _notificar(dynamic counts) async {
   final plugin = FlutterLocalNotificationsPlugin();
-  const android = AndroidNotificationDetails(
-    kChannelId,
-    'Pedidos Maestro',
-    channelDescription: 'Novos pedidos e atualizações',
-    importance: Importance.max,
-    priority: Priority.high,
-    playSound: true,
-  );
+    const android = AndroidNotificationDetails(
+      'pedidos_channel',
+      'Novos pedidos',
+      channelDescription: 'Avisa quando há novos pedidos',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      icon: 'ic_maestro_notification',
+      color: Color(0xFFF80032),
+    );
   const details = NotificationDetails(android: android);
   final corpo =
       '${counts.novoPedido} novo(s), ${counts.emSeparacao} em separação, '
