@@ -38,6 +38,10 @@ dependencies:
   # WebView (fluxo Microsoft OAuth)
   webview_flutter: ^4.4.2
 
+  # Polling em background + notificações (equiv. PedidoPollingWorker do Kotlin)
+  workmanager: ^0.5.2
+  flutter_local_notifications: ^17.2.3
+
   # Áudio (som de novo pedido)
   audioplayers: ^5.2.1
 

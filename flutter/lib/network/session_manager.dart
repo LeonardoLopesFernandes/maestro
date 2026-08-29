@@ -108,4 +108,11 @@ class SessionManager {
 
   String? getDeliveryToken(String numero) =>
       _prefs.getString("$_keyDeliveryTokenPrefix$numero");
+
+  // ---------- Última contagem de pedidos (polling em background) ----------
+  static const String _keyLastPolling = "LAST_POLLING_COUNT";
+
+  int getLastPollingCount() => _prefs.getInt(_keyLastPolling) ?? 0;
+
+  void saveLastPollingCount(int v) => _prefs.setInt(_keyLastPolling, v);
 }

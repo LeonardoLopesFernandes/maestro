@@ -13,12 +13,20 @@ import 'screens/scanner_imei_screen.dart';
 import 'screens/price_tags_screen.dart';
 import 'utils/constants.dart';
 import 'utils/crash_logger.dart';
+import 'background/polling_worker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await CrashLogger.init();
   final session = await SessionManager.create();
   final apiService = ApiService(ApiClient(session: session));
+  // Polling em background (notificações de novos pedidos) — equiv. PedidoPollingWorker
+  await inicializarPolling();
+  // Permite notificações (Android 13+ exige permissão em runtime)
+  if (await Permission.notification.isDenied) {
+    await Permission.notification.request();
+  }
   runApp(MaestroApp(session: session, apiService: apiService));
 }
 

@@ -541,9 +541,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
-              foreground: Paint()
+                foreground: Paint()
                 ..style = PaintingStyle.stroke
-                ..strokeWidth = 0.8
+                ..strokeWidth = 0.4
                 ..color = const Color(0xFF1F2937),
             ),
           ),
@@ -749,15 +749,27 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Token Cliente: ${_tkMasc('tokenCliente')}',
+            _linhaToken('Token Cliente', _tkMasc('tokenCliente')),
+            const SizedBox(height: 2),
+            _linhaToken('Token Retirada', _tkMasc('tokenRetirada')),
+            const SizedBox(height: 2),
+            _linhaToken('Token Insucesso', _tkMasc('tokenInsucesso')),
+          ],
+        ),
+      );
+
+  Widget _linhaToken(String label, String valor) => RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+                text: '$label: ',
+                style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+            TextSpan(
+                text: valor,
                 style: const TextStyle(
-                    fontSize: 13, color: Color(0xFF6B7280))),
-            Text('Token Retirada: ${_tkMasc('tokenRetirada')}',
-                style: const TextStyle(
-                    fontSize: 13, color: Color(0xFF6B7280))),
-            Text('Token Insucesso: ${_tkMasc('tokenInsucesso')}',
-                style: const TextStyle(
-                    fontSize: 13, color: Color(0xFF6B7280))),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black)),
           ],
         ),
       );
@@ -879,7 +891,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       if (_temMaisDe3Dias()) {
         badges.add(const SizedBox(height: 8));
         badges.add(_badgeAcao(
-            'CANCELAR', const Color(0xFFF80032), _acaoCancelarRetirada));
+            'CANCELAR', const Color(0xFFF80032), _acaoCancelarRetirada,
+            raio: 8));
       }
     } else if (s.contains('ENTREGA')) {
       badges.add(_badgeAcao(
@@ -889,7 +902,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           _acaoDevolverEstoque));
     } else if (s.contains('FINALIZADO')) {
       badges.add(_badgeAcao(
-          'CANCELAR', const Color(0xFFF80032), _acaoCancelarHistorico));
+          'CANCELAR', const Color(0xFFF80032), _acaoCancelarHistorico,
+          raio: 8));
     }
     if (badges.isEmpty) return const SizedBox.shrink();
 
@@ -933,11 +947,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   Widget _badgeAcaoNotaFiscal() => Container(
         height: 48,
         decoration: BoxDecoration(
-            color: Colors.black, borderRadius: BorderRadius.circular(24)),
+            color: Colors.black, borderRadius: BorderRadius.circular(8)),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(8),
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => VisualizarDanfeScreen(
@@ -966,16 +980,17 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         ),
       );
 
-  Widget _badgeAcao(String texto, Color cor, VoidCallback onTap) => Container(
+  Widget _badgeAcao(String texto, Color cor, VoidCallback onTap,
+          {double raio = 24}) =>
+      Container(
         width: double.infinity,
         height: 48,
         decoration: BoxDecoration(
-            color: cor, borderRadius: BorderRadius.circular(24)),
+            color: cor, borderRadius: BorderRadius.circular(raio)),
         child: Material(
-
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(raio),
             onTap: onTap,
             child: Center(
               child: Text(texto,
@@ -1433,16 +1448,14 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoDevolverEstoque() async {
-    final ok = await MaestroDialogs.confirmar(context,
-        titulo: 'Devolver ao estoque',
-        mensagem:
-            'Confirma a devolução deste pedido ao estoque? (Cancelado pela loja)',
-        textoSim: 'SIM, DEVOLVER');
-    if (ok != true) return;
+    final res = await MaestroDialogs.retornarEstoque(context);
+    if (res == null) return;
     try {
       await widget.apiService.retornarParaEstoque(
           _normOrigem(_pedido.origem),
-          _pedido.codigoExterno ?? _pedido.numero);
+          _pedido.codigoExterno ?? _pedido.numero,
+          captchaToken: res.$2,
+          motivo: res.$1);
       _sucesso('Pedido devolvido ao estoque.');
     } catch (e) {
       _erroMsg(e);

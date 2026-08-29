@@ -57,7 +57,12 @@ class _VisualizarDanfeScreenState extends State<VisualizarDanfeScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(Constants.RED_600),
-        title: const Text('DANFE'),
+        automaticallyImplyLeading: false,
+        title: const Text('NOTA FISCAL',
+            style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1)),
       ),
       body: _carregando
           ? const Center(child: CircularProgressIndicator())
