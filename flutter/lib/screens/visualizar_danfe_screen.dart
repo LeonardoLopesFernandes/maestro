@@ -9,12 +9,14 @@ class VisualizarDanfeScreen extends StatefulWidget {
   final SessionManager session;
   final ApiService apiService;
   final String chave;
+  final String? url;
 
   const VisualizarDanfeScreen({
     super.key,
     required this.session,
     required this.apiService,
     required this.chave,
+    this.url,
   });
 
   @override
@@ -32,9 +34,16 @@ class _VisualizarDanfeScreenState extends State<VisualizarDanfeScreen> {
     _carregar();
   }
 
+  String get _danfeUrl {
+    final u = widget.url;
+    if (u != null && u.trim().isNotEmpty) return u.trim();
+    // Host externo (inventti/lasa) que disponibiliza o PDF da DANFE pela chave
+    return 'https://lasa.inventti.app/nfe/api/pdf/DanfeEmissao?chave=${widget.chave}';
+  }
+
   Future<void> _carregar() async {
     try {
-      final b = await widget.apiService.getDanfe(widget.chave);
+      final b = await widget.apiService.getDanfeUrl(_danfeUrl);
       if (mounted) setState(() => _bytes = b);
     } catch (e) {
       if (mounted) setState(() => _erro = e.toString());

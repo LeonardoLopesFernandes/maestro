@@ -922,6 +922,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                   session: widget.session,
                   apiService: widget.apiService,
                   chave: _pedido.notaFiscalChave!,
+                  url: _pedido.notaFiscalUrl,
                 ),
               ));
             },

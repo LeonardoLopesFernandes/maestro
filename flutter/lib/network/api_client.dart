@@ -45,6 +45,20 @@ class ApiClient {
     throw ApiException(response.statusCode, response.body);
   }
 
+  // GET de bytes por URL completa (ex.: DANFE em host externo)
+  Future<Uint8List> getBytesDirect(String url, {bool withAuth = true}) async {
+    if (session.isDemo()) return <int>[];
+    final uri = Uri.parse(url);
+    final response = await _http.get(
+      uri,
+      headers: withAuth ? _headers() : {'Accept': 'application/pdf'},
+    );
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return response.bodyBytes;
+    }
+    throw ApiException(response.statusCode, response.body);
+  }
+
   Future<dynamic> post(String path, {dynamic body}) async {
     if (session.isDemo()) return _demoWrite(path, body);
     final uri = Uri.parse(baseUrl + path);

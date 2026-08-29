@@ -196,6 +196,12 @@ class ApiService {
     return Uint8List.fromList(bytes);
   }
 
+  // DANFE via URL direta (host externo inventti/lasa)
+  Future<Uint8List> getDanfeUrl(String url) async {
+    final bytes = await client.getBytesDirect(url, withAuth: false);
+    return bytes;
+  }
+
   // ---------- Price Tags (etiquetas de preço) ----------
   Future<Map<String, dynamic>> getPriceTagSummary(String loja) async =>
       (await client.get('web/price-tag/store/$loja'))

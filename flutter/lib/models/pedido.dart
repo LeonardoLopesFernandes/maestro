@@ -24,6 +24,7 @@ class Pedido {
   final String? canalDeVendas;
   final String? searchtext;
   final String? notaFiscalChave;
+  final String? notaFiscalUrl;
   final String? transportadora;
   final int? tempoConfirmacao;
   final List<MotivoCancelamento>? motivo;
@@ -99,6 +100,9 @@ class Pedido {
       canalDeVendas: json['canalDeVendas'] ?? json['canalVendas'],
       searchtext: json['searchtext'],
       notaFiscalChave: json['notaFiscal']?['chave'],
+      notaFiscalUrl: json['notaFiscal']?['nfe'] ??
+          json['notaFiscal']?['url'] ??
+          json['notaFiscal']?['link'],
       transportadora: json['transportadora'],
       tempoConfirmacao: _toInt(json['tempoConfirmacao']),
       motivo: (json['motivo'] as List?)
