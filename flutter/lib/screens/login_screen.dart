@@ -125,15 +125,18 @@ class _LoginScreenState extends State<LoginScreen> {
         var v = texto.substring(idx + p.length);
         final fim = v.indexOf(RegExp(r'[&\s;]'));
         if (fim != -1) v = v.substring(0, fim);
-        if (v.isNotEmpty && v.length > 50) return v;
+        if (v.isNotEmpty) return v;
       }
     }
     final t = texto.trim();
     if (t.startsWith('eyJ') && t.split('.').length == 3) return t;
     // Token bruto colado diretamente (ex.: rc-newToken do Papeleta63 / Rotina
-    // Comercial, que não é um JWT). Aceita qualquer valor sem espaços e com
-    // tamanho razoável de token.
-    if (t.isNotEmpty && !t.contains(RegExp(r'\s')) && t.length >= 20) return t;
+    // Comercial, que não é um JWT). Não aceita URLs nem textos muito longos.
+    if (t.isNotEmpty &&
+        !t.contains(RegExp(r'\s')) &&
+        !t.startsWith('http') &&
+        t.length >= 20 &&
+        t.length <= 1000) return t;
     return null;
   }
 
