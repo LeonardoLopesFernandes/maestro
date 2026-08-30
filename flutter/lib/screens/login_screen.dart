@@ -81,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
           autofocus: true,
           decoration: const InputDecoration(
             hintText:
-                'Cole a URL (maestro.americanas.io/login?token=...) ou o token JWT',
+                'Cole o token JWT ou a URL com token=/rc-newToken (também serve o token do Papeleta63 / Rotina Comercial)',
             border: OutlineInputBorder(),
           ),
         ),
@@ -130,6 +130,10 @@ class _LoginScreenState extends State<LoginScreen> {
     }
     final t = texto.trim();
     if (t.startsWith('eyJ') && t.split('.').length == 3) return t;
+    // Token bruto colado diretamente (ex.: rc-newToken do Papeleta63 / Rotina
+    // Comercial, que não é um JWT). Aceita qualquer valor sem espaços e com
+    // tamanho razoável de token.
+    if (t.isNotEmpty && !t.contains(RegExp(r'\s')) && t.length >= 20) return t;
     return null;
   }
 
@@ -400,7 +404,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: TextButton(
                               onPressed: _carregando ? null : _entrarComToken,
                               child: const Text(
-                                'Entrar com token (gerado no site)',
+                                'ENTRAR COM TOKEN',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 14,
