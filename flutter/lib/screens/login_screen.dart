@@ -16,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _senhaController = TextEditingController();
   bool _salvarCredenciais = true;
   bool _carregando = false;
+  bool _reconectando = false;
   late final SessionManager _session;
 
   @override
@@ -38,6 +39,21 @@ class _LoginScreenState extends State<LoginScreen> {
     if (email != null) _emailController.text = email;
     if (senha != null) _senhaController.text = senha;
     if (mounted) setState(() {});
+
+    if (_session.hasSavedCredentials()) {
+      _iniciarReconexaoSilenciosa();
+    }
+  }
+
+  void _iniciarReconexaoSilenciosa() {
+    setState(() {
+      _reconectando = true;
+      _carregando = true;
+    });
+    Future.delayed(const Duration(seconds: 1), () {
+      if (!mounted) return;
+      _abrirWebView(autoLogin: true);
+    });
   }
 
   void _abrirWebView({bool autoLogin = false}) {
@@ -264,6 +280,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 28),
+                          if (_reconectando)
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 20),
+                              child: Text(
+                                'Sessão expirada. Reconectando automaticamente...',
+                                style: TextStyle(color: Colors.white70, fontSize: 13),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                           // 2. Formulário (width 320)
                           SizedBox(
                             width: 320,
