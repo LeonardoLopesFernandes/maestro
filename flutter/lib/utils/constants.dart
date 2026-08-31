@@ -9,7 +9,7 @@ class Constants {
   // Microsoft OAuth (tenant e clientId próprios do Maestro)
   static const String tenant = "e316d1ac-42c8-4d30-817c-12c7a71f8ab2";
   static const String clientId = "883c90b2-f8df-4308-a4d4-c91e11bc989f";
-  static const String redirectUri = "https://maestro-auth.americanas.io/ad/reply";
+  static const String redirectUri = "https://maestro.americanas.io";
   static const String msLoginUrl =
       "https://login.microsoftonline.com/$tenant/oauth2/authorize"
       "?resource=$clientId&response_type=code&redirect_uri=$redirectUri&client_id=$clientId";
