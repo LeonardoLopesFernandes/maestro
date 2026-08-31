@@ -125,8 +125,8 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
       _salvarToken(token);
       return;
     }
-    // URL de retorno do OAuth (maestro-auth.../ad/reply?code=...) pode entregar o
-    // token em cookie/query na próxima navegação; o polling cuida disso.
+    // URL de retorno do SAML2 pode entregar o token em cookie/query na
+    // próxima navegação; o polling cuida disso.
     if (url.startsWith(Constants.redirectUri)) {
       _capturarToken().then((t) {
         if (t != null) _salvarToken(t);
