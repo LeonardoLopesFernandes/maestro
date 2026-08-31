@@ -111,6 +111,12 @@ class PedidoAdapter(
 
         holder.ivEdit.visibility = View.GONE
 
+        val editado = pedidoFoiEditado(pedido)
+        if (editado && status in listOf("PRONTO_PARA_SAIR", "PRONTO")) {
+            holder.ivEdit.visibility = View.VISIBLE
+            holder.ivEdit.setColorFilter(ContextCompat.getColor(ctx, R.color.blue_primary))
+        }
+
         // Contador de tempo real para NOVO_PEDIDO e EM_SEPARACAO
         if (status in listOf("NOVO_PEDIDO", "NOVO", "EM_SEPARACAO", "SEPARACAO")) {
             val tempoConfirmacao = pedido.tempoConfirmacao
@@ -202,6 +208,15 @@ class PedidoAdapter(
     fun updateItems(newPedidos: List<Pedido>) {
         this.pedidos = newPedidos
         notifyDataSetChanged()
+    }
+
+    private fun pedidoFoiEditado(pedido: Pedido): Boolean {
+        val itens = pedido.itens ?: return false
+        return itens.any { item ->
+            val qtdOriginal = item.quantidade
+            val qtdAtual = item.quantidadeTotal ?: item.quantidade
+            qtdAtual != qtdOriginal
+        }
     }
 
     private fun formatStatusVisivel(status: String?): String {
