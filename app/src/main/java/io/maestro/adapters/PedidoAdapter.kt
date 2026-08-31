@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import io.maestro.R
 import io.maestro.network.models.HorarioLoja
 import io.maestro.network.models.Pedido
+import io.maestro.network.SessionManager
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -111,7 +112,7 @@ class PedidoAdapter(
 
         holder.ivEdit.visibility = View.GONE
 
-        val editado = pedidoFoiEditado(pedido)
+        val editado = pedidoFoiEditado(ctx, pedido)
         if (editado && status in listOf("PRONTO_PARA_SAIR", "PRONTO")) {
             holder.ivEdit.visibility = View.VISIBLE
             holder.ivEdit.setColorFilter(ContextCompat.getColor(ctx, R.color.blue_primary))
@@ -210,13 +211,9 @@ class PedidoAdapter(
         notifyDataSetChanged()
     }
 
-    private fun pedidoFoiEditado(pedido: Pedido): Boolean {
-        val itens = pedido.itens ?: return false
-        return itens.any { item ->
-            val qtdOriginal = item.quantidade
-            val qtdAtual = item.quantidadeTotal ?: item.quantidade
-            qtdAtual != qtdOriginal
-        }
+    private fun pedidoFoiEditado(ctx: android.content.Context, pedido: Pedido): Boolean {
+        val session = SessionManager(ctx)
+        return session.isPedidoEditado(pedido.numero)
     }
 
     private fun formatStatusVisivel(status: String?): String {
