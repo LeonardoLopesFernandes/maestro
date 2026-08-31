@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
+import 'dart:convert';
 import '../models/pedido.dart';
 import '../network/api_service.dart';
 import '../network/session_manager.dart';
@@ -1291,6 +1292,19 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         editado: editado,
         motivo: motivo,
         itens: itensQuery);
+    // Salvar flag de edição e itens originais localmente (espelha Kotlin)
+    if (editado) {
+      try {
+        final itensJson = jsonEncode(itens.map((it) => {
+          'codigoEAN': it.codigoEAN,
+          'codigoSAP': it.codigoSAP,
+          'descricao': it.descricao,
+          'quantidade': it.quantidade,
+        }).toList());
+        widget.session.savePedidoItens(_pedido.numero, itensJson);
+        widget.session.saveEditFlag(_pedido.numero);
+      } catch (_) {}
+    }
     _sucesso('Separação confirmada.');
   }
 
@@ -1510,6 +1524,18 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     @override
     Widget build(BuildContext context) {
       final i = widget.item;
+      final alterado = i.foiAlterado;
+      final recusado = i.foiRecusado;
+      final corItem = recusado
+          ? const Color(0xFFDC2626)
+          : alterado
+              ? const Color(0xFFDC2626)
+              : const Color(0xFF2B2B2B);
+      final corSecundaria = recusado || alterado
+          ? const Color(0xFFDC2626)
+          : const Color(0xFF888888);
+      final qtd = i.quantidadeEfetiva;
+
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
@@ -1520,21 +1546,21 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
               children: [
                 SizedBox(
                   width: 45,
-                  child: Text('${i.quantidade}x',
-                      style: const TextStyle(
+                  child: Text('${qtd}x',
+                      style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF2B2B2B))),
+                          color: corItem)),
                 ),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(i.descricao ?? '',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF000000))),
+                              color: corItem)),
                       InkWell(
                         onTap: _secundarios.isNotEmpty
                             ? () => setState(() => _expanded = !_expanded)
@@ -1543,8 +1569,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                           children: [
                             Expanded(
                               child: Text('EAN: ${i.codigoEAN ?? ''}',
-                                  style: const TextStyle(
-                                      fontSize: 11, color: Color(0xFF888888))),
+                                  style: TextStyle(
+                                      fontSize: 11, color: corSecundaria)),
                             ),
                             if (_secundarios.isNotEmpty)
                               const SizedBox(width: 6),
@@ -1560,20 +1586,20 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                       ),
                       if (_expanded && _secundarios.isNotEmpty)
                         Padding(
-                          padding: const EdgeInsets.only(left: 22, top: 3),
+                          padding: const EdgeInsets.only(top: 3),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: _secundarios
                                 .map((e) => Text('EAN: $e',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         fontSize: 11,
-                                        color: Color(0xFF888888))))
+                                        color: corSecundaria)))
                                 .toList(),
                           ),
                         ),
                       Text('SAP: ${i.codigoSAP ?? ''}',
-                          style: const TextStyle(
-                              fontSize: 11, color: Color(0xFF888888))),
+                          style: TextStyle(
+                              fontSize: 11, color: corSecundaria)),
                       if (i.imeis.isNotEmpty)
                         Text('IMEI: ${i.imeis.expand((e) => e).join(", ")}',
                             style: const TextStyle(
@@ -1588,16 +1614,16 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('R\$ ${CurrencyFormatter.formatarMoeda(i.valorTotal)}',
-                          style: const TextStyle(
+                      Text('R\$ ${CurrencyFormatter.formatarMoeda(i.valorUnitario * qtd)}',
+                          style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF000000))),
+                              color: corItem)),
                       Text(
-                          '${i.quantidade}x R\$ ${CurrencyFormatter.formatarMoeda(i.valorUnitario)}',
-                          style: const TextStyle(
+                          '${qtd}x R\$ ${CurrencyFormatter.formatarMoeda(i.valorUnitario)}',
+                          style: TextStyle(
                               fontSize: 12,
-                              color: Color(0xFF000000),
+                              color: corItem,
                               fontWeight: FontWeight.bold)),
                     ],
                   ),

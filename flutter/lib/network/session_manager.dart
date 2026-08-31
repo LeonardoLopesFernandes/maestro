@@ -113,6 +113,36 @@ class SessionManager {
   String? getDeliveryToken(String numero) =>
       _prefs.getString("$_keyDeliveryTokenPrefix$numero");
 
+  // ---------- Flag de pedido editado ----------
+  // Espelha saveEditFlag/isPedidoEditado do Kotlin: quando o operador edita
+  // quantidades de itens na separação, a flag é salva para exibir o lápis
+  // azul no card do pedido na aba PRONTO PARA RETIRADA.
+  static const String _keyEditFlagPrefix = "PEDIDO_EDITADO_";
+  static const String _keyItensPrefix = "PEDIDO_ITENS_";
+
+  void saveEditFlag(String numero) {
+    _prefs.setBool("$_keyEditFlagPrefix${numero.trim()}", true);
+  }
+
+  bool isPedidoEditado(String numero) {
+    return _prefs.getBool("$_keyEditFlagPrefix${numero.trim()}") ?? false;
+  }
+
+  void savePedidoItens(String numero, String itensJson) {
+    _prefs.setString("$_keyItensPrefix${numero.trim()}", itensJson);
+  }
+
+  String? getPedidoItens(String numero) {
+    return _prefs.getString("$_keyItensPrefix${numero.trim()}");
+  }
+
+  /// Verifica se o pedido foi editado (flag OU itens salvos)
+  bool pedidoFoiEditado(String numero) {
+    if (isPedidoEditado(numero)) return true;
+    if (getPedidoItens(numero) != null) return true;
+    return false;
+  }
+
   // ---------- Última contagem de pedidos (polling em background) ----------
   static const String _keyLastPolling = "LAST_POLLING_COUNT";
 

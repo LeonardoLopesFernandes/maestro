@@ -131,6 +131,12 @@ int _toInt(dynamic v) {
   return int.tryParse(v.toString()) ?? 0;
 }
 
+int? _toIntNullable(dynamic v) {
+  if (v == null) return null;
+  if (v is num) return v.toInt();
+  return int.tryParse(v.toString());
+}
+
 class Cliente {
   final String? nome;
   final String? cpf;
@@ -203,6 +209,7 @@ class Item {
   final String? codigoSAP;
   final String? descricao;
   final int quantidade;
+  final int? quantidadeTotal;
   final double valorUnitario;
   final double valorTotal;
   final int? estoque;
@@ -216,6 +223,7 @@ class Item {
     this.codigoSAP,
     this.descricao,
     this.quantidade = 0,
+    this.quantidadeTotal,
     this.valorUnitario = 0.0,
     this.valorTotal = 0.0,
     this.estoque,
@@ -231,6 +239,7 @@ class Item {
         codigoSAP: json['codigoSAP'],
         descricao: json['descricao'],
         quantidade: json['quantidade'] ?? 0,
+        quantidadeTotal: _toIntNullable(json['quantidadeTotal']),
         valorUnitario: _toDouble(json['valorUnitario']),
         valorTotal: _toDouble(json['valorTotal']),
         estoque: json['estoque'],
@@ -242,6 +251,15 @@ class Item {
                 .toList() ??
             [],
       );
+
+  /// Quantidade efetiva: quantidadeTotal (editada) ou quantidade (original)
+  int get quantidadeEfetiva => quantidadeTotal ?? quantidade;
+
+  /// Se o item foi alterado (quantidadeTotal difere de quantidade)
+  bool get foiAlterado => quantidadeTotal != null && quantidadeTotal != quantidade;
+
+  /// Se o item foi recusado (quantidadeTotal == 0)
+  bool get foiRecusado => quantidadeTotal != null && quantidadeTotal == 0;
 }
 
 class DeliveryToken {

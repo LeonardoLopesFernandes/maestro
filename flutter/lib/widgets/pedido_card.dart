@@ -10,13 +10,16 @@ class PedidoCard extends StatelessWidget {
   // Token de retirada (entregador) persistido/exibido quando o pedido está
   // ENTREGUE/FINALIZADO — espelha o token salvo na retirada (Kotlin).
   final String? tokenRetirada;
+  // Indica se o pedido foi editado (lápis azul no card)
+  final bool editado;
 
   const PedidoCard(
       {super.key,
       required this.pedido,
       required this.onTap,
       this.onAcao,
-      this.tokenRetirada});
+      this.tokenRetirada,
+      this.editado = false});
 
   String get _statusNormalizado =>
       (pedido.status ?? '').toUpperCase().trim();
@@ -134,6 +137,14 @@ class PedidoCard extends StatelessWidget {
                           style: const TextStyle(
                               fontSize: 13, color: Color(0xFF64748B))),
                     ),
+                    if (editado &&
+                        (_statusNormalizado == 'PRONTO_PARA_SAIR' ||
+                            _statusNormalizado == 'PRONTO'))
+                      const Padding(
+                        padding: EdgeInsets.only(right: 6),
+                        child: Icon(Icons.edit,
+                            size: 16, color: Color(0xFF2563EB)),
+                      ),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 3),
