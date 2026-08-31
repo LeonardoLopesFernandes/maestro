@@ -6,13 +6,13 @@ class Constants {
   static const String webBaseUrl = "https://maestro.americanas.io/";
   static const String loginUrl = "https://maestro.americanas.io/unauthorized";
 
-  // Microsoft OAuth (tenant e clientId próprios do Maestro)
+  // Microsoft OAuth — fluxo SAML2 via sl-authorization (mesmo padrão da minhaloja).
   static const String tenant = "e316d1ac-42c8-4d30-817c-12c7a71f8ab2";
-  static const String clientId = "883c90b2-f8df-4308-a4d4-c91e11bc989f";
-  static const String redirectUri = "https://maestro.americanas.io";
+  static const String clientId = "16021f31-43f8-4f7a-8af4-5e47efe7db8a";
+  static const String redirectUri =
+      "https://apimobile.brasilrisk.com.br/Validar/SamlResponseConsumer";
   static const String msLoginUrl =
-      "https://login.microsoftonline.com/$tenant/oauth2/authorize"
-      "?resource=$clientId&response_type=code&redirect_uri=$redirectUri&client_id=$clientId";
+      "https://sl-authorization.americanas.io/maestro";
 
   static const String recaptchaSiteKey =
       "6LcGCN4aAAAAACBn8w45pz5foZB7yf7RO_bZUJl6";
