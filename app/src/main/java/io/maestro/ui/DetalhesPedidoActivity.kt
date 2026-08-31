@@ -722,6 +722,30 @@ class DetalhesPedidoActivity : AppCompatActivity() {
             // ============================================
             layoutItensDetalhe.removeAllViews()
             val itensList = pedido.getItens()
+
+            // Carregar quantidades originais salvas para detectar alterações
+            val quantidadesOriginais = mutableMapOf<String, Int>()
+            try {
+                val session = SessionManager(this)
+                val itensSalvosJson = session.getPedidoItens(pedido.numero)
+                if (!itensSalvosJson.isNullOrEmpty()) {
+                    val itensSalvos = com.google.gson.Gson().fromJson(
+                        itensSalvosJson,
+                        com.google.gson.reflect.TypeToken.getParameterized(
+                            List::class.java, Item::class.java
+                        ).type
+                    ) as? List<Item>
+                    itensSalvos?.forEach { itemSalvo ->
+                        val key = itemSalvo.codigoSAP ?: itemSalvo.codigoEAN ?: ""
+                        if (key.isNotEmpty()) {
+                            quantidadesOriginais[key] = itemSalvo.quantidade
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Erro ao carregar quantidades originais salvas", e)
+            }
+
             if (itensList.isNotEmpty()) {
                 val status = pedido.status
                 for (i in itensList.indices) {
@@ -807,7 +831,10 @@ class DetalhesPedidoActivity : AppCompatActivity() {
 
                     divider.visibility = if (i == itensList.size - 1) View.GONE else View.VISIBLE
 
-                    val alterado = qtd == 0 || (item.quantidadeTotal != null && item.quantidadeTotal != item.quantidade)
+                    val alterado = qtd == 0 ||
+                        (item.quantidadeTotal != null && item.quantidadeTotal != item.quantidade) ||
+                        (item.quantidadeTotal == null && quantidadesOriginais.isNotEmpty() &&
+                            quantidadesOriginais[item.codigoSAP ?: ""]?.let { it != item.quantidade } == true)
                     if (alterado) {
                         val vermelho = android.graphics.Color.parseColor("#DC2626")
                         tvQuantidade.setTextColor(vermelho)

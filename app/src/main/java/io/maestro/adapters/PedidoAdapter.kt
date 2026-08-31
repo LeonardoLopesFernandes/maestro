@@ -213,7 +213,9 @@ class PedidoAdapter(
 
     private fun pedidoFoiEditado(ctx: android.content.Context, pedido: Pedido): Boolean {
         val session = SessionManager(ctx)
-        return session.isPedidoEditado(pedido.numero)
+        if (session.isPedidoEditado(pedido.numero)) return true
+        if (session.getPedidoItens(pedido.numero) != null) return true
+        return false
     }
 
     private fun formatStatusVisivel(status: String?): String {
