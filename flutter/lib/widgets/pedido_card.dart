@@ -137,14 +137,6 @@ class PedidoCard extends StatelessWidget {
                           style: const TextStyle(
                               fontSize: 13, color: Color(0xFF64748B))),
                     ),
-                    if (editado &&
-                        (_statusNormalizado == 'PRONTO_PARA_SAIR' ||
-                            _statusNormalizado == 'PRONTO'))
-                      const Padding(
-                        padding: EdgeInsets.only(right: 6),
-                        child: Icon(Icons.edit,
-                            size: 16, color: Color(0xFF2563EB)),
-                      ),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 3),
@@ -168,9 +160,15 @@ class PedidoCard extends StatelessWidget {
                   color: const Color(0xFFF1F5F9),
                 ),
                 // Bloco B: tags
-                if (mostraCanal || mostraEntrega)
+                if (mostraCanal || mostraEntrega || editado)
                   Row(
                     children: [
+                      if (editado)
+                        const Padding(
+                          padding: EdgeInsets.only(right: 6),
+                          child: Icon(Icons.edit,
+                              size: 16, color: Color(0xFF2563EB)),
+                        ),
                       if (mostraCanal)
                         Container(
                           margin: const EdgeInsets.only(right: 8),
@@ -204,7 +202,8 @@ class PedidoCard extends StatelessWidget {
                         ),
                     ],
                   ),
-                if (mostraCanal || mostraEntrega) const SizedBox(height: 8),
+                if (mostraCanal || mostraEntrega || editado)
+                  const SizedBox(height: 8),
                 // Bloco D: data + valor
                 Row(
                   children: [
