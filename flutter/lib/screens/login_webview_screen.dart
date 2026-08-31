@@ -258,15 +258,26 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
     final claims = _decodificarClaims(token);
     _session.saveToken(
         token, expiryEpochSeconds: claims?['exp'] is int ? claims!['exp'] as int : null);
-    final email = (claims?['email'] ??
+    // Suporta JWT com claims aninhados em "user" (minhaloja/trocafacil)
+    // e flat (Microsoft OAuth padrão).
+    final user = claims?['user'] is Map ? Map<String, dynamic>.from(claims!['user']) : null;
+    final email = (user?['email'] ??
+                claims?['email'] ??
                 claims?['upn'] ??
                 claims?['preferred_username'] ??
                 claims?['unique_name'] ??
                 widget.args?['email'])?.toString() ??
         "usuario@americanas.io";
-    final nome = _nomeDosClaims(claims, email);
+    final nome = (user?['nome'] ??
+                user?['name'] ??
+                _nomeDosClaims(claims, email))
+        ?.toString() ?? '';
+    final stores = user?['stores'] ?? claims?['stores'];
+    final loja = user?['loja']?.toString() ??
+        claims?['loja']?.toString() ??
+        (stores is List && stores.isNotEmpty ? stores.first.toString() : null);
     _session.saveUserInfo(
-        email, nome, _session.getUserStore() ?? Constants.defaultStore);
+        email, nome, loja ?? _session.getUserStore() ?? Constants.defaultStore);
     Navigator.of(context).pushReplacementNamed('/home');
   }
 

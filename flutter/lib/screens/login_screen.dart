@@ -173,14 +173,22 @@ class _LoginScreenState extends State<LoginScreen> {
     final claims = _decodificarClaims(token);
     _session.saveToken(
         token, expiryEpochSeconds: claims?['exp'] is int ? claims!['exp'] as int : null);
-    final email = (claims?['email'] ??
+    // Suporta JWT com claims aninhados em "user" (minhaloja/trocafacil)
+    // e flat (Microsoft OAuth padrão).
+    final user = claims?['user'] is Map ? Map<String, dynamic>.from(claims!['user']) : null;
+    final email = (user?['email'] ??
+            claims?['email'] ??
             claims?['upn'] ??
             claims?['preferred_username'] ??
             claims?['unique_name'])
         ?.toString();
-    final nome = _nomeDosClaims(claims, email ?? '');
-    final stores = claims?['stores'];
-    final loja = claims?['loja']?.toString() ??
+    final nome = (user?['nome'] ??
+            user?['name'] ??
+            _nomeDosClaims(claims, email ?? ''))
+        ?.toString() ?? '';
+    final stores = user?['stores'] ?? claims?['stores'];
+    final loja = user?['loja']?.toString() ??
+        claims?['loja']?.toString() ??
         (stores is List && stores.isNotEmpty ? stores.first.toString() : null);
     _session.saveUserInfo(
       email ?? 'usuario@americanas.io',
