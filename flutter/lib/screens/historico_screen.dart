@@ -394,16 +394,19 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
             pedido: p,
             tokenRetirada: tokenSalvo,
             editado: editado,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => DetalhesPedidoScreen(
-                  session: widget.session,
-                  apiService: widget.apiService,
-                  pedidoId: p.id,
-                  pedido: p,
+            onTap: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => DetalhesPedidoScreen(
+                    session: widget.session,
+                    apiService: widget.apiService,
+                    pedidoId: p.id,
+                    pedido: p,
+                  ),
                 ),
-              ),
-            ),
+              );
+              if (mounted) _carregar(reset: true);
+            },
           );
         },
       ),

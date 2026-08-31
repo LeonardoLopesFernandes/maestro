@@ -1105,6 +1105,17 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         itens.any((it) => novaQtd(it) != it.quantidade);
 
     if (houveAlteracao) {
+      // Salvar flag de edição IMEDIATAMENTE (antes da API, espelha Kotlin)
+      try {
+        final itensJson = jsonEncode(itens.map((it) => {
+          'codigoEAN': it.codigoEAN,
+          'codigoSAP': it.codigoSAP,
+          'descricao': it.descricao,
+          'quantidade': it.quantidade,
+        }).toList());
+        widget.session.savePedidoItens(_pedido.numero, itensJson);
+        widget.session.saveEditFlag(_pedido.numero);
+      } catch (_) {}
       // 2º diálogo: confirmação parcial com motivo
       final alterados = <(String, int, int)>[];
       for (final it in itens) {
@@ -1169,6 +1180,17 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         itens.any((it) => novaQtd(it) != it.quantidade);
 
     if (houveAlteracao) {
+      // Salvar flag de edição IMEDIATAMENTE (antes da API, espelha Kotlin)
+      try {
+        final itensJson = jsonEncode(itens.map((it) => {
+          'codigoEAN': it.codigoEAN,
+          'codigoSAP': it.codigoSAP,
+          'descricao': it.descricao,
+          'quantidade': it.quantidade,
+        }).toList());
+        widget.session.savePedidoItens(_pedido.numero, itensJson);
+        widget.session.saveEditFlag(_pedido.numero);
+      } catch (_) {}
       final alterados = <(String, int, int)>[];
       for (final it in itens) {
         final n = novaQtd(it);

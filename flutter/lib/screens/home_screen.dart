@@ -650,8 +650,8 @@ class _PedidoListTabState extends State<_PedidoListTab> {
           return PedidoCard(
             pedido: p,
             editado: editado,
-            onTap: () {
-              Navigator.of(context).push(
+            onTap: () async {
+              await Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => DetalhesPedidoScreen(
                     session: widget.session,
@@ -661,6 +661,7 @@ class _PedidoListTabState extends State<_PedidoListTab> {
                   ),
                 ),
               );
+              if (mounted) _carregar(reset: true);
             },
           );
         },
