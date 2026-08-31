@@ -757,7 +757,7 @@ class DetalhesPedidoActivity : AppCompatActivity() {
                         for (eanExtra in eansExtras) {
                             val tvEan = TextView(this).apply {
                                 layoutParams = LinearLayout.LayoutParams(
-                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.MATCH_PARENT,
                                     LinearLayout.LayoutParams.WRAP_CONTENT
                                 )
                                 text = "EAN: $eanExtra"
@@ -807,7 +807,8 @@ class DetalhesPedidoActivity : AppCompatActivity() {
 
                     divider.visibility = if (i == itensList.size - 1) View.GONE else View.VISIBLE
 
-                    if (qtd == 0) {
+                    val alterado = qtd == 0 || (item.quantidadeTotal != null && item.quantidadeTotal != item.quantidade)
+                    if (alterado) {
                         val vermelho = android.graphics.Color.parseColor("#DC2626")
                         tvQuantidade.setTextColor(vermelho)
                         tvDescricao.setTextColor(vermelho)
