@@ -647,6 +647,10 @@ class _PedidoListTabState extends State<_PedidoListTab> {
           }
           final p = _pedidos[i];
           final editado = widget.session.pedidoFoiEditado(p.id);
+          if (i == 0) {
+            print('>>> HOME_CHECK: p.id="${p.id}" p.numero="${p.numero}" editado=$editado');
+            print('>>> HOME_PREFS: isPedidoEditado="${widget.session.isPedidoEditado(p.id)}" getPedidoItens="${widget.session.getPedidoItens(p.id) != null}"');
+          }
           return PedidoCard(
             pedido: p,
             editado: editado,

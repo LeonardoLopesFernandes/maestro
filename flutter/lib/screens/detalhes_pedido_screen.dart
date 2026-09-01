@@ -82,6 +82,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     if (!silencioso) setState(() => _carregando = true);
     try {
       final p = await widget.apiService.getPedidoById(widget.pedidoId);
+      print('>>> DETAIL_LOAD: id="${p.id}" numero="${p.numero}" status="${p.status}"');
       if (mounted) {
         setState(() {
           _pedido = p;
@@ -89,7 +90,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         });
       }
       _carregarTokens();
-    } catch (_) {
+    } catch (e) {
+      print('>>> DETAIL_LOAD_ERROR: $e');
       if (mounted && !silencioso) setState(() => _erro = true);
     }
   }
@@ -1114,9 +1116,13 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           'quantidade': it.quantidade,
         }).toList());
         final editKey = _pedido.id.isNotEmpty ? _pedido.id : _pedido.numero;
+        print('>>> SAVE_EDIT_FLAG: id="${_pedido.id}" numero="${_pedido.numero}" editKey="$editKey"');
         widget.session.savePedidoItens(editKey, itensJson);
         widget.session.saveEditFlag(editKey);
-      } catch (_) {}
+        print('>>> SAVE_EDIT_FLAG_OK: pedidoFoiEditado="$editKey" => ${widget.session.pedidoFoiEditado(editKey)}');
+      } catch (e) {
+        print('>>> SAVE_EDIT_FLAG_ERROR: $e');
+      }
       // 2º diálogo: confirmação parcial com motivo
       final alterados = <(String, int, int)>[];
       for (final it in itens) {
