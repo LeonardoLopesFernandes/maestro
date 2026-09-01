@@ -31,6 +31,15 @@ android {
         versionName = flutter.versionName
     }
 
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a")
+            isUniversalApk = false
+        }
+    }
+
     signingConfigs {
         create("release") {
             storeFile = file("../../release-key.jks")
