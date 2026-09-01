@@ -104,8 +104,6 @@ class SessionManager {
   bool isDemo() => _prefs.getBool(_keyDemo) ?? false;
 
   // ---------- Token de retirada (entregador) persistido por pedido ----------
-  // Espelha o saveDeliveryToken/getDeliveryToken do Kotlin: o token digitado/
-  // validado na retirada é salvo para ser exibido depois (ex.: histórico ENTREGUE).
   void saveDeliveryToken(String numero, String token) {
     _prefs.setString("$_keyDeliveryTokenPrefix$numero", token);
   }
@@ -114,17 +112,31 @@ class SessionManager {
       _prefs.getString("$_keyDeliveryTokenPrefix$numero");
 
   // ---------- Flag de pedido editado ----------
-  // Salva todos os IDs editados num Set JSON para não depender de key-matching.
+  // Salva com TODOS os IDs possíveis (id, numero, codigoExterno) para
+  // garantir match entre list API e detail API.
   static const String _keyEditFlagPrefix = "PEDIDO_EDITADO_";
   static const String _keyItensPrefix = "PEDIDO_ITENS_";
   static const String _keyEditedIds = "EDITED_IDS_SET";
 
-  void _addToEditedSet(String id) {
-    if (id.isEmpty) return;
-    final ids = getEditedIds();
-    if (!ids.contains(id)) {
-      ids.add(id);
-      _prefs.setString(_keyEditedIds, ids.join(','));
+  List<String> _idsForPedido(String id, String numero, String codigoExterno) {
+    final ids = <String>{};
+    if (id.isNotEmpty) ids.add(id);
+    if (numero.isNotEmpty) ids.add(numero);
+    if (codigoExterno.isNotEmpty) ids.add(codigoExterno);
+    return ids.toList();
+  }
+
+  void _addToEditedSet(List<String> allIds) {
+    final existing = getEditedIds();
+    var changed = false;
+    for (final id in allIds) {
+      if (id.isNotEmpty && !existing.contains(id)) {
+        existing.add(id);
+        changed = true;
+      }
+    }
+    if (changed) {
+      _prefs.setString(_keyEditedIds, existing.join(','));
     }
   }
 
@@ -134,40 +146,53 @@ class SessionManager {
     return raw.split(',').where((s) => s.isNotEmpty).toSet();
   }
 
-  void saveEditFlag(String id) {
-    if (id.isEmpty) return;
-    _addToEditedSet(id);
-    _prefs.setBool("$_keyEditFlagPrefix${id.trim()}", true);
+  void saveEditFlag(String id, {String numero = '', String codigoExterno = ''}) {
+    final allIds = _idsForPedido(id, numero, codigoExterno);
+    if (allIds.isEmpty) return;
+    _addToEditedSet(allIds);
+    for (final key in allIds) {
+      _prefs.setBool("$_keyEditFlagPrefix${key.trim()}", true);
+    }
+  }
+
+  void savePedidoItens(String id, String itensJson,
+      {String numero = '', String codigoExterno = ''}) {
+    final allIds = _idsForPedido(id, numero, codigoExterno);
+    if (allIds.isEmpty) return;
+    _addToEditedSet(allIds);
+    for (final key in allIds) {
+      _prefs.setString("$_keyItensPrefix${key.trim()}", itensJson);
+    }
+  }
+
+  String? getPedidoItens(String id) {
+    if (id.isEmpty) return null;
+    return _prefs.getString("$_keyItensPrefix${id.trim()}");
   }
 
   bool isPedidoEditado(String id) {
+    if (id.isEmpty) return false;
     if (getEditedIds().contains(id)) return true;
     return _prefs.getBool("$_keyEditFlagPrefix${id.trim()}") ?? false;
   }
 
-  void savePedidoItens(String id, String itensJson) {
-    if (id.isEmpty) return;
-    _addToEditedSet(id);
-    _prefs.setString("$_keyItensPrefix${id.trim()}", itensJson);
-  }
-
-  String? getPedidoItens(String id) {
-    return _prefs.getString("$_keyItensPrefix${id.trim()}");
-  }
-
-  /// Verifica se o pedido foi editado (Set OU flag OU itens salvos)
-  bool pedidoFoiEditado(String id) {
-    if (id.isEmpty) return false;
-    if (getEditedIds().contains(id)) return true;
-    if (isPedidoEditado(id)) return true;
-    if (getPedidoItens(id) != null) return true;
+  /// Verifica se o pedido foi editado — checa por qualquer um dos IDs
+  /// (id, numero, codigoExterno) no Set, nas flags individuais, ou nos itens.
+  bool pedidoFoiEditado(String id, {String numero = '', String codigoExterno = ''}) {
+    final allIds = _idsForPedido(id, numero, codigoExterno);
+    final editedIds = getEditedIds();
+    for (final key in allIds) {
+      if (editedIds.contains(key)) return true;
+      if (key.isNotEmpty && (_prefs.getBool("$_keyEditFlagPrefix${key.trim()}") ?? false)) return true;
+      if (key.isNotEmpty && _prefs.getString("$_keyItensPrefix${key.trim()}") != null) return true;
+    }
     return false;
   }
 
   // ---------- Última contagem de pedidos (polling em background) ----------
   static const String _keyLastPolling = "LAST_POLLING_COUNT";
 
-  int getLastPollingCount() => _prefs.getInt(_keyLastPolling) ?? 0;
+  int getLastPollingCount() => _prefs.getInt(_keyLastPolling) ?? -1;
 
   void saveLastPollingCount(int v) => _prefs.setInt(_keyLastPolling, v);
 }

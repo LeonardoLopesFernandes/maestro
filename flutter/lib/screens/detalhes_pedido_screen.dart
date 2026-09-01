@@ -1113,24 +1113,16 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           'descricao': it.descricao,
           'quantidade': it.quantidade,
         }).toList());
-        final editKey = _pedido.id.isNotEmpty ? _pedido.id : _pedido.numero;
-        widget.session.savePedidoItens(editKey, itensJson);
-        widget.session.saveEditFlag(editKey);
-        final verificou = widget.session.pedidoFoiEditado(editKey);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('DEBUG: id="${_pedido.id}" num="${_pedido.numero}" key="$editKey" found=$verificou'),
-            duration: const Duration(seconds: 6),
-          ));
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('DEBUG ERRO: $e'),
-            duration: const Duration(seconds: 6),
-          ));
-        }
-      }
+        widget.session.savePedidoItens(
+            _pedido.id, itensJson,
+            numero: _pedido.numero,
+            codigoExterno: _pedido.codigoExterno ?? '');
+        widget.session.saveEditFlag(
+            _pedido.id,
+            numero: _pedido.numero,
+            codigoExterno: _pedido.codigoExterno ?? '');
+      } catch (_) {}
+      // 2º diálogo: confirmação parcial com motivo
       // 2º diálogo: confirmação parcial com motivo
       final alterados = <(String, int, int)>[];
       for (final it in itens) {
@@ -1204,9 +1196,13 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           'quantidade': it.quantidade,
         }).toList());
         widget.session.savePedidoItens(
-            _pedido.id.isNotEmpty ? _pedido.id : _pedido.numero, itensJson);
+            _pedido.id, itensJson,
+            numero: _pedido.numero,
+            codigoExterno: _pedido.codigoExterno ?? '');
         widget.session.saveEditFlag(
-            _pedido.id.isNotEmpty ? _pedido.id : _pedido.numero);
+            _pedido.id,
+            numero: _pedido.numero,
+            codigoExterno: _pedido.codigoExterno ?? '');
       } catch (_) {}
       final alterados = <(String, int, int)>[];
       for (final it in itens) {
@@ -1341,9 +1337,13 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           'quantidade': it.quantidade,
         }).toList());
         widget.session.savePedidoItens(
-            _pedido.id.isNotEmpty ? _pedido.id : _pedido.numero, itensJson);
+            _pedido.id, itensJson,
+            numero: _pedido.numero,
+            codigoExterno: _pedido.codigoExterno ?? '');
         widget.session.saveEditFlag(
-            _pedido.id.isNotEmpty ? _pedido.id : _pedido.numero);
+            _pedido.id,
+            numero: _pedido.numero,
+            codigoExterno: _pedido.codigoExterno ?? '');
       } catch (_) {}
     }
     _sucesso('Separação confirmada.');
