@@ -557,6 +557,15 @@ class _PedidoListTabState extends State<_PedidoListTab> {
   bool _carregando = true;
   bool _temMais = true;
   final int _limit = 20;
+  bool _debugShown = false;
+
+  void debugShowSnack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg, style: const TextStyle(fontSize: 11)),
+      duration: const Duration(seconds: 8),
+    ));
+  }
 
   @override
   void initState() {
@@ -647,9 +656,10 @@ class _PedidoListTabState extends State<_PedidoListTab> {
           }
           final p = _pedidos[i];
           final editado = widget.session.pedidoFoiEditado(p.id);
-          if (i == 0) {
-            print('>>> HOME_CHECK: p.id="${p.id}" p.numero="${p.numero}" editado=$editado');
-            print('>>> HOME_PREFS: isPedidoEditado="${widget.session.isPedidoEditado(p.id)}" getPedidoItens="${widget.session.getPedidoItens(p.id) != null}"');
+          if (i < 3 && !_debugShown) {
+            final ids = widget.session.getEditedIds();
+            debugShowSnack('DEBUG HOME: p.id="${p.id}" num="${p.numero}" editado=$editado savedIds=$ids');
+            if (i == 2) _debugShown = true;
           }
           return PedidoCard(
             pedido: p,

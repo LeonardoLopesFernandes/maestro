@@ -82,7 +82,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     if (!silencioso) setState(() => _carregando = true);
     try {
       final p = await widget.apiService.getPedidoById(widget.pedidoId);
-      print('>>> DETAIL_LOAD: id="${p.id}" numero="${p.numero}" status="${p.status}"');
       if (mounted) {
         setState(() {
           _pedido = p;
@@ -90,8 +89,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         });
       }
       _carregarTokens();
-    } catch (e) {
-      print('>>> DETAIL_LOAD_ERROR: $e');
+    } catch (_) {
       if (mounted && !silencioso) setState(() => _erro = true);
     }
   }
@@ -1116,12 +1114,22 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           'quantidade': it.quantidade,
         }).toList());
         final editKey = _pedido.id.isNotEmpty ? _pedido.id : _pedido.numero;
-        print('>>> SAVE_EDIT_FLAG: id="${_pedido.id}" numero="${_pedido.numero}" editKey="$editKey"');
         widget.session.savePedidoItens(editKey, itensJson);
         widget.session.saveEditFlag(editKey);
-        print('>>> SAVE_EDIT_FLAG_OK: pedidoFoiEditado="$editKey" => ${widget.session.pedidoFoiEditado(editKey)}');
+        final verificou = widget.session.pedidoFoiEditado(editKey);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('DEBUG: id="${_pedido.id}" num="${_pedido.numero}" key="$editKey" found=$verificou'),
+            duration: const Duration(seconds: 6),
+          ));
+        }
       } catch (e) {
-        print('>>> SAVE_EDIT_FLAG_ERROR: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('DEBUG ERRO: $e'),
+            duration: const Duration(seconds: 6),
+          ));
+        }
       }
       // 2º diálogo: confirmação parcial com motivo
       final alterados = <(String, int, int)>[];

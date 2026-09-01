@@ -114,32 +114,53 @@ class SessionManager {
       _prefs.getString("$_keyDeliveryTokenPrefix$numero");
 
   // ---------- Flag de pedido editado ----------
-  // Espelha saveEditFlag/isPedidoEditado do Kotlin: quando o operador edita
-  // quantidades de itens na separação, a flag é salva para exibir o lápis
-  // azul no card do pedido na aba PRONTO PARA RETIRADA.
+  // Salva todos os IDs editados num Set JSON para não depender de key-matching.
   static const String _keyEditFlagPrefix = "PEDIDO_EDITADO_";
   static const String _keyItensPrefix = "PEDIDO_ITENS_";
+  static const String _keyEditedIds = "EDITED_IDS_SET";
 
-  void saveEditFlag(String numero) {
-    _prefs.setBool("$_keyEditFlagPrefix${numero.trim()}", true);
+  void _addToEditedSet(String id) {
+    if (id.isEmpty) return;
+    final ids = getEditedIds();
+    if (!ids.contains(id)) {
+      ids.add(id);
+      _prefs.setString(_keyEditedIds, ids.join(','));
+    }
   }
 
-  bool isPedidoEditado(String numero) {
-    return _prefs.getBool("$_keyEditFlagPrefix${numero.trim()}") ?? false;
+  Set<String> getEditedIds() {
+    final raw = _prefs.getString(_keyEditedIds) ?? '';
+    if (raw.isEmpty) return {};
+    return raw.split(',').where((s) => s.isNotEmpty).toSet();
   }
 
-  void savePedidoItens(String numero, String itensJson) {
-    _prefs.setString("$_keyItensPrefix${numero.trim()}", itensJson);
+  void saveEditFlag(String id) {
+    if (id.isEmpty) return;
+    _addToEditedSet(id);
+    _prefs.setBool("$_keyEditFlagPrefix${id.trim()}", true);
   }
 
-  String? getPedidoItens(String numero) {
-    return _prefs.getString("$_keyItensPrefix${numero.trim()}");
+  bool isPedidoEditado(String id) {
+    if (getEditedIds().contains(id)) return true;
+    return _prefs.getBool("$_keyEditFlagPrefix${id.trim()}") ?? false;
   }
 
-  /// Verifica se o pedido foi editado (flag OU itens salvos)
-  bool pedidoFoiEditado(String numero) {
-    if (isPedidoEditado(numero)) return true;
-    if (getPedidoItens(numero) != null) return true;
+  void savePedidoItens(String id, String itensJson) {
+    if (id.isEmpty) return;
+    _addToEditedSet(id);
+    _prefs.setString("$_keyItensPrefix${id.trim()}", itensJson);
+  }
+
+  String? getPedidoItens(String id) {
+    return _prefs.getString("$_keyItensPrefix${id.trim()}");
+  }
+
+  /// Verifica se o pedido foi editado (Set OU flag OU itens salvos)
+  bool pedidoFoiEditado(String id) {
+    if (id.isEmpty) return false;
+    if (getEditedIds().contains(id)) return true;
+    if (isPedidoEditado(id)) return true;
+    if (getPedidoItens(id) != null) return true;
     return false;
   }
 
