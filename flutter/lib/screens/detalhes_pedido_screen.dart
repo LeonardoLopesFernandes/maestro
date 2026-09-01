@@ -1113,8 +1113,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           'descricao': it.descricao,
           'quantidade': it.quantidade,
         }).toList());
-        widget.session.savePedidoItens(_pedido.numero, itensJson);
-        widget.session.saveEditFlag(_pedido.numero);
+        final editKey = _pedido.id.isNotEmpty ? _pedido.id : _pedido.numero;
+        widget.session.savePedidoItens(editKey, itensJson);
+        widget.session.saveEditFlag(editKey);
       } catch (_) {}
       // 2º diálogo: confirmação parcial com motivo
       final alterados = <(String, int, int)>[];
@@ -1188,8 +1189,10 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           'descricao': it.descricao,
           'quantidade': it.quantidade,
         }).toList());
-        widget.session.savePedidoItens(_pedido.numero, itensJson);
-        widget.session.saveEditFlag(_pedido.numero);
+        widget.session.savePedidoItens(
+            _pedido.id.isNotEmpty ? _pedido.id : _pedido.numero, itensJson);
+        widget.session.saveEditFlag(
+            _pedido.id.isNotEmpty ? _pedido.id : _pedido.numero);
       } catch (_) {}
       final alterados = <(String, int, int)>[];
       for (final it in itens) {
@@ -1323,8 +1326,10 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           'descricao': it.descricao,
           'quantidade': it.quantidade,
         }).toList());
-        widget.session.savePedidoItens(_pedido.numero, itensJson);
-        widget.session.saveEditFlag(_pedido.numero);
+        widget.session.savePedidoItens(
+            _pedido.id.isNotEmpty ? _pedido.id : _pedido.numero, itensJson);
+        widget.session.saveEditFlag(
+            _pedido.id.isNotEmpty ? _pedido.id : _pedido.numero);
       } catch (_) {}
     }
     _sucesso('Separação confirmada.');

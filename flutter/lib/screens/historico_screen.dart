@@ -389,7 +389,7 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
           final p = _pedidos[i];
           final tokenSalvo = p.deliveryToken?.tokenRetirada ??
               widget.session.getDeliveryToken(p.numero);
-          final editado = widget.session.pedidoFoiEditado(p.numero);
+          final editado = widget.session.pedidoFoiEditado(p.id);
           return PedidoCard(
             pedido: p,
             tokenRetirada: tokenSalvo,

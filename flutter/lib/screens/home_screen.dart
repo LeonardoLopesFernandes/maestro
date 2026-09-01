@@ -646,7 +646,7 @@ class _PedidoListTabState extends State<_PedidoListTab> {
             );
           }
           final p = _pedidos[i];
-          final editado = widget.session.pedidoFoiEditado(p.numero);
+          final editado = widget.session.pedidoFoiEditado(p.id);
           return PedidoCard(
             pedido: p,
             editado: editado,
