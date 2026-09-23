@@ -23,13 +23,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _init();
-    // Se veio de um 401, abre direto o diálogo de token (pula a tela de login).
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final args = ModalRoute.of(context)?.settings.arguments;
-      if (args is Map && args['abrirToken'] == true && mounted) {
-        _entrarComToken();
-      }
-    });
   }
 
   Future<void> _init() async {
@@ -77,155 +70,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _entrarDemo() {
-    _session.enableDemo();
-    Navigator.of(context).pushReplacementNamed('/home');
-  }
-
-  // Entrada manual do token gerado no site (maestro.americanas.io/login?token=...).
-  // Útil quando o MFA (SMS) do Microsoft está indisponível.
-  void _entrarComToken() {
-    final c = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Entrar com token'),
-        content: TextField(
-          controller: c,
-          maxLines: null,
-          minLines: 3,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText:
-                'Cole o token JWT ou a URL com token=/rc-newToken (também serve o token do Papeleta63 / Rotina Comercial)',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('CANCELAR'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final token = _extrairTokenDeTexto(c.text);
-              if (token == null) {
-                ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(
-                  content: Text('Token não encontrado no texto informado.'),
-                ));
-                return;
-              }
-              Navigator.pop(ctx);
-              _aplicarToken(token);
-            },
-            child: const Text('ENTRAR'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String? _extrairTokenDeTexto(String texto) {
-    const patterns = [
-      'token=',
-      'newToken=',
-      'bearer=',
-      'access_token=',
-      'id_token=',
-      'auth_token=',
-      'jwt=',
-    ];
-    for (final p in patterns) {
-      final idx = texto.indexOf(p);
-      if (idx != -1) {
-        var v = texto.substring(idx + p.length);
-        final fim = v.indexOf(RegExp(r'[&\s;]'));
-        if (fim != -1) v = v.substring(0, fim);
-        if (v.isNotEmpty) return v;
-      }
-    }
-    final t = texto.trim();
-    if (t.startsWith('eyJ') && t.split('.').length == 3) return t;
-    // Token bruto colado diretamente (ex.: rc-newToken do Papeleta63 / Rotina
-    // Comercial, que não é um JWT). Não aceita URLs nem textos muito longos.
-    if (t.isNotEmpty &&
-        !t.contains(RegExp(r'\s')) &&
-        !t.startsWith('http') &&
-        t.length >= 20 &&
-        t.length <= 1000) return t;
-    return null;
-  }
-
-  Map<String, dynamic>? _decodificarClaims(String token) {
-    try {
-      final parts = token.split('.');
-      if (parts.length < 2) return null;
-      var p = parts[1];
-      p = p.padRight(p.length + (4 - p.length % 4) % 4, '=');
-      final j = jsonDecode(utf8.decode(base64Url.decode(p)));
-      return j is Map ? Map<String, dynamic>.from(j) : null;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  void _aplicarToken(String token) {
-    final claims = _decodificarClaims(token);
-    _session.saveToken(
-        token, expiryEpochSeconds: claims?['exp'] is int ? claims!['exp'] as int : null);
-    // Suporta JWT com claims aninhados em "user" (minhaloja/trocafacil)
-    // e flat (Microsoft OAuth padrão).
-    final user = claims?['user'] is Map ? Map<String, dynamic>.from(claims!['user']) : null;
-    final email = (user?['email'] ??
-            claims?['email'] ??
-            claims?['upn'] ??
-            claims?['preferred_username'] ??
-            claims?['unique_name'])
-        ?.toString();
-    final nome = (user?['nome'] ??
-            user?['name'] ??
-            _nomeDosClaims(claims, email ?? ''))
-        ?.toString() ?? '';
-    final stores = user?['stores'] ?? claims?['stores'];
-    final loja = user?['loja']?.toString() ??
-        claims?['loja']?.toString() ??
-        (stores is List && stores.isNotEmpty ? stores.first.toString() : null);
-    _session.saveUserInfo(
-      email ?? 'usuario@americanas.io',
-      nome,
-      loja ?? _session.getUserStore() ?? Constants.defaultStore,
-    );
-    Navigator.of(context).pushReplacementNamed('/home');
-  }
-
-  String _nomeDosClaims(Map<String, dynamic>? c, String email) {
-    if (c != null) {
-      for (final k in ['nome', 'name', 'display_name', 'displayName']) {
-        final v = c[k];
-        if (v != null && v.toString().trim().isNotEmpty) {
-          return v.toString().trim();
-        }
-      }
-      final g = c['given_name']?.toString();
-      final f = c['family_name']?.toString();
-      if (g != null && g.isNotEmpty) {
-        return [g, if (f != null && f.isNotEmpty) f].join(' ');
-      }
-      final un = c['unique_name']?.toString();
-      if (un != null && un.isNotEmpty && !un.contains('@')) {
-        return _capitalizar(un.replaceAll(RegExp(r'[._-]'), ' '));
-      }
-    }
-    final local = email.split('@').first;
-    return _capitalizar(local.replaceAll(RegExp(r'[._-]'), ' '));
-  }
-
-  String _capitalizar(String s) => s
-      .split(' ')
-      .where((w) => w.isNotEmpty)
-      .map((w) => w[0].toUpperCase() + w.substring(1))
-      .join(' ');
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -233,14 +77,14 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Stack(
         clipBehavior: Clip.none,
         children: [
-          // "M" gigante ao fundo (espelha activity_login.xml: txtFundoGigante)
+          // "m" gigante ao fundo (espelha activity_login.xml: txtFundoGigante)
           Positioned.fill(
             child: Align(
               alignment: const Alignment(0.0, 0.75),
               child: Transform.scale(
-                scale: 5.5,
+                scale: 4.5,
                 child: const Text(
-                  'M',
+                  'm',
                   style: TextStyle(
                     fontSize: 200,
                     color: Colors.black12,
@@ -413,40 +257,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                               ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          // 2b. Modo demonstração (preview sem credenciais)
-                          SizedBox(
-                            width: double.infinity,
-                            height: 44,
-                            child: TextButton(
-                              onPressed: _carregando ? null : _entrarDemo,
-                              child: const Text(
-                                'Entrar em modo demonstração',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // 2c. Entrada manual do token gerado no site
-                          SizedBox(
-                            width: double.infinity,
-                            height: 44,
-                            child: TextButton(
-                              onPressed: _carregando ? null : _entrarComToken,
-                              child: const Text(
-                                'ENTRAR COM TOKEN',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
                             ),
                           ),
                           const Spacer(),

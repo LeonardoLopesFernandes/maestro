@@ -30,6 +30,7 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
   String _email = '';
   String _senha = '';
   Timer? _pollTimer;
+  bool _promptInjetado = false;
 
   @override
   void initState() {
@@ -52,7 +53,10 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (url) {
-            if (url != null) _verificarUrl(url);
+            if (url != null) {
+              _verificarUrl(url);
+              _garantirSelectAccount(url);
+            }
           },
           onPageFinished: (url) async {
             if (!_loginConcluido) {
@@ -73,6 +77,9 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
           },
           onNavigationRequest: (request) {
             _verificarUrl(request.url);
+            if (_garantirSelectAccount(request.url)) {
+              return NavigationDecision.prevent;
+            }
             return NavigationDecision.navigate;
           },
         ),
@@ -89,6 +96,20 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
       final token = await _capturarToken();
       if (token != null) _salvarToken(token);
     });
+  }
+
+  // Força a tela "Escolher uma conta" do Microsoft: intercepta a URL de
+  // autorização e injeta prompt=select_account, para o usuário clicar na
+  // conta salva desejada ao trocar de conta. Retorna true se recarregou a URL.
+  bool _garantirSelectAccount(String url) {
+    if (_loginConcluido || _promptInjetado) return false;
+    if (!url.contains('login.microsoftonline.com')) return false;
+    if (url.contains('prompt=')) return false;
+    _promptInjetado = true;
+    final sep = url.contains('?') ? '&' : '?';
+    final nova = url + sep + 'prompt=select_account';
+    _controller.loadRequest(Uri.parse(nova));
+    return true;
   }
 
   // Espelha preencherLoginAutomatico/montarScriptPreenchimento do Kotlin.

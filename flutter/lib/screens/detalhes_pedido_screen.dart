@@ -889,13 +889,25 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     } else if (s.contains('SEPARACAO')) {
       badges.add(_badgeAcao('CONFIRMAR', const Color(0xFF12CD0C), _acaoConfirmar));
     } else if (s.contains('PRONTO')) {
-      badges.add(_badgeAcao(
-          'RETIRAR PEDIDO', const Color(0xFFFFAA02), _acaoRetirar));
       if (_temMaisDe3Dias()) {
-        badges.add(const SizedBox(height: 8));
+        // RETIRAR PEDIDO + CANCELAR PEDIDO lado a lado (larguras/alturas iguais)
+        badges.add(Row(
+          children: [
+            Expanded(
+              child: _badgeAcao(
+                  'RETIRAR PEDIDO', const Color(0xFFFFAA02), _acaoRetirar),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _badgeAcao(
+                  'CANCELAR PEDIDO', const Color(0xFFF80032), _acaoCancelarRetirada,
+                  raio: 8),
+            ),
+          ],
+        ));
+      } else {
         badges.add(_badgeAcao(
-            'CANCELAR', const Color(0xFFF80032), _acaoCancelarRetirada,
-            raio: 8));
+            'RETIRAR PEDIDO', const Color(0xFFFFAA02), _acaoRetirar));
       }
     } else if (s.contains('ENTREGA')) {
       badges.add(_badgeAcao(
