@@ -81,13 +81,14 @@ class _LoginScreenState extends State<LoginScreen> {
           // "a" gigante ao fundo (espelha activity_login.xml: txtFundoGigante)
           Positioned.fill(
             child: Align(
-              alignment: const Alignment(0.9, 0.5),
+              alignment: const Alignment(0.95, 0.5),
               child: Transform.scale(
                 scale: 1.0,
                 child: const Text(
                   'a',
                   style: TextStyle(
-                    fontSize: 390,
+                    fontSize: 600,
+                    height: 1.0,
                     color: Colors.black12,
                     fontWeight: FontWeight.w900,
                   ),

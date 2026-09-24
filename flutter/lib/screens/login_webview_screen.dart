@@ -190,7 +190,7 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
           "for(var i=0;i<keys.length;i++){var p=keys[i];var idx=s.indexOf(p);"
           "if(idx>=0){var v=s.substring(idx+p.length);var m=v.match(/^[^&\"'_\\\\s]+/);"
           "if(m&&m[0].length>50) return m[0];}}"
-          "var lk=['newToken','token','bearer','access_token','id_token','auth_token','jwt','session_token'];"
+          "var lk=['newToken','rc-newToken','rcNewToken','token','bearer','access_token','id_token','auth_token','jwt','session_token','maestroToken','authToken'];"
           "for(var i=0;i<lk.length;i++){var v=localStorage.getItem(lk[i])||sessionStorage.getItem(lk[i]);"
           "if(v&&v.length>50) return v;}"
           "for(var i=0;i<lk.length;i++){if(window[lk[i]]&&window[lk[i]].length>50) return window[lk[i]];}"
@@ -276,30 +276,40 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
     _tokenCapturado = true;
     _pollTimer?.cancel();
     if (mounted) setState(() => _carregando = true);
-    final claims = _decodificarClaims(token);
-    await _session.saveToken(
-        token, expiryEpochSeconds: claims?['exp'] is int ? claims!['exp'] as int : null);
-    // Suporta JWT com claims aninhados em "user" (minhaloja/trocafacil)
-    // e flat (Microsoft OAuth padrão).
-    final user = claims?['user'] is Map ? Map<String, dynamic>.from(claims!['user']) : null;
-    final email = (user?['email'] ??
-                claims?['email'] ??
-                claims?['upn'] ??
-                claims?['preferred_username'] ??
-                claims?['unique_name'] ??
-                widget.args?['email'])?.toString() ??
-        "usuario@americanas.io";
-    final nome = (user?['nome'] ??
-                user?['name'] ??
-                _nomeDosClaims(claims, email))
-        ?.toString() ?? '';
-    final stores = user?['stores'] ?? claims?['stores'];
-    final loja = user?['loja']?.toString() ??
-        claims?['loja']?.toString() ??
-        (stores is List && stores.isNotEmpty ? stores.first.toString() : null);
-    _session.saveUserInfo(
-        email, nome, loja ?? _session.getUserStore() ?? Constants.defaultStore);
-    Navigator.of(context).pushReplacementNamed('/home');
+    try {
+      final claims = _decodificarClaims(token);
+      await _session.saveToken(token,
+          expiryEpochSeconds: claims?['exp'] is int ? claims!['exp'] as int : null);
+      // Suporta JWT com claims aninhados em "user" (minhaloja/trocafacil)
+      // e flat (Microsoft OAuth padrão).
+      final user = claims?['user'] is Map
+          ? Map<String, dynamic>.from(claims!['user'])
+          : null;
+      final email = (user?['email'] ??
+                  claims?['email'] ??
+                  claims?['upn'] ??
+                  claims?['preferred_username'] ??
+                  claims?['unique_name'] ??
+                  widget.args?['email'])?.toString() ??
+          "usuario@americanas.io";
+      final nome = (user?['nome'] ??
+                  user?['name'] ??
+                  _nomeDosClaims(claims, email))
+              ?.toString() ??
+          '';
+      final stores = user?['stores'] ?? claims?['stores'];
+      final loja = user?['loja']?.toString() ??
+          claims?['loja']?.toString() ??
+          (stores is List && stores.isNotEmpty ? stores.first.toString() : null);
+      _session.saveUserInfo(
+          email, nome, loja ?? _session.getUserStore() ?? Constants.defaultStore);
+    } catch (e) {
+      LogHelper.e('LoginWebView: erro ao salvar token', e);
+    }
+    // Sempre navega para a home, mesmo se a persistência falhar.
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed('/home');
+    }
   }
 
   @override
