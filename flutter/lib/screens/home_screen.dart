@@ -71,6 +71,9 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _buscando = false;
   Timer? _pollTimer;
   int _currentIndex = 0;
+  final Map<String, GlobalKey<_PedidoListTabState>> _listKeys = {};
+  final GlobalKey<HistoricoScreenState> _historicoKey =
+      GlobalKey<HistoricoScreenState>();
 
   final AudioPlayer _player = AudioPlayer();
   int _prevNovo = 0;
@@ -95,8 +98,25 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _carregarCounts();
+    // Polling em tempo real: atualiza os counts E recarrega a lista da aba
+    // visível, para os pedidos aparecerem sem pull-to-refresh.
     _pollTimer =
-        Timer.periodic(const Duration(seconds: 45), (_) => _carregarCounts());
+        Timer.periodic(const Duration(seconds: 20), (_) => _pollAtualizar());
+  }
+
+  Future<void> _pollAtualizar() async {
+    await _carregarCounts();
+    _recarregarAbaAtiva();
+  }
+
+  void _recarregarAbaAtiva() {
+    if (!mounted) return;
+    final aba = _abas[_currentIndex];
+    if (aba.status == 'HISTORICO') {
+      _historicoKey.currentState?.reload();
+    } else {
+      _listKeys[aba.status]?.currentState?._carregar(reset: true);
+    }
   }
 
   Future<void> _carregarCounts() async {
@@ -168,7 +188,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _onNavTap(int i) => setState(() => _currentIndex = i);
+  void _onNavTap(int i) {
+    setState(() => _currentIndex = i);
+    // Recarrega a aba ao entrar para mostrar dados atualizados na hora.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _recarregarAbaAtiva());
+  }
 
   Color get _corAba => Color(_tabColors[_currentIndex]);
 
@@ -504,13 +528,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _conteudo(_Aba aba) {
     if (aba.status == 'HISTORICO') {
       return HistoricoScreen(
+        key: _historicoKey,
         session: widget.session,
         apiService: widget.apiService,
         search: _searchController.text,
       );
     }
     return _PedidoListTab(
-      key: ValueKey(aba.status + _searchController.text),
+      key: _listKeys.putIfAbsent(
+          aba.status, () => GlobalKey<_PedidoListTabState>()),
       apiService: widget.apiService,
       session: widget.session,
       status: aba.status,

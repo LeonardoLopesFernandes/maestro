@@ -19,10 +19,10 @@ class HistoricoScreen extends StatefulWidget {
   });
 
   @override
-  State<HistoricoScreen> createState() => _HistoricoScreenState();
+  State<HistoricoScreen> createState() => HistoricoScreenState();
 }
 
-class _HistoricoScreenState extends State<HistoricoScreen> {
+class HistoricoScreenState extends State<HistoricoScreen> {
   List<Pedido> _pedidos = []; // exibidos (já filtrados)
   List<Pedido> _todos = []; // crus (todas as páginas carregadas)
   int _skip = 0;
@@ -111,6 +111,8 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
     final p = (int v) => v.toString().padLeft(2, '0');
     return '${p(d.day)}/${p(d.month)}/${d.year}';
   }
+
+  Future<void> reload() => _carregar(reset: true);
 
   Future<void> _carregar({bool reset = false}) async {
     if (reset) {
