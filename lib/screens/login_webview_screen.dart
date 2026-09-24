@@ -28,6 +28,7 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
   bool _pronto = false;
   bool _tokenCapturado = false;
   bool _autoLogin = false;
+  bool _pedirCredenciais = false;
   String _email = '';
   String _senha = '';
   Timer? _pollTimer;
@@ -44,6 +45,7 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
     _apiService = ApiService(ApiClient(session: _session));
     final args = widget.args ?? {};
     _autoLogin = args['autoLogin'] == true;
+    _pedirCredenciais = args['pedirCredenciais'] == true;
     _email = (args['email'] ?? '').toString();
     _senha = (args['senha'] ?? '').toString();
     _controller = WebViewController()
@@ -99,16 +101,16 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
     });
   }
 
-  // Força a tela "Escolher uma conta" do Microsoft: intercepta a URL de
-  // autorização e injeta prompt=select_account, para o usuário clicar na
-  // conta salva desejada ao trocar de conta. Retorna true se recarregou a URL.
+  // Força a tela de escolha de conta do Microsoft (ou a de login quando
+// pedirCredenciais — ENTRAR COM MICROSOFT — para trocar de usuário).
   bool _garantirSelectAccount(String url) {
     if (_loginConcluido || _promptInjetado) return false;
     if (!url.contains('login.microsoftonline.com')) return false;
     if (url.contains('prompt=')) return false;
     _promptInjetado = true;
     final sep = url.contains('?') ? '&' : '?';
-    final nova = url + sep + 'prompt=select_account';
+    final prompt = _pedirCredenciais ? 'login' : 'select_account';
+    final nova = url + sep + 'prompt=$prompt';
     _controller.loadRequest(Uri.parse(nova));
     return true;
   }

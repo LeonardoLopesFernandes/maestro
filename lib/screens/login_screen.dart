@@ -50,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _abrirWebView({bool autoLogin = false}) {
+  void _abrirWebView({bool autoLogin = false, bool pedirCredenciais = false}) {
     if (_salvarCredenciais && _emailController.text.isNotEmpty) {
       _session.saveCredentials(
           _emailController.text.trim(), _senhaController.text);
@@ -65,6 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
             'email': _emailController.text.trim(),
             'senha': _senhaController.text,
             'autoLogin': autoLogin,
+            'pedirCredenciais': pedirCredenciais,
           },
         ),
       ),
@@ -85,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
               builder: (context, constraints) {
                 final h = constraints.maxHeight;
                 return Align(
-                  alignment: const Alignment(0.95, 0.5),
+                  alignment: const Alignment(0.95, 0.05),
                   child: Text(
                     'a',
                     style: TextStyle(
@@ -234,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: ElevatedButton(
                                     onPressed: _carregando
                                         ? null
-                                        : () => _abrirWebView(),
+                                        : () => _abrirWebView(pedirCredenciais: true),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.white,
                                       foregroundColor:
