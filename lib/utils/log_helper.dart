@@ -36,4 +36,14 @@ class LogHelper {
         s.contains('timeout') ||
         s.contains('clientexception');
   }
+
+  /// Erros de sessão (401/TOKEN_NOT_PROVIDED): o onUnauthorized já trata
+  /// redirecionando ao login, então não devemos mostrar toast.
+  static bool ehErroDeSessao(Object e) {
+    final s = e.toString().toLowerCase();
+    return s.contains('401') ||
+        s.contains('token_not_provided') ||
+        s.contains('unauthorized') ||
+        s.contains('session expired');
+  }
 }

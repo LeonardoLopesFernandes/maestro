@@ -203,7 +203,7 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
           "function buscar(storage){"
           "for(var i=0;i<storage.length;i++){"
           "try{var k=storage.key(i);var v=storage.getItem(k);"
-          "if(v&&v.length>50&&(v.indexOf('.')>=0||v.indexOf('eyJ')===0)){return v;}"
+          "if(v&&v.length>50&&v.indexOf(' ')<0&&(v.indexOf('.')>=0||v.indexOf('eyJ')===0)){return v;}"
           "}catch(e){}"
           "}"
           "return null;"

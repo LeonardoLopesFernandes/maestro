@@ -147,7 +147,10 @@ class HistoricoScreenState extends State<HistoricoScreen> {
         });
       }
     } catch (e) {
-      if (mounted && ger == _geracao && !LogHelper.ehErroDeRede(e)) {
+      if (mounted &&
+          ger == _geracao &&
+          !LogHelper.ehErroDeRede(e) &&
+          !LogHelper.ehErroDeSessao(e)) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Erro: $e')));
       }
