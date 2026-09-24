@@ -605,6 +605,8 @@ class _PedidoListTabState extends State<_PedidoListTab> {
   bool _carregando = true;
   bool _temMais = true;
   final int _limit = 20;
+  bool _buscando = false;
+  int _geracao = 0;
 
   @override
   void initState() {
@@ -623,12 +625,15 @@ class _PedidoListTabState extends State<_PedidoListTab> {
   }
 
   Future<void> _carregar({bool reset = false}) async {
+    if (_buscando) return; // evita corrida entre polling e scroll/refresh
+    final ger = ++_geracao;
     if (reset) {
       _skip = 0;
       _pedidos = [];
       _temMais = true;
     }
     if (!_temMais) return;
+    _buscando = true;
     setState(() => _carregando = true);
     try {
       final resp = await widget.apiService.getPedidosPaged(
@@ -639,7 +644,7 @@ class _PedidoListTabState extends State<_PedidoListTab> {
         ordemDataInclusao: widget.ordemDataInclusao,
         find: widget.search.isNotEmpty ? widget.search : null,
       );
-      if (mounted) {
+      if (mounted && ger == _geracao) {
         setState(() {
           _pedidos.addAll(resp.pedidos);
           _skip += resp.pedidos.length;
@@ -647,13 +652,14 @@ class _PedidoListTabState extends State<_PedidoListTab> {
         });
       }
     } catch (e) {
-      if (mounted && !LogHelper.ehErroDeRede(e)) {
+      if (mounted && ger == _geracao && !LogHelper.ehErroDeRede(e)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao carregar: $e')),
         );
       }
     } finally {
-      if (mounted) setState(() => _carregando = false);
+      _buscando = false;
+      if (mounted && ger == _geracao) setState(() => _carregando = false);
     }
   }
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../network/session_manager.dart';
 import '../network/api_client.dart';
@@ -183,6 +184,7 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
   Future<String?> _capturarToken() async {
     if (_tokenCapturado) return null;
     try {
+      // 1) JS no WebView (localStorage/sessionStorage/window/cookies visíveis)
       const script = "(function(){"
           "function extrair(s){"
           "if(!s) return null;"
@@ -208,6 +210,21 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
       }
     } catch (e) {
       LogHelper.e("capturarToken", e);
+    }
+
+    // 2) Cookies nativos (inclui HttpOnly, que o JS não lê) — espelha o
+    // extrairTokenDosCookies do Kotlin (CookieManager).
+    try {
+      const channel = MethodChannel('io.maestro/cookies');
+      final cookies = await channel.invokeMethod<String>('getCookies', {
+        'url': 'https://maestro.americanas.io',
+      });
+      if (cookies != null && cookies.isNotEmpty) {
+        final t = _extrairToken(cookies);
+        if (t != null) return t;
+      }
+    } catch (e) {
+      LogHelper.e("capturarToken cookies", e);
     }
     return null;
   }
@@ -341,22 +358,53 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
   }
 }
 
-class _CarregamentoWidget extends StatelessWidget {
+class _CarregamentoWidget extends StatefulWidget {
   const _CarregamentoWidget();
+
+  @override
+  State<_CarregamentoWidget> createState() => _CarregamentoWidgetState();
+}
+
+class _CarregamentoWidgetState extends State<_CarregamentoWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: const Color(0xFFE60000),
-      child: const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(color: Colors.white),
-            SizedBox(height: 24),
-            Text('Autenticando...',
-                style: TextStyle(color: Colors.white, fontSize: 16)),
-          ],
+      child: Center(
+        child: FadeTransition(
+          opacity: _pulse.drive(Tween<double>(begin: 1.0, end: 0.3)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/ic_maestro_logo.png',
+                width: 120,
+                height: 120,
+                fit: BoxFit.contain,
+              ),
+              const SizedBox(height: 24),
+              const Text('Autenticando...',
+                  style: TextStyle(color: Colors.white, fontSize: 16)),
+            ],
+          ),
         ),
       ),
     );

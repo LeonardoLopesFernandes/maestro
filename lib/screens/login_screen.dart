@@ -78,22 +78,25 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Stack(
         clipBehavior: Clip.none,
         children: [
-          // "a" gigante ao fundo (espelha activity_login.xml: txtFundoGigante)
+          // "a" gigante ao fundo (espelha activity_login.xml: txtFundoGigante).
+          // Escala com a altura da tela para cobrir do topo ao rodapé.
           Positioned.fill(
-            child: Align(
-              alignment: const Alignment(0.95, 0.5),
-              child: Transform.scale(
-                scale: 1.0,
-                child: const Text(
-                  'a',
-                  style: TextStyle(
-                    fontSize: 600,
-                    height: 1.0,
-                    color: Colors.black12,
-                    fontWeight: FontWeight.w900,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final h = constraints.maxHeight;
+                return Align(
+                  alignment: const Alignment(0.95, 0.5),
+                  child: Text(
+                    'a',
+                    style: TextStyle(
+                      fontSize: h * 1.2,
+                      height: 1.0,
+                      color: Colors.black12,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
           SafeArea(

@@ -29,6 +29,8 @@ class HistoricoScreenState extends State<HistoricoScreen> {
   int _skip = 0;
   bool _carregando = true;
   bool _temMais = true;
+  bool _buscando = false;
+  int _geracao = 0;
   final int _limit = 20;
   String _filtro = 'TODOS';
   DateTime? _dataFiltro;
@@ -116,6 +118,8 @@ class HistoricoScreenState extends State<HistoricoScreen> {
   Future<void> reload() => _carregar(reset: true);
 
   Future<void> _carregar({bool reset = false}) async {
+    if (_buscando) return; // evita corrida entre polling e scroll/refresh
+    final ger = ++_geracao;
     if (reset) {
       _skip = 0;
       _todos = [];
@@ -123,6 +127,7 @@ class HistoricoScreenState extends State<HistoricoScreen> {
       _temMais = true;
     }
     if (!_temMais) return;
+    _buscando = true;
     setState(() => _carregando = true);
     try {
       final resp = await widget.apiService.getPedidosPaged(
@@ -133,7 +138,7 @@ class HistoricoScreenState extends State<HistoricoScreen> {
         ordemDataInclusao: false,
         find: _busca.text.isNotEmpty ? _busca.text : null,
       );
-      if (mounted) {
+      if (mounted && ger == _geracao) {
         setState(() {
           _todos.addAll(resp.pedidos);
           _skip += resp.pedidos.length;
@@ -142,12 +147,13 @@ class HistoricoScreenState extends State<HistoricoScreen> {
         });
       }
     } catch (e) {
-      if (mounted && !LogHelper.ehErroDeRede(e)) {
+      if (mounted && ger == _geracao && !LogHelper.ehErroDeRede(e)) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Erro: $e')));
       }
     } finally {
-      if (mounted) setState(() => _carregando = false);
+      _buscando = false;
+      if (mounted && ger == _geracao) setState(() => _carregando = false);
     }
   }
 
