@@ -14,6 +14,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
+  bool _senhaVisivel = false;
   bool _salvarCredenciais = true;
   bool _carregando = false;
   bool _reconectando = false;
@@ -77,16 +78,16 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Stack(
         clipBehavior: Clip.none,
         children: [
-          // "m" gigante ao fundo (espelha activity_login.xml: txtFundoGigante)
+          // "a" gigante ao fundo (espelha activity_login.xml: txtFundoGigante)
           Positioned.fill(
             child: Align(
-              alignment: const Alignment(0.0, 0.75),
+              alignment: const Alignment(0.9, 0.5),
               child: Transform.scale(
-                scale: 4.5,
+                scale: 1.0,
                 child: const Text(
-                  'm',
+                  'a',
                   style: TextStyle(
-                    fontSize: 200,
+                    fontSize: 390,
                     color: Colors.black12,
                     fontWeight: FontWeight.w900,
                   ),
@@ -156,7 +157,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 _campo(
                                   controller: _senhaController,
                                   hint: 'Senha',
-                                  obscure: true,
+                                  obscure: !_senhaVisivel,
+                                  mostrarOlho: true,
                                 ),
                                 const SizedBox(height: 40),
                                 SizedBox(
@@ -328,6 +330,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required TextEditingController controller,
     required String hint,
     bool obscure = false,
+    bool mostrarOlho = false,
     TextInputType? keyboardType,
   }) {
     return SizedBox(
@@ -348,6 +351,18 @@ class _LoginScreenState extends State<LoginScreen> {
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide.none,
           ),
+          suffixIcon: mostrarOlho
+              ? IconButton(
+                  icon: Icon(
+                    _senhaVisivel
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                    color: const Color(0xFF0056B3),
+                  ),
+                  onPressed: () =>
+                      setState(() => _senhaVisivel = !_senhaVisivel),
+                )
+              : null,
         ),
       ),
     );

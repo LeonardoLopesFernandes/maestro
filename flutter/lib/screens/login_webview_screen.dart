@@ -270,14 +270,14 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
     return _capitalizar(local.replaceAll(RegExp(r'[._-]'), ' '));
   }
 
-  void _salvarToken(String token) {
+  Future<void> _salvarToken(String token) async {
     if (_loginConcluido) return;
     _loginConcluido = true;
     _tokenCapturado = true;
     _pollTimer?.cancel();
     if (mounted) setState(() => _carregando = true);
     final claims = _decodificarClaims(token);
-    _session.saveToken(
+    await _session.saveToken(
         token, expiryEpochSeconds: claims?['exp'] is int ? claims!['exp'] as int : null);
     // Suporta JWT com claims aninhados em "user" (minhaloja/trocafacil)
     // e flat (Microsoft OAuth padrão).

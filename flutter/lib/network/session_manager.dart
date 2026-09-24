@@ -22,8 +22,8 @@ class SessionManager {
     return SessionManager(prefs);
   }
 
-  void saveToken(String token, {int? expiryEpochSeconds}) {
-    _prefs.setString(_keyBearerToken, token);
+  Future<void> saveToken(String token, {int? expiryEpochSeconds}) async {
+    await _prefs.setString(_keyBearerToken, token);
     final expiry = (expiryEpochSeconds != null
             ? expiryEpochSeconds * 1000
             : DateTime.now()
@@ -31,8 +31,8 @@ class SessionManager {
                 .millisecondsSinceEpoch)
         .clamp(DateTime.now().millisecondsSinceEpoch,
             DateTime.now().add(const Duration(days: 365)).millisecondsSinceEpoch);
-    _prefs.setInt(_keyTokenExpiry, expiry);
-    _prefs.setBool(_keyRememberLogin, true);
+    await _prefs.setInt(_keyTokenExpiry, expiry);
+    await _prefs.setBool(_keyRememberLogin, true);
   }
 
   String? getToken() {
