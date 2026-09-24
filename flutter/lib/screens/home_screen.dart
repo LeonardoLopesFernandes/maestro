@@ -6,6 +6,7 @@ import '../models/pedido.dart';
 import '../network/api_service.dart';
 import '../network/session_manager.dart';
 import '../utils/constants.dart';
+import '../utils/log_helper.dart';
 import 'historico_screen.dart';
 import 'price_tags_screen.dart';
 import '../widgets/pedido_card.dart';
@@ -64,7 +65,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   CountResponse _counts = CountResponse();
   bool _carregandoCounts = true;
   final TextEditingController _searchController = TextEditingController();
@@ -97,11 +98,31 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _carregarCounts();
     // Polling em tempo real: atualiza os counts E recarrega a lista da aba
     // visível, para os pedidos aparecerem sem pull-to-refresh.
+    _iniciarPolling();
+  }
+
+  void _iniciarPolling() {
+    _pollTimer?.cancel();
     _pollTimer =
         Timer.periodic(const Duration(seconds: 20), (_) => _pollAtualizar());
+    _pollAtualizar();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Pausa o polling em segundo plano (evita toasts de erro de rede ao
+    // voltar sem conexão); retoma ao voltar para o app.
+    if (state == AppLifecycleState.resumed) {
+      _iniciarPolling();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _pollTimer?.cancel();
+    }
   }
 
   Future<void> _pollAtualizar() async {
@@ -338,6 +359,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pollTimer?.cancel();
     _searchController.dispose();
     _player.dispose();
@@ -625,7 +647,7 @@ class _PedidoListTabState extends State<_PedidoListTab> {
         });
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && !LogHelper.ehErroDeRede(e)) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erro ao carregar: $e')),
         );

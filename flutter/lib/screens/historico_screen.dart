@@ -3,6 +3,7 @@ import '../models/pedido.dart';
 import '../network/api_service.dart';
 import '../network/session_manager.dart';
 import '../utils/constants.dart';
+import '../utils/log_helper.dart';
 import '../widgets/pedido_card.dart';
 import 'detalhes_pedido_screen.dart';
 
@@ -141,7 +142,7 @@ class HistoricoScreenState extends State<HistoricoScreen> {
         });
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && !LogHelper.ehErroDeRede(e)) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Erro: $e')));
       }
