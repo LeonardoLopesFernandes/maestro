@@ -88,6 +88,17 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
         ),
       );
 
+    // ENTRAR COM MICROSOFT: limpa a sessão do site/Microsoft para forçar o
+    // login pedir credenciais (troca de usuário), em vez de reutilizar a
+    // sessão anterior que entrava automaticamente.
+    if (_pedirCredenciais) {
+      try {
+        await WebViewCookieManager().clearCookies();
+      } catch (e) {
+        LogHelper.e('LoginWebView: limpar cookies', e);
+      }
+    }
+
     await _controller.loadRequest(Uri.parse(Constants.msLoginUrl));
     _pronto = true;
     if (mounted) setState(() {});

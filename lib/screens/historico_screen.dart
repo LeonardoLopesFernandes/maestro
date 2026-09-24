@@ -368,20 +368,23 @@ class HistoricoScreenState extends State<HistoricoScreen> {
                               fontWeight: FontWeight.bold,
                               color: Colors.white)),
                     ),
-                    const SizedBox(width: 4),
-                    Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.28),
-                        borderRadius: BorderRadius.circular(10),
+                    // Contador visível SOMENTE no filtro selecionado.
+                    if (_filtro == f.nome) ...[
+                      const SizedBox(width: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.28),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text('${_contagemPara(f)}',
+                            style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white)),
                       ),
-                      child: Text('${_contagemPara(f)}',
-                          style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white)),
-                    ),
+                    ],
                   ],
                 ),
               ),
