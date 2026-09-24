@@ -346,16 +346,68 @@ class HistoricoScreenState extends State<HistoricoScreen> {
                 _carregar(reset: true);
               },
               child: Center(
-                child: Text(f.nome,
-                    style: TextStyle(
-                        fontSize: f.nome.length > 8 ? 10 : 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white)),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Text(f.nome,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                              fontSize: f.nome.length > 8 ? 10 : 11,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                    ),
+                    const SizedBox(width: 4),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.28),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text('${_contagemPara(f)}',
+                          style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
       );
+
+  // Contagem de pedidos carregados para cada modalidade do filtro.
+  int _contagemPara(_Filtro f) {
+    switch (f.nome) {
+      case 'TODOS':
+        return _todos.length;
+      case 'PEGUE NA LOJA':
+        return _todos.where((p) => p.origem == 'PEGUE_NA_LOJA_HOJE').length;
+      case 'DELIVERY':
+        return _todos
+            .where((p) => p.origem != 'PEGUE_NA_LOJA_HOJE' && p.origem != null)
+            .length;
+      case 'IFOOD':
+        return _todos
+            .where((p) =>
+                (p.canalDeVendas ?? '').toUpperCase().contains('IFOOD'))
+            .length;
+      case 'CANCELADO':
+        return _todos
+            .where((p) => (p.status ?? '').toUpperCase() == 'CANCELADO')
+            .length;
+      case 'DEVOLVIDO':
+        return _todos
+            .where((p) => (p.status ?? '').toUpperCase() == 'DEVOLVIDO')
+            .length;
+      default:
+        return _todos.length;
+    }
+  }
 
   Widget _conteudo() {
     if (_carregando && _pedidos.isEmpty) {
