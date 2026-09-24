@@ -92,7 +92,7 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
 
     // Polling de segurança: a página de resposta pode setar o token via
     // JavaScript sem trocar a URL (igual ao JavascriptInterface do Kotlin).
-    _pollTimer = Timer.periodic(const Duration(milliseconds: 800), (_) async {
+    _pollTimer = Timer.periodic(const Duration(milliseconds: 400), (_) async {
       if (_loginConcluido) return;
       final token = await _capturarToken();
       if (token != null) _salvarToken(token);
@@ -198,9 +198,17 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
           "for(var i=0;i<lk.length;i++){if(window[lk[i]]&&window[lk[i]].length>50) return window[lk[i]];}"
           "return null;"
           "}"
+          "function buscar(storage){"
+          "for(var i=0;i<storage.length;i++){"
+          "try{var k=storage.key(i);var v=storage.getItem(k);"
+          "if(v&&v.length>50&&(v.indexOf('.')>=0||v.indexOf('eyJ')===0)){return v;}"
+          "}catch(e){}"
+          "}"
+          "return null;"
+          "}"
           "var cookies=document.cookie||'';"
           "var loc=location.href||'';"
-          "return extrair(loc)||extrair(cookies);"
+          "return extrair(loc)||extrair(cookies)||buscar(localStorage)||buscar(sessionStorage);"
           "})();";
       final result = await _controller.runJavaScriptReturningResult(script);
       String? token;
