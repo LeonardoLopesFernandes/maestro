@@ -131,6 +131,7 @@ class PedidoCard extends StatelessWidget {
                         color: Color(0xFF1E293B))),
                 const SizedBox(height: 4),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Text(pedido.codigoExterno ?? '',
@@ -162,6 +163,7 @@ class PedidoCard extends StatelessWidget {
                 // Bloco B: tags
                 if (mostraCanal || mostraEntrega || editado)
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       if (editado)
                         const Padding(

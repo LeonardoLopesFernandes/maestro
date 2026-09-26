@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math';
 import '../models/pedido.dart';
 import '../network/api_service.dart';
 import '../network/session_manager.dart';
@@ -1032,16 +1033,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 76,
-                height: 76,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE8F6EE),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.check_circle,
-                    color: Color(0xFF2E7D32), size: 46),
-              ),
+              const _SucessoAnimado(),
               const SizedBox(height: 16),
               const Text('Sucesso',
                   style: TextStyle(
@@ -1757,3 +1749,110 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     }
   }
 
+
+/// Animação de sucesso: o círculo verde surge e o check é desenhado
+/// progressivamente por traço.
+class _SucessoAnimado extends StatefulWidget {
+  const _SucessoAnimado();
+
+  @override
+  State<_SucessoAnimado> createState() => _SucessoAnimadoState();
+}
+
+class _SucessoAnimadoState extends State<_SucessoAnimado>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, _) {
+        return Container(
+          width: 96,
+          height: 96,
+          decoration: const BoxDecoration(
+            color: Color(0xFFE8F6EE),
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: SizedBox(
+            width: 56,
+            height: 56,
+            child: CustomPaint(
+              painter: _CheckPainter(progress: _ctrl.value),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CheckPainter extends CustomPainter {
+  final double progress;
+  _CheckPainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = size.center(Offset.zero);
+    final radius = size.width / 2;
+
+    // Círculo desenhado na primeira metade da animação.
+    final circleT = (progress / 0.5).clamp(0.0, 1.0);
+    if (circleT > 0) {
+      final circlePaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5
+        ..strokeCap = StrokeCap.round
+        ..color = const Color(0xFF2E7D32);
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius - 3),
+        -pi / 2,
+        2 * pi * circleT,
+        false,
+        circlePaint,
+      );
+    }
+
+    // Check desenhado na segunda metade.
+    if (progress > 0.45) {
+      final checkT = ((progress - 0.45) / 0.55).clamp(0.0, 1.0);
+      final p1 = center + Offset(-radius * 0.5, 0);
+      final p2 = center + Offset(-radius * 0.08, radius * 0.38);
+      final p3 = center + Offset(radius * 0.55, -radius * 0.38);
+      final path = Path()
+        ..moveTo(p1.dx, p1.dy)
+        ..lineTo(p2.dx, p2.dy)
+        ..lineTo(p3.dx, p3.dy);
+      final metrics = path.computeMetrics().first;
+      final extracted = metrics.extractPath(0, metrics.length * checkT);
+      final checkPaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..color = const Color(0xFF2E7D32);
+      canvas.drawPath(extracted, checkPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _CheckPainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
