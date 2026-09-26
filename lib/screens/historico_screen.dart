@@ -427,15 +427,15 @@ class HistoricoScreenState extends State<HistoricoScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_pedidos.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset('assets/icons/ic_historico.png',
               width: 80, height: 80,
               color: Colors.black26, colorBlendMode: BlendMode.srcIn),
-            SizedBox(height: 16),
-            Text('Nenhum pedido no histórico',
+            const SizedBox(height: 16),
+            const Text('Nenhum pedido no histórico',
                 style: TextStyle(color: Color(0xFF6B7280), fontSize: 16)),
           ],
         ),
