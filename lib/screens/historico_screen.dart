@@ -431,7 +431,9 @@ class HistoricoScreenState extends State<HistoricoScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.history, size: 80, color: Colors.black12),
+            Image.asset('assets/icons/ic_historico.png',
+              width: 80, height: 80,
+              color: Colors.black26, colorBlendMode: BlendMode.srcIn),
             SizedBox(height: 16),
             Text('Nenhum pedido no histórico',
                 style: TextStyle(color: Color(0xFF6B7280), fontSize: 16)),

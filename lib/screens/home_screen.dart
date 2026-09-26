@@ -501,6 +501,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       search: _searchController.text,
       minDias: _minDias,
       ordemDataInclusao: _ordemDataInclusao,
+      tabIcon: _tabIconAssets[aba.index],
     );
   }
 }
@@ -520,6 +521,7 @@ class _PedidoListTab extends StatefulWidget {
   final String search;
   final int minDias;
   final bool ordemDataInclusao;
+  final String tabIcon;
 
   const _PedidoListTab({
     super.key,
@@ -529,6 +531,7 @@ class _PedidoListTab extends StatefulWidget {
     required this.search,
     required this.minDias,
     required this.ordemDataInclusao,
+    required this.tabIcon,
   });
 
   @override
@@ -613,7 +616,13 @@ class _PedidoListTabState extends State<_PedidoListTab> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.receipt_long, size: 90, color: Colors.grey.shade300),
+            Image.asset(
+              widget.tabIcon,
+              width: 90,
+              height: 90,
+              color: Colors.grey.shade400,
+              colorBlendMode: BlendMode.srcIn,
+            ),
             const SizedBox(height: 16),
             const Text('Não há pedidos!',
                 style: TextStyle(
