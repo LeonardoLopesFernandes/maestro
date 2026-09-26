@@ -344,7 +344,25 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
     } catch (e) {
       LogHelper.e('LoginWebView: erro ao salvar token', e);
     }
-    // Sempre navega para a home, mesmo se a persistência falhar.
+    // Valida o token com a API antes de navegar — evita o ciclo infinito
+    // (capturar token inválido -> home -> 401 -> login -> captura de novo).
+    try {
+      final api = ApiService(ApiClient(session: _session));
+      await api.getCounts(_session.getUserStore() ?? Constants.defaultStore);
+    } catch (e) {
+      final msg = e.toString().toLowerCase();
+      if (msg.contains('401') ||
+          msg.contains('token_not_provided') ||
+          msg.contains('unauthorized')) {
+        LogHelper.e('LoginWebView: token rejeitado pela API', e);
+        _loginConcluido = false;
+        _tokenCapturado = false;
+        if (mounted) setState(() => _carregando = false);
+        return;
+      }
+      // Outros erros (rede) — tenta navegar mesmo assim.
+    }
+    // Navega para a home.
     if (mounted) {
       Navigator.of(context).pushReplacementNamed('/home');
     }

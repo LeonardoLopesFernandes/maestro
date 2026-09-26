@@ -117,6 +117,40 @@ class Pedido {
     if (codigoExterno.isNotEmpty) return codigoExterno;
     return id;
   }
+
+  Pedido copyWith({List<Item>? itens}) {
+    return Pedido(
+      id: id,
+      numero: numero,
+      codigoExterno: codigoExterno,
+      loja: loja,
+      status: status,
+      origem: origem,
+      tipoEntrega: tipoEntrega,
+      dataInclusao: dataInclusao,
+      dataAlteracao: dataAlteracao,
+      cliente: cliente,
+      recebedor: recebedor,
+      itens: itens ?? this.itens,
+      valorTotal: valorTotal,
+      valorSubtotal: valorSubtotal,
+      valorDesconto: valorDesconto,
+      valorEntrega: valorEntrega,
+      pagamentoStatus: pagamentoStatus,
+      pago: pago,
+      dhEntregaEstimada: dhEntregaEstimada,
+      deliveryToken: deliveryToken,
+      timelines: timelines,
+      historico: historico,
+      canalDeVendas: canalDeVendas,
+      searchtext: searchtext,
+      notaFiscalChave: notaFiscalChave,
+      notaFiscalUrl: notaFiscalUrl,
+      transportadora: transportadora,
+      tempoConfirmacao: tempoConfirmacao,
+      motivo: motivo,
+    );
+  }
 }
 
 double _toDouble(dynamic v) {
@@ -260,6 +294,23 @@ class Item {
 
   /// Se o item foi recusado (quantidadeTotal == 0)
   bool get foiRecusado => quantidadeTotal != null && quantidadeTotal == 0;
+
+  Item copyWith({int? quantidadeTotal}) {
+    return Item(
+      codigoEAN: codigoEAN,
+      eans: eans,
+      codigoSAP: codigoSAP,
+      descricao: descricao,
+      quantidade: quantidade,
+      quantidadeTotal: quantidadeTotal ?? this.quantidadeTotal,
+      valorUnitario: valorUnitario,
+      valorTotal: valorTotal,
+      estoque: estoque,
+      precoVenda: precoVenda,
+      quantidadeImeis: quantidadeImeis,
+      imeis: imeis,
+    );
+  }
 }
 
 class DeliveryToken {

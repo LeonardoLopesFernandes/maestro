@@ -10,6 +10,7 @@ class SessionManager {
   static const String _keyRememberLogin = "REMEMBER_LOGIN";
   static const String _keyMsPassword = "MS_PASSWORD";
   static const String _keyDemo = "DEMO_MODE";
+  static const String _keyProfilePhoto = "PROFILE_PHOTO";
   static const String _keyDeliveryTokenPrefix = "DELIVERY_TOKEN_";
   static const int _tokenExpiryDays = 14;
 
@@ -72,6 +73,10 @@ class SessionManager {
   String? getUserEmail() => _prefs.getString(_keyUserEmail);
   String? getUserName() => _prefs.getString(_keyUserName);
   String? getUserStore() => _prefs.getString(_keyUserStore) ?? "L291";
+
+  void saveProfilePhoto(String path) => _prefs.setString(_keyProfilePhoto, path);
+
+  String? getProfilePhoto() => _prefs.getString(_keyProfilePhoto);
 
   void saveCredentials(String email, String password) {
     _prefs.setString(_keyUserEmail, email);

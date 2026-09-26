@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/pedido.dart';
 import '../network/api_service.dart';
 import '../network/session_manager.dart';
@@ -238,80 +241,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _abrirPerfil() {
-    final nome = widget.session.getUserName() ??
-        widget.session.getUserEmail() ??
-        'Usuário';
-    final email = widget.session.getUserEmail() ?? '-';
-    final loja = widget.session.getUserStore() ?? Constants.defaultStore;
     showDialog(
       context: context,
-      barrierColor: const Color(0xFFFDECEC),
-      builder: (_) => Dialog(
-        insetPadding: EdgeInsets.zero,
-        backgroundColor: const Color(0xFFFDECEC),
-        child: SizedBox(
-          width: double.infinity,
-          height: double.infinity,
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: const Color(_redDark), size: 40),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: 100,
-                height: 100,
-                decoration: const BoxDecoration(shape: BoxShape.circle),
-                child:
-                    const Icon(Icons.person, size: 86, color: const Color(_redDark)),
-              ),
-              const SizedBox(height: 12),
-              Text(nome,
-                  style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(_redDark))),
-              const SizedBox(height: 4),
-              Text(email,
-                  style: const TextStyle(fontSize: 16, color: const Color(_redDark))),
-              const SizedBox(height: 12),
-              Container(width: 80, height: 1, color: const Color(0xFFE0B4B4)),
-              const SizedBox(height: 12),
-              Text('Loja $loja',
-                  style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(_redDark))),
-              const Spacer(),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1A1A1A),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
-                    ),
-                    onPressed: () {
-                      widget.session.clearToken();
-                      widget.session.clearAll();
-                      Navigator.of(context).pushReplacementNamed('/login');
-                    },
-                    child: const Text('SAIR',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      builder: (_) => _PerfilDialog(session: widget.session),
     );
   }
 
@@ -354,7 +286,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ],
       ),
     );
-    return sair == true;
+    if (sair == true) {
+      // Sai do app sem deslogar (mantém a sessão).
+      SystemNavigator.pop();
+    }
+    return false;
   }
 
   @override
@@ -828,6 +764,136 @@ class _FiltroDialogState extends State<_FiltroDialog> {
               style: TextStyle(color: Colors.white)),
         ),
       ],
+    );
+  }
+}
+
+class _PerfilDialog extends StatefulWidget {
+  final SessionManager session;
+  const _PerfilDialog({required this.session});
+
+  @override
+  State<_PerfilDialog> createState() => _PerfilDialogState();
+}
+
+class _PerfilDialogState extends State<_PerfilDialog> {
+  final ImagePicker _picker = ImagePicker();
+  File? _foto;
+
+  @override
+  void initState() {
+    super.initState();
+    final path = widget.session.getProfilePhoto();
+    if (path != null) {
+      final f = File(path);
+      if (f.existsSync()) _foto = f;
+    }
+  }
+
+  Future<void> _escolherFoto() async {
+    try {
+      final picked = await _picker.pickImage(
+          source: ImageSource.gallery, imageQuality: 70, maxWidth: 1200);
+      if (picked == null) return;
+      final arquivo = File(picked.path);
+      final dir = await getApplicationDocumentsDirectory();
+      final destino =
+          File('${dir.path}/profile_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await arquivo.copy(destino.path);
+      widget.session.saveProfilePhoto(destino.path);
+      setState(() => _foto = destino);
+    } catch (e) {
+      LogHelper.e('Perfil: erro ao escolher foto', e);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final nome = widget.session.getUserName() ??
+        widget.session.getUserEmail() ??
+        'Usuário';
+    final email = widget.session.getUserEmail() ?? '-';
+    final loja = widget.session.getUserStore() ?? Constants.defaultStore;
+    return Dialog(
+      insetPadding: EdgeInsets.zero,
+      backgroundColor: Colors.white,
+      child: SizedBox(
+        width: double.infinity,
+        height: double.infinity,
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: IconButton(
+                  icon: const Icon(Icons.close,
+                      color: Color(_redDark), size: 30),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: _escolherFoto,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: const BoxDecoration(
+                    shape: BoxShape.circle, color: Color(0xFFF1F3F4)),
+                child: ClipOval(
+                  child: _foto != null
+                      ? Image.file(_foto!, fit: BoxFit.cover)
+                      : const Icon(Icons.person,
+                          size: 90, color: Color(_redDark)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text('Toque para alterar a foto',
+                style:
+                    TextStyle(color: Color(0xFF888888), fontSize: 12)),
+            const SizedBox(height: 16),
+            Text(nome,
+                style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(_redDark))),
+            const SizedBox(height: 4),
+            Text(email,
+                style:
+                    const TextStyle(fontSize: 16, color: Color(0xFF555555))),
+            const SizedBox(height: 12),
+            Text('Loja $loja',
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(_redDark))),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1A1A1A),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () {
+                    SystemNavigator.pop();
+                  },
+                  child: const Text('SAIR',
+                      style: TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

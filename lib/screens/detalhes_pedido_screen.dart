@@ -1024,19 +1024,57 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   void _sucesso(String msg) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Sucesso', textAlign: TextAlign.center),
-        content: Text(msg, textAlign: TextAlign.center),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-            },
-            child: const Text('OK'),
+      builder: (_) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 76,
+                height: 76,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE8F6EE),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check_circle,
+                    color: Color(0xFF2E7D32), size: 46),
+              ),
+              const SizedBox(height: 16),
+              const Text('Sucesso',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1A1A1A))),
+              const SizedBox(height: 8),
+              Text(msg,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      color: Color(0xFF555555), fontSize: 14)),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE31837),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text('OK',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1359,6 +1397,19 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       } catch (_) {}
     }
     _sucesso('Separação confirmada.');
+    // Atualiza localmente os itens com a quantidade alterada, para o card
+    // do item ficar vermelho (foiAlterado) sem depender do reload da API.
+    if (mounted) {
+      setState(() {
+        _pedido = _pedido.copyWith(itens: itens.map((it) {
+          final n = novaQtd(it);
+          if (n != it.quantidade) {
+            return it.copyWith(quantidadeTotal: n);
+          }
+          return it;
+        }).toList());
+      });
+    }
   }
 
   Future<List<String>> _carregarMotivosRecusa(String origem, String status) async {
