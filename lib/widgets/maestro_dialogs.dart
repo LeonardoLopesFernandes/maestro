@@ -442,9 +442,12 @@ class MaestroDialogs {
       BuildContext context, Pedido pedido) {
     final selecionados = <int, bool>{};
     final qtd = <int, int>{};
+    final controllers = <int, TextEditingController>{};
     for (var i = 0; i < pedido.itens.length; i++) {
       selecionados[i] = false;
       qtd[i] = pedido.itens[i].quantidade;
+      controllers[i] =
+          TextEditingController(text: '${pedido.itens[i].quantidade}');
     }
     bool nenhum = false;
 
@@ -555,16 +558,25 @@ class MaestroDialogs {
                                               const EdgeInsets.symmetric(
                                                   vertical: 4),
                                         ),
-                                        controller: TextEditingController(
-                                            text: '${qtd[i]}'),
+                                        controller: controllers[i],
                                         onChanged: (v) {
-                                          final nova =
-                                              int.tryParse(v) ?? 0;
-                                          set(() {
-                                            qtd[i] = nova > it.quantidade
-                                                ? it.quantidade
-                                                : nova;
-                                          });
+                                          final nova = int.tryParse(v) ?? 0;
+                                          // Não permite adicionar acima da
+                                          // quantidade pedida pelo cliente.
+                                          if (nova > it.quantidade) {
+                                            controllers[i]!.text =
+                                                '${it.quantidade}';
+                                            controllers[i]!.selection =
+                                                TextSelection.fromPosition(
+                                                    TextPosition(
+                                                        offset:
+                                                            controllers[i]!
+                                                                .text
+                                                                .length));
+                                            set(() => qtd[i] = it.quantidade);
+                                          } else {
+                                            set(() => qtd[i] = nova);
+                                          }
                                         },
                                       ),
                                     ),
