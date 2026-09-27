@@ -1050,8 +1050,12 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
+                    // Fecha o diálogo de sucesso, mantém a tela de detalhes
+                    // aberta e recarrega o pedido: o status muda (ex: NOVO →
+                    // EM_SEPARACAO → PRONTO_PARA_RETIRADA) e os badges de
+                    // ação avançam sem sair da tela.
                     Navigator.of(context).pop();
-                    Navigator.of(context).pop();
+                    _carregar(silencioso: true);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE31837),
