@@ -32,6 +32,7 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
   String _email = '';
   String _senha = '';
   Timer? _pollTimer;
+  Timer? _injectTimer;
   bool _promptInjetado = false;
 
   @override
@@ -103,6 +104,16 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
     _pronto = true;
     if (mounted) setState(() {});
 
+    // Auto-login robusto (igual ao minha-loja): injeta as credenciais
+    // periodicamente até o login concluir (o Microsoft pode trocar de tela
+    // entre email/senha/KMSI em momentos diferentes).
+    if (_autoLogin) {
+      _injectTimer =
+          Timer.periodic(const Duration(milliseconds: 1200), (_) {
+        if (!_loginConcluido) _preencherLoginAutomatico();
+      });
+    }
+
     // Polling de segurança: a página de resposta pode setar o token via
     // JavaScript sem trocar a URL (igual ao JavascriptInterface do Kotlin).
     _pollTimer = Timer.periodic(const Duration(milliseconds: 400), (_) async {
@@ -136,9 +147,9 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
         "function setV(el,v){try{var d=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value');if(d&&d.set)d.set.call(el,v);else el.value=v;el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));}catch(e){}}"
         "var btn=document.getElementById('idSIButton9');"
         "var em=document.getElementById('i0116');"
-        "if(em){setV(em,\$EMAIL\$);if(btn){btn.click();return 'email';}return 'email-no-btn';}"
+        "if(em&&em.value.trim()===''){setV(em,\$EMAIL\$);if(btn){btn.click();}return 'email';}"
         "var pw=document.getElementById('i0118');"
-        "if(pw){setV(pw,\$SENHA\$);if(btn){btn.click();return 'pwd';}return 'pwd-no-btn';}"
+        "if(pw&&pw.value.trim()===''){setV(pw,\$SENHA\$);if(btn){btn.click();}return 'pwd';}"
         "var km=document.getElementById('KmsiCheckboxField');"
         "if(km){if(btn){btn.click();return 'kmsi';}return 'kmsi-no-btn';}"
         "return 'none';"
@@ -371,6 +382,7 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _injectTimer?.cancel();
     super.dispose();
   }
 
