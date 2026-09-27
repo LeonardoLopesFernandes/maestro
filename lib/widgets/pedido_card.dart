@@ -64,6 +64,34 @@ class PedidoCard extends StatelessWidget {
       _statusNormalizado.contains('NOVO') ||
       _statusNormalizado.contains('SEPARACAO');
 
+  // Na aba PRONTO: se o pedido está pronto há mais de 35 minutos (esperando a
+  // retirada), o número do pedido fica vermelho no card.
+  bool get _prontoHaMaisDe35Min {
+    if (!_statusNormalizado.contains('PRONTO')) return false;
+    DateTime? momentoPronto;
+    for (final t in pedido.timelines) {
+      if ((t.nome ?? '').toUpperCase().contains('PRONTO')) {
+        final d = t.data;
+        if (d != null && d.isNotEmpty) {
+          try {
+            momentoPronto = DateTime.parse(d).toLocal();
+            break;
+          } catch (_) {}
+        }
+      }
+    }
+    if (momentoPronto == null) {
+      final da = pedido.dataAlteracao;
+      if (da != null && da.isNotEmpty) {
+        try {
+          momentoPronto = DateTime.parse(da).toLocal();
+        } catch (_) {}
+      }
+    }
+    if (momentoPronto == null) return false;
+    return DateTime.now().difference(momentoPronto).inMinutes > 35;
+  }
+
   String get _canalTexto {
     final c = pedido.canalDeVendas ?? '';
     if (c.toUpperCase().contains('EXTERNA')) return 'Delivery';
@@ -102,6 +130,7 @@ class PedidoCard extends StatelessWidget {
         pedido.canalDeVendas != null && pedido.canalDeVendas!.isNotEmpty;
     final mostraEntrega =
         pedido.tipoEntrega != null && pedido.tipoEntrega!.isNotEmpty;
+    final prontoAtrasado = _prontoHaMaisDe35Min;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
@@ -134,8 +163,14 @@ class PedidoCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(pedido.codigoExterno ?? '',
-                          style: const TextStyle(
-                              fontSize: 13, color: Color(0xFF64748B))),
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: prontoAtrasado
+                                  ? const Color(0xFFDC3545)
+                                  : const Color(0xFF64748B),
+                              fontWeight: prontoAtrasado
+                                  ? FontWeight.bold
+                                  : FontWeight.normal)),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
