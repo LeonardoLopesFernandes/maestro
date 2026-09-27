@@ -544,15 +544,14 @@ class MaestroDialogs {
                                                       horizontal: 8,
                                                       vertical: 2),
                                               decoration: BoxDecoration(
-                                                  color:
-                                                      const Color(0xFFE8F5E9),
+                                                  color: const Color(0xFF4CAF50),
                                                   borderRadius:
                                                       BorderRadius.circular(8)),
                                               child: Text(
                                                   'Estoque estimado: ${it.estoque}',
                                                   style: const TextStyle(
                                                       fontSize: 10,
-                                                      color: Color(0xFF2E7D32),
+                                                      color: Colors.white,
                                                       fontWeight: FontWeight.bold)),
                                             ),
                                         ],
