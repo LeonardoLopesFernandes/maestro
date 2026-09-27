@@ -536,11 +536,25 @@ class MaestroDialogs {
                                                   fontSize: 10,
                                                   color: Color(0xFF555555))),
                                           if (it.estoque != null)
-                                            Text(
-                                                'Estoque estimado: ${it.estoque}',
-                                                style: const TextStyle(
-                                                    fontSize: 10,
-                                                    color: Color(0xFF1565C0))),
+                                            Container(
+                                              margin: const EdgeInsets.only(
+                                                  top: 4),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 2),
+                                              decoration: BoxDecoration(
+                                                  color:
+                                                      const Color(0xFFE8F5E9),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8)),
+                                              child: Text(
+                                                  'Estoque estimado: ${it.estoque}',
+                                                  style: const TextStyle(
+                                                      fontSize: 10,
+                                                      color: Color(0xFF2E7D32),
+                                                      fontWeight: FontWeight.bold)),
+                                            ),
                                         ],
                                       ),
                                     ),
