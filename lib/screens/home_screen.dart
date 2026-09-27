@@ -516,6 +516,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       minDias: _minDias,
       ordemDataInclusao: _ordemDataInclusao,
       tabIcon: _tabIconAssets[aba.index],
+      onVoltarDetalhes: _recarregarTodasAbas,
     );
   }
 }
@@ -536,6 +537,7 @@ class _PedidoListTab extends StatefulWidget {
   final int minDias;
   final bool ordemDataInclusao;
   final String tabIcon;
+  final VoidCallback? onVoltarDetalhes;
 
   const _PedidoListTab({
     super.key,
@@ -546,6 +548,7 @@ class _PedidoListTab extends StatefulWidget {
     required this.minDias,
     required this.ordemDataInclusao,
     required this.tabIcon,
+    this.onVoltarDetalhes,
   });
 
   @override
@@ -678,7 +681,7 @@ class _PedidoListTabState extends State<_PedidoListTab> {
                   ),
                 ),
               );
-              if (mounted) _recarregarTodasAbas();
+              if (mounted) widget.onVoltarDetalhes?.call();
             },
           );
         },
