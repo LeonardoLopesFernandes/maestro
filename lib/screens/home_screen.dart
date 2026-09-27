@@ -143,6 +143,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  // Recarrega todas as abas de pedido + histórico. Usado ao voltar da tela de
+  // detalhes: um pedido que mudou de status (separação/confirmar/retirar)
+  // precisa sumir da aba atual e aparecer imediatamente na aba de destino.
+  void _recarregarTodasAbas() {
+    if (!mounted) return;
+    for (final aba in _abas) {
+      if (aba.status == 'HISTORICO') {
+        _historicoKey.currentState?.reload();
+      } else {
+        _listKeys[aba.status]?.currentState?._carregar(reset: true);
+      }
+    }
+  }
+
   Future<void> _carregarCounts() async {
     try {
       final c = await widget.apiService
@@ -564,7 +578,7 @@ class _PedidoListTabState extends State<_PedidoListTab> {
   }
 
   Future<void> _carregar({bool reset = false}) async {
-    if (_buscando) return; // evita corrida entre polling e scroll/refresh
+    if (_buscando && !reset) return; // evita corrida, mas reset sempre recarrega
     final ger = ++_geracao;
     if (reset) {
       _skip = 0;
@@ -664,7 +678,7 @@ class _PedidoListTabState extends State<_PedidoListTab> {
                   ),
                 ),
               );
-              if (mounted) _carregar(reset: true);
+              if (mounted) _recarregarTodasAbas();
             },
           );
         },
