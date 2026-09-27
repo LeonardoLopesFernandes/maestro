@@ -64,32 +64,24 @@ class PedidoCard extends StatelessWidget {
       _statusNormalizado.contains('NOVO') ||
       _statusNormalizado.contains('SEPARACAO');
 
-  // Na aba PRONTO: se o pedido está pronto há mais de 35 minutos (esperando a
-  // retirada), o número do pedido fica vermelho no card.
-  bool get _prontoHaMaisDe35Min {
+  bool get _separadoComAtraso {
     if (!_statusNormalizado.contains('PRONTO')) return false;
-    DateTime? momentoPronto;
-    for (final t in pedido.timelines) {
-      if ((t.nome ?? '').toUpperCase().contains('PRONTO')) {
-        final d = t.data;
-        if (d != null && d.isNotEmpty) {
-          try {
-            momentoPronto = DateTime.parse(d).toLocal();
-            break;
-          } catch (_) {}
-        }
-      }
+    final tc = pedido.tempoConfirmacao;
+    if (tc == null || tc <= 0) return false;
+    return tc > 35 * 60 * 1000;
+  }
+
+  // Ícone no card quando o pedido está parado (PRONTO) há mais de 3 dias.
+  bool get _paradoHaMaisDe3Dias {
+    if (!_statusNormalizado.contains('PRONTO')) return false;
+    final d = pedido.dataInclusao;
+    if (d.isEmpty) return false;
+    try {
+      final dt = DateTime.parse(d).toLocal();
+      return DateTime.now().difference(dt).inDays > 3;
+    } catch (_) {
+      return false;
     }
-    if (momentoPronto == null) {
-      final da = pedido.dataAlteracao;
-      if (da != null && da.isNotEmpty) {
-        try {
-          momentoPronto = DateTime.parse(da).toLocal();
-        } catch (_) {}
-      }
-    }
-    if (momentoPronto == null) return false;
-    return DateTime.now().difference(momentoPronto).inMinutes > 35;
   }
 
   String get _canalTexto {
@@ -130,7 +122,8 @@ class PedidoCard extends StatelessWidget {
         pedido.canalDeVendas != null && pedido.canalDeVendas!.isNotEmpty;
     final mostraEntrega =
         pedido.tipoEntrega != null && pedido.tipoEntrega!.isNotEmpty;
-    final prontoAtrasado = _prontoHaMaisDe35Min;
+    final prontoAtrasado = _separadoComAtraso;
+    final paradoHaMaisDe3Dias = _paradoHaMaisDe3Dias;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
@@ -161,6 +154,12 @@ class PedidoCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
+                    if (paradoHaMaisDe3Dias)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 6),
+                        child: Icon(Icons.schedule,
+                            size: 16, color: Color(0xFFDC3545)),
+                      ),
                     Expanded(
                       child: Text(pedido.codigoExterno ?? '',
                           style: TextStyle(
