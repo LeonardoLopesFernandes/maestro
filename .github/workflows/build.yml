@@ -54,11 +54,14 @@ jobs:
           BUILD_NUMBER: ${{ github.run_number }}
         run: flutter build apk --split-per-abi --target-platform android-arm64 --build-number=$BUILD_NUMBER --build-name="1.0.$BUILD_NUMBER"
 
+      - name: Renomear APK
+        run: cp build/app/outputs/flutter-apk/*arm64-v8a*.apk build/app/outputs/flutter-apk/maestro_flutter.apk && ls -la build/app/outputs/flutter-apk/maestro_flutter.apk
+
       - name: Upload arm64-v8a APK
         uses: actions/upload-artifact@v4
         with:
-          name: maestro-flutter-arm64-v8a
-          path: ${{ github.workspace }}/build/app/outputs/flutter-apk/*arm64-v8a*.apk
+          name: maestro_flutter-apk
+          path: ${{ github.workspace }}/build/app/outputs/flutter-apk/maestro_flutter.apk
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
@@ -66,6 +69,6 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           name: Maestro ${{ github.ref_name }}
-          files: build/app/outputs/flutter-apk/*arm64-v8a*.apk
+          files: build/app/outputs/flutter-apk/maestro_flutter.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
