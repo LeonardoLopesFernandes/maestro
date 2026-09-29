@@ -1151,24 +1151,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         itens.any((it) => novaQtd(it) != it.quantidade);
 
     if (houveAlteracao) {
-      // Salvar flag de edição IMEDIATAMENTE (antes da API, espelha Kotlin)
-      try {
-        final itensJson = jsonEncode(itens.map((it) => {
-          'codigoEAN': it.codigoEAN,
-          'codigoSAP': it.codigoSAP,
-          'descricao': it.descricao,
-          'quantidade': it.quantidade,
-        }).toList());
-        widget.session.savePedidoItens(
-            _pedido.id, itensJson,
-            numero: _pedido.numero,
-            codigoExterno: _pedido.codigoExterno ?? '');
-        widget.session.saveEditFlag(
-            _pedido.id,
-            numero: _pedido.numero,
-            codigoExterno: _pedido.codigoExterno ?? '');
-      } catch (_) {}
-      // 2º diálogo: confirmação parcial com motivo
+      // Flag/itens salvos só após confirmação (no _executarConfirmacao).
+      // Salvar aqui marcava o lápis mesmo quando o usuário cancelava.
       // 2º diálogo: confirmação parcial com motivo
       final alterados = <(String, int, int)>[];
       for (final it in itens) {
@@ -1233,23 +1217,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         itens.any((it) => novaQtd(it) != it.quantidade);
 
     if (houveAlteracao) {
-      // Salvar flag de edição IMEDIATAMENTE (antes da API, espelha Kotlin)
-      try {
-        final itensJson = jsonEncode(itens.map((it) => {
-          'codigoEAN': it.codigoEAN,
-          'codigoSAP': it.codigoSAP,
-          'descricao': it.descricao,
-          'quantidade': it.quantidade,
-        }).toList());
-        widget.session.savePedidoItens(
-            _pedido.id, itensJson,
-            numero: _pedido.numero,
-            codigoExterno: _pedido.codigoExterno ?? '');
-        widget.session.saveEditFlag(
-            _pedido.id,
-            numero: _pedido.numero,
-            codigoExterno: _pedido.codigoExterno ?? '');
-      } catch (_) {}
+      // Flag/itens salvos só após confirmação (no _executarConfirmacao).
       final alterados = <(String, int, int)>[];
       for (final it in itens) {
         final n = novaQtd(it);

@@ -689,51 +689,157 @@ class MaestroDialogs {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, set) => AlertDialog(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          contentPadding: const EdgeInsets.all(20),
-          title: Text(
-              'Confirmação Parcial de $totalItens itens. Selecione o motivo para o(s) produto(s) recusado(s):',
-              style:
-                  const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+          actionsPadding:
+              const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          title: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEBEE),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.edit_note,
+                    color: Color(0xFFE60014), size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Confirmação parcial',
+                        style: TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.bold)),
+                    Text(
+                      '$totalItens ${totalItens == 1 ? 'item' : 'itens'} no pedido',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.normal),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           content: SizedBox(
-            width: double.infinity,
+            width: double.maxFinite,
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 4),
+                Text('ITENS ALTERADOS (${alterados.length})',
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[600],
+                        letterSpacing: 0.5)),
+                const SizedBox(height: 8),
                 ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 180),
+                  constraints: const BoxConstraints(maxHeight: 210),
                   child: SingleChildScrollView(
                     child: Column(
-                      children: alterados
-                          .map((a) => Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 2),
-                                child: Row(
+                      children: alterados.map((a) {
+                        final diff = a.$3 - a.$2;
+                        final recusa = diff < 0;
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
-                                    Expanded(
-                                        child: Text(a.$1,
-                                            style:
-                                                const TextStyle(fontSize: 12))),
-                                    Text(
-                                        '${a.$2} → ${a.$3}',
+                                    Text(a.$1,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
                                             fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFFE61937))),
+                                            fontWeight: FontWeight.w600)),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          '${a.$2}',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.grey[500],
+                                            decoration: TextDecoration
+                                                .lineThrough,
+                                          ),
+                                        ),
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 6),
+                                          child: Icon(Icons.arrow_forward,
+                                              size: 14, color: Colors.grey),
+                                        ),
+                                        Text(
+                                          '${a.$3}',
+                                          style: const TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFFE61937)),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
-                              ))
-                          .toList(),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: recusa
+                                      ? const Color(0xFFFFEBEE)
+                                      : const Color(0xFFE8F5E9),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  diff > 0 ? '+$diff' : '$diff',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: recusa
+                                          ? const Color(0xFFE60014)
+                                          : const Color(0xFF2E7D32)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ),
                 const SizedBox(height: 12),
+                Text('MOTIVO DA RECUSA *',
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[600],
+                        letterSpacing: 0.5)),
+                const SizedBox(height: 6),
                 Container(
-                  height: 44,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Color(0xFFD1D5DB)),
-                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFD1D5DB)),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: DropdownButton<String>(
                     isExpanded: true,
@@ -743,7 +849,8 @@ class MaestroDialogs {
                     items: motivos
                         .map((m) => DropdownMenuItem(
                             value: m,
-                            child: Text(m, style: const TextStyle(fontSize: 14))))
+                            child: Text(m,
+                                style: const TextStyle(fontSize: 14))))
                         .toList(),
                     onChanged: (v) => set(() => motivo = v),
                   ),
@@ -754,14 +861,16 @@ class MaestroDialogs {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('FECHAR',
+              child: const Text('CANCELAR',
                   style: TextStyle(color: Color(0xFF6B7280))),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                   backgroundColor: motivo != null
                       ? const Color(_verde)
-                      : const Color(0xFFD1D5DB)),
+                      : const Color(0xFFD1D5DB),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10))),
               onPressed: motivo != null
                   ? () => Navigator.of(ctx).pop(motivo)
                   : null,
