@@ -22,6 +22,8 @@ class _ItemQuantidadeDialogState extends State<ItemQuantidadeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       title: const Text('Confirmar quantidades'),
       content: SizedBox(
         width: double.maxFinite,
@@ -90,6 +92,8 @@ class _SmartphoneConfirmacaoDialogState
         .where((e) => (e.quantidadeImeis) > 0 || (e.imeis.isNotEmpty))
         .toList();
     return AlertDialog(
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       title: const Text('Confirmar smartphones'),
       content: SizedBox(
         width: double.maxFinite,

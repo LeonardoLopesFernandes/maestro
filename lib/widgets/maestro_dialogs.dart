@@ -20,6 +20,8 @@ class MaestroDialogs {
   }) {
     return showDialog<bool>(
       context: context,
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(titulo,
@@ -64,6 +66,8 @@ class MaestroDialogs {
     bool habilitado = false;
     return showDialog<String>(
       context: context,
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, set) => AlertDialog(
           shape:
@@ -174,6 +178,8 @@ class MaestroDialogs {
     bool ajudaAberta = false;
     return showDialog<bool>(
       context: context,
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, set) {
@@ -400,6 +406,8 @@ class MaestroDialogs {
   static Future<bool?> tudoCerto(BuildContext context, int itens) {
     return showDialog<bool>(
       context: context,
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         contentPadding: const EdgeInsets.all(28),
@@ -461,6 +469,8 @@ class MaestroDialogs {
 
     return showDialog<(Map<String, int>, bool)>(
       context: context,
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, set) {
           bool temAlteracao = pedido.itens.any((it) {
@@ -686,6 +696,8 @@ class MaestroDialogs {
     String? motivo;
     return showDialog<String>(
       context: context,
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, set) => AlertDialog(
           shape:
@@ -889,6 +901,8 @@ class MaestroDialogs {
     String? sel;
     return showDialog<String>(
       context: context,
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, set) => AlertDialog(
           shape:
@@ -943,6 +957,8 @@ class MaestroDialogs {
     bool recaptcha = false;
     return showDialog<(String, String, String)>(
       context: context,
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, set) => AlertDialog(
           shape:
@@ -1038,6 +1054,8 @@ class MaestroDialogs {
     bool recaptcha = false;
     return showDialog<(String, String)>(
       context: context,
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, set) => AlertDialog(
           shape:
@@ -1126,6 +1144,8 @@ class MaestroDialogs {
     bool recaptcha = false;
     return showDialog<(String, String)>(
       context: context,
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
         builder: (ctx) => StatefulBuilder(
         builder: (ctx, set) => AlertDialog(
           shape:
@@ -1217,6 +1237,8 @@ class MaestroDialogs {
       {required String titulo, required String mensagem, String sim = 'SIM'}) {
     return showDialog<bool>(
       context: context,
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         contentPadding: const EdgeInsets.all(28),
