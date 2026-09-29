@@ -98,6 +98,10 @@ class MaestroApp extends StatelessWidget {
         locale: const Locale('pt', 'BR'),
         theme: ThemeData(
           primaryColor: const Color(Constants.RED_600),
+          dialogTheme: const DialogThemeData(
+            insetPadding:
+                EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+          ),
           colorScheme: ColorScheme.fromSwatch()
               .copyWith(primary: const Color(Constants.RED_600)),
           useMaterial3: true,

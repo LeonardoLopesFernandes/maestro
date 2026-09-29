@@ -1084,6 +1084,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     try {
       await widget.apiService.separarPedido(
           _normOrigem(_pedido.origem), _pedido.codigoExterno ?? _pedido.numero);
+      await _carregar(silencioso: true);
       _sucesso('Pedido em separação.');
     } catch (e) {
       _erroMsg(e);
@@ -1374,6 +1375,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         }).toList());
       });
     }
+    // Recarrega o pedido (novo status) sem sair dos detalhes; as abas da
+    // home atualizam ao voltar (onVoltarDetalhes).
+    await _carregar(silencioso: true);
   }
 
   Future<List<String>> _carregarMotivosRecusa(String origem, String status) async {
