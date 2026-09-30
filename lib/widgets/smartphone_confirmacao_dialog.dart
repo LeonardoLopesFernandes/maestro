@@ -131,7 +131,8 @@ class _SmartphoneConfirmacaoDialogState
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      insetPadding: const EdgeInsets.all(16),
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 4, vertical: 24),
       backgroundColor: Colors.transparent,
       child: _screen == 1 ? _buildScreen1() : _buildScreen2(),
     );

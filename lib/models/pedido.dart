@@ -118,13 +118,13 @@ class Pedido {
     return id;
   }
 
-  Pedido copyWith({List<Item>? itens}) {
+  Pedido copyWith({List<Item>? itens, String? status}) {
     return Pedido(
       id: id,
       numero: numero,
       codigoExterno: codigoExterno,
       loja: loja,
-      status: status,
+      status: status ?? this.status,
       origem: origem,
       tipoEntrega: tipoEntrega,
       dataInclusao: dataInclusao,

@@ -95,6 +95,17 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     }
   }
 
+  /// Recarrega até o status mudar (o backend pode demorar a propagar).
+  Future<void> _recarregarAteMudar(String statusAnterior) async {
+    final anterior = statusAnterior.toUpperCase().trim();
+    for (var i = 0; i < 4; i++) {
+      await _carregar(silencioso: true);
+      if (!mounted) return;
+      if (_pedido.status.toUpperCase().trim() != anterior) return;
+      await Future.delayed(const Duration(seconds: 2));
+    }
+  }
+
   @override
   void dispose() {
     _pollingEntregador?.cancel();
@@ -1084,7 +1095,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     try {
       await widget.apiService.separarPedido(
           _normOrigem(_pedido.origem), _pedido.codigoExterno ?? _pedido.numero);
-      await _carregar(silencioso: true);
+      final anterior = _pedido.status;
+      if (mounted) {
+        setState(() => _pedido = _pedido.copyWith(status: 'EM_SEPARACAO'));
+      }
+      await _recarregarAteMudar(anterior);
       _sucesso('Pedido em separação.');
     } catch (e) {
       _erroMsg(e);
@@ -1316,6 +1331,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       {required bool editado,
       String? motivo,
       Map<String, List<String>>? imeisEditados}) async {
+    final statusAnterior = _pedido.status;
     final itensAtualizados =
         _buildItensBody(itens, novaQtd, imeisEditados);
     final novoValorTotal = _calcularValorTotal(itens, novaQtd);
@@ -1375,9 +1391,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         }).toList());
       });
     }
-    // Recarrega o pedido (novo status) sem sair dos detalhes; as abas da
+    // Recarrega (novo status no badge) sem sair dos detalhes; as abas da
     // home atualizam ao voltar (onVoltarDetalhes).
-    await _carregar(silencioso: true);
+    await _recarregarAteMudar(statusAnterior);
   }
 
   Future<List<String>> _carregarMotivosRecusa(String origem, String status) async {

@@ -66,8 +66,6 @@ class MaestroDialogs {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, set) => AlertDialog(
-          insetPadding:
-              const EdgeInsets.symmetric(horizontal: 4, vertical: 24),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           contentPadding: const EdgeInsets.all(24),

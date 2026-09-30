@@ -483,8 +483,8 @@ class _CarregamentoWidgetState extends State<_CarregamentoWidget>
                       offset: Offset(_motoDx(t) * w, 0),
                       child: SvgPicture.string(
                         _kMotoSvg,
-                        width: 96,
-                        height: 96,
+                        width: 128,
+                        height: 128,
                       ),
                     ),
                     Transform.scale(
@@ -520,9 +520,14 @@ class _LogoDrawPainter extends CustomPainter {
     if (image == null) return;
     final center = Offset(size.width / 2, size.height / 2);
     final side = size.shortestSide;
-    final src = Rect.fromLTWH(
-        0, 0, image!.width.toDouble(), image!.height.toDouble());
-    final dst = Rect.fromCenter(center: center, width: side, height: side);
+    // Preserva a proporção original (68x114): sem esticar, sem borrar.
+    final iw = image!.width.toDouble();
+    final ih = image!.height.toDouble();
+    final s = math.min(size.width / iw, size.height / ih);
+    final src = Rect.fromLTWH(0, 0, iw, ih);
+    final dst =
+        Rect.fromCenter(center: center, width: iw * s, height: ih * s);
+    final paint = Paint()..filterQuality = FilterQuality.high;
     final drawT = progress.clamp(0.0, 1.0);
     if (drawT <= 0) return;
     canvas.save();
@@ -534,7 +539,7 @@ class _LogoDrawPainter extends CustomPainter {
             -math.pi / 2, sweep, false)
         ..close());
     }
-    canvas.drawImageRect(image!, src, dst, Paint());
+    canvas.drawImageRect(image!, src, dst, paint);
     canvas.restore();
     if (drawT > 0 && drawT < 1) {
       final a = -math.pi / 2 + drawT * math.pi * 2;
