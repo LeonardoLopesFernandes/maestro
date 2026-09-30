@@ -1100,7 +1100,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         setState(() => _pedido = _pedido.copyWith(status: 'EM_SEPARACAO'));
       }
       await _recarregarAteMudar(anterior);
-      _sucesso('Pedido em separação.');
     } catch (e) {
       _erroMsg(e);
     }
@@ -1211,7 +1210,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     try {
       await _executarConfirmacao(origem, codigoExterno, itens, novaQtd,
           editado: false, motivo: null);
-      _sucesso('Separação confirmada.');
     } catch (e) {
       _erroMsg(e);
     }
@@ -1273,7 +1271,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     try {
       await _executarConfirmacao(origem, codigoExterno, itens, novaQtd,
           editado: false, motivo: null, imeisEditados: imeis);
-      _sucesso('Separação confirmada.');
     } catch (e) {
       _erroMsg(e);
     }
@@ -1377,7 +1374,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             codigoExterno: _pedido.codigoExterno ?? '');
       } catch (_) {}
     }
-    _sucesso('Separação confirmada.');
     // Atualiza localmente os itens com a quantidade alterada, para o card
     // do item ficar vermelho (foiAlterado) sem depender do reload da API.
     if (mounted) {
@@ -1509,7 +1505,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     if (token != null && token.isNotEmpty) {
       widget.session.saveDeliveryToken(_pedido.numero, token);
     }
-    _sucesso('Pedido retirado.');
   }
 
   Future<void> _acaoCancelarRetirada() async {
@@ -1545,7 +1540,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           _pedido.codigoExterno ?? _pedido.numero,
           recaptchaToken: res.$3,
           observacao: res.$2);
-      _sucesso('Pedido retornado ao estoque.');
     } catch (e) {
       _erroMsg(e);
     }
