@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../network/session_manager.dart';
@@ -409,6 +412,11 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
   }
 }
 
+/// Moto que passa atrás do logo: vai à direita, volta pela esquerda
+/// e para no centro.
+const _kMotoSvg =
+    '''<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><title>sharp-motorcycle</title><path fill="#fffdfd" d="M19.44 9.03L15.41 5H11v2h3.59l2 2H5c-2.8 0-5 2.2-5 5s2.2 5 5 5c2.46 0 4.45-1.69 4.9-4h1.65l2.77-2.77c-.21.54-.32 1.14-.32 1.77c0 2.8 2.2 5 5 5s5-2.2 5-5c0-2.65-1.97-4.77-4.56-4.97M7.82 15C7.4 16.15 6.28 17 5 17c-1.63 0-3-1.37-3-3s1.37-3 3-3c1.28 0 2.4.85 2.82 2H5v2zM19 17c-1.66 0-3-1.34-3-3s1.34-3 3-3s3 1.34 3 3s-1.34 3-3 3"/></svg>''';
+
 class _CarregamentoWidget extends StatefulWidget {
   const _CarregamentoWidget();
 
@@ -419,14 +427,31 @@ class _CarregamentoWidget extends StatefulWidget {
 class _CarregamentoWidgetState extends State<_CarregamentoWidget>
     with SingleTickerProviderStateMixin {
   late final AnimationController _draw;
+  ui.Image? _logo;
 
   @override
   void initState() {
     super.initState();
     _draw = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2200),
+      duration: const Duration(milliseconds: 3400),
     )..repeat();
+    _loadLogo();
+  }
+
+  Future<void> _loadLogo() async {
+    try {
+      final data = await rootBundle.load('assets/ic_maestro_logo.png');
+      final img = await decodeImageFromList(data.buffer.asUint8List());
+      if (mounted) setState(() => _logo = img);
+    } catch (_) {}
+  }
+
+  double _motoDx(double t) {
+    if (t < 0.3) return 0.8 * (t / 0.3);
+    if (t < 0.4) return -0.8;
+    if (t < 0.7) return -0.8 + 0.8 * ((t - 0.4) / 0.3);
+    return 0.0;
   }
 
   @override
@@ -445,10 +470,33 @@ class _CarregamentoWidgetState extends State<_CarregamentoWidget>
           children: [
             AnimatedBuilder(
               animation: _draw,
-              builder: (_, __) => CustomPaint(
-                painter: _DrawPainter(_draw.value),
-                size: const Size(120, 120),
-              ),
+              builder: (_, __) {
+                final t = _draw.value;
+                final w = MediaQuery.of(context).size.width;
+                final zoom =
+                    1.0 - 0.12 * ((t - 0.8) / 0.2).clamp(0.0, 1.0);
+                final drawT = (t / 0.7).clamp(0.0, 1.0);
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Transform.translate(
+                      offset: Offset(_motoDx(t) * w, 0),
+                      child: SvgPicture.string(
+                        _kMotoSvg,
+                        width: 96,
+                        height: 96,
+                      ),
+                    ),
+                    Transform.scale(
+                      scale: zoom,
+                      child: CustomPaint(
+                        painter: _LogoDrawPainter(_logo, drawT),
+                        size: const Size(120, 120),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 24),
             const Text('Autenticando...',
@@ -460,38 +508,45 @@ class _CarregamentoWidgetState extends State<_CarregamentoWidget>
   }
 }
 
-/// Ícone "sendo desenhado": círculo e check revelados por traço animado.
-class _DrawPainter extends CustomPainter {
+/// O próprio logo "sendo desenhado": revelação em varredura circular
+/// com ponta luminosa, como traço de caneta.
+class _LogoDrawPainter extends CustomPainter {
+  final ui.Image? image;
   final double progress;
-  _DrawPainter(this.progress);
+  _LogoDrawPainter(this.image, this.progress);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-    final r = size.width / 2 - 8;
+    if (image == null) return;
     final center = Offset(size.width / 2, size.height / 2);
-    final circle = Path()
-      ..addOval(Rect.fromCircle(center: center, radius: r));
-    final cm = circle.computeMetrics().first;
-    final circleT = (progress / 0.55).clamp(0.0, 1.0);
-    canvas.drawPath(cm.extractPath(0, cm.length * circleT), paint);
-    if (progress > 0.55) {
-      final checkT = ((progress - 0.55) / 0.35).clamp(0.0, 1.0);
-      final check = Path()
-        ..moveTo(center.dx - r * 0.45, center.dy + 0.02)
-        ..lineTo(center.dx - r * 0.12, center.dy + r * 0.35)
-        ..lineTo(center.dx + r * 0.5, center.dy - r * 0.35);
-      final mm = check.computeMetrics().first;
-      canvas.drawPath(mm.extractPath(0, mm.length * checkT), paint);
+    final side = size.shortestSide;
+    final src = Rect.fromLTWH(
+        0, 0, image!.width.toDouble(), image!.height.toDouble());
+    final dst = Rect.fromCenter(center: center, width: side, height: side);
+    final drawT = progress.clamp(0.0, 1.0);
+    if (drawT <= 0) return;
+    canvas.save();
+    if (drawT < 1) {
+      final sweep = drawT * math.pi * 2;
+      canvas.clipPath(Path()
+        ..moveTo(center.dx, center.dy)
+        ..arcTo(Rect.fromCircle(center: center, radius: side),
+            -math.pi / 2, sweep, false)
+        ..close());
+    }
+    canvas.drawImageRect(image!, src, dst, Paint());
+    canvas.restore();
+    if (drawT > 0 && drawT < 1) {
+      final a = -math.pi / 2 + drawT * math.pi * 2;
+      final dot = Offset(center.dx + (side / 2) * math.cos(a),
+          center.dy + (side / 2) * math.sin(a));
+      canvas.drawCircle(
+          dot, 10, Paint()..color = Colors.white.withOpacity(0.35));
+      canvas.drawCircle(dot, 5, Paint()..color = Colors.white);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _DrawPainter old) =>
-      old.progress != progress;
+  bool shouldRepaint(covariant _LogoDrawPainter old) =>
+      old.progress != progress || old.image != image;
 }
