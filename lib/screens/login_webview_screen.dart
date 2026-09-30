@@ -418,20 +418,20 @@ class _CarregamentoWidget extends StatefulWidget {
 
 class _CarregamentoWidgetState extends State<_CarregamentoWidget>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
+  late final AnimationController _draw;
 
   @override
   void initState() {
     super.initState();
-    _pulse = AnimationController(
+    _draw = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 2200),
+    )..repeat();
   }
 
   @override
   void dispose() {
-    _pulse.dispose();
+    _draw.dispose();
     super.dispose();
   }
 
@@ -440,24 +440,58 @@ class _CarregamentoWidgetState extends State<_CarregamentoWidget>
     return Container(
       color: const Color(0xFFE60000),
       child: Center(
-        child: FadeTransition(
-          opacity: _pulse.drive(Tween<double>(begin: 1.0, end: 0.3)),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/ic_maestro_logo.png',
-                width: 120,
-                height: 120,
-                fit: BoxFit.contain,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedBuilder(
+              animation: _draw,
+              builder: (_, __) => CustomPaint(
+                painter: _DrawPainter(_draw.value),
+                size: const Size(120, 120),
               ),
-              const SizedBox(height: 24),
-              const Text('Autenticando...',
-                  style: TextStyle(color: Colors.white, fontSize: 16)),
-            ],
-          ),
+            ),
+            const SizedBox(height: 24),
+            const Text('Autenticando...',
+                style: TextStyle(color: Colors.white, fontSize: 16)),
+          ],
         ),
       ),
     );
   }
+}
+
+/// Ícone "sendo desenhado": círculo e check revelados por traço animado.
+class _DrawPainter extends CustomPainter {
+  final double progress;
+  _DrawPainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 6
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final r = size.width / 2 - 8;
+    final center = Offset(size.width / 2, size.height / 2);
+    final circle = Path()
+      ..addOval(Rect.fromCircle(center: center, radius: r));
+    final cm = circle.computeMetrics().first;
+    final circleT = (progress / 0.55).clamp(0.0, 1.0);
+    canvas.drawPath(cm.extractPath(0, cm.length * circleT), paint);
+    if (progress > 0.55) {
+      final checkT = ((progress - 0.55) / 0.35).clamp(0.0, 1.0);
+      final check = Path()
+        ..moveTo(center.dx - r * 0.45, center.dy + 0.02)
+        ..lineTo(center.dx - r * 0.12, center.dy + r * 0.35)
+        ..lineTo(center.dx + r * 0.5, center.dy - r * 0.35);
+      final mm = check.computeMetrics().first;
+      canvas.drawPath(mm.extractPath(0, mm.length * checkT), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DrawPainter old) =>
+      old.progress != progress;
 }
