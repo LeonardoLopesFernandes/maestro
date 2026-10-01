@@ -225,7 +225,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           ? _skeleton()
           : Column(
               children: [
-                _toolbar(status.cor),
+                _toolbar(status),
                 Expanded(
                   child: NotificationListener<ScrollNotification>(
                     onNotification: (n) {
@@ -244,7 +244,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                       controller: _scrollController,
                       padding: const EdgeInsets.all(16),
                       children: [
-                        _headerStatus(status),
+                        _headerStatus(),
                         const SizedBox(height: 12),
                         _cardCliente(),
                         const SizedBox(height: 10),
@@ -271,8 +271,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         child: CircularProgressIndicator(),
       );
 
-  Widget _toolbar(Color cor) => Container(
-        color: cor,
+  Widget _toolbar(({String texto, Color cor}) status) => Container(
+        color: status.cor,
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
         child: SafeArea(
           bottom: false,
@@ -308,15 +308,23 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Text('Nº ${_pedido.codigoExterno ?? _pedido.numero}',
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 12)),
+                    Expanded(
+                      child: Text('Nº ${_pedido.codigoExterno ?? _pedido.numero}',
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 12),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                    ),
                     if (_pedido.tipoEntrega != null &&
                         _pedido.tipoEntrega!.isNotEmpty) ...[
                       const SizedBox(width: 8),
                       _pillHeader(
                           _labelTipoEntrega(_pedido.tipoEntrega!),
                           const Color(0xFF760018)),
+                    ],
+                    if (_mostrarStatusHeader) ...[
+                      const SizedBox(width: 8),
+                      _pillHeader(status.texto, status.cor),
                     ],
                   ],
                 ),
@@ -325,6 +333,14 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           ),
         ),
       );
+
+  bool get _mostrarStatusHeader {
+    final t = _statusBadge.texto;
+    return t == 'Pronto para Retirada' ||
+        t == 'Entregue' ||
+        t == 'Devolvido' ||
+        t == 'Cancelado';
+  }
 
   Widget _pillHeader(String texto, Color cor) {
     final compacto = texto.length > 12;
@@ -343,30 +359,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     );
   }
 
-  Widget _headerStatus(({String texto, Color cor}) status) => Container(
+  Widget _headerStatus() => Container(
         color: Colors.white,
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: status.cor,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(status.texto,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
             InkWell(
               onTap: () => setState(() => _timelineAberta = !_timelineAberta),
               child: Row(
