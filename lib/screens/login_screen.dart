@@ -192,75 +192,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                                 strokeWidth: 2,
                                                 color: Colors.white),
                                           )
-                                        : const Text(
-                                            'ENTRAR',
-                                            style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight:
-                                                    FontWeight.bold),
+                                        : const Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              _MicrosoftLogo(size: 20),
+                                              SizedBox(width: 12),
+                                              Text(
+                                                'Login Microsoft',
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                  ),
-                                ),
-                                const SizedBox(height: 22),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Container(
-                                        height: 1,
-                                        color: Colors.white
-                                            .withOpacity(0.33),
-                                      ),
-                                    ),
-                                    const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 10),
-                                      child: Text('ou',
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12)),
-                                    ),
-                                    Expanded(
-                                      child: Container(
-                                        height: 1,
-                                        color: Colors.white
-                                            .withOpacity(0.33),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 20),
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 52,
-                                  child: ElevatedButton(
-                                    onPressed: _carregando
-                                        ? null
-                                        : () => _abrirWebView(pedirCredenciais: true),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor:
-                                          const Color(0xFF333333),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(8),
-                                      ),
-                                      elevation: 0,
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        const _MicrosoftLogo(size: 20),
-                                        const SizedBox(width: 12),
-                                        const Text(
-                                          'ENTRAR COM MICROSOFT',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
                                   ),
                                 ),
                               ],

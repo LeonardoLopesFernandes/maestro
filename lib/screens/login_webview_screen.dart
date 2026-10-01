@@ -1,7 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math' as math;
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
@@ -417,6 +415,14 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
 const _kMotoSvg =
     '''<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><title>sharp-motorcycle</title><path fill="#fffdfd" d="M19.44 9.03L15.41 5H11v2h3.59l2 2H5c-2.8 0-5 2.2-5 5s2.2 5 5 5c2.46 0 4.45-1.69 4.9-4h1.65l2.77-2.77c-.21.54-.32 1.14-.32 1.77c0 2.8 2.2 5 5 5s5-2.2 5-5c0-2.65-1.97-4.77-4.56-4.97M7.82 15C7.4 16.15 6.28 17 5 17c-1.63 0-3-1.37-3-3s1.37-3 3-3c1.28 0 2.4.85 2.82 2H5v2zM19 17c-1.66 0-3-1.34-3-3s1.34-3 3-3s3 1.34 3 3s-1.34 3-3 3"/></svg>''';
 
+/// Logo "a" (Americanas) branco, desenhado com revelação da esquerda pra direita.
+const _kLogoSvg =
+    '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254">
+<g transform="translate(0.000000,1254.000000) scale(0.100000,-0.100000)" fill="#FFFFFF" stroke="none">
+<path fill-rule="evenodd" d="m9528 5330 l252 0 0 -690 0 -690 -3510 0 -3510 0 0 689 0 690 43 3 c32 2 3136 2 6725 -2z m-2853 -2130 c565 -34 1045 -145 1410 -325 412 -203 657 -459 774 -810 68 -203 63 -70 71 -2100 8 -1851 11 -1982 45 -2117 36 -138 125 -250 239 -299 l56 -24 0 -117 0 -118 -859 0 -860 0 -36 110 c-35 109 -98 400 -111 512 -4 32 -10 58 -13 58 -4 0 -31 -25 -61 -56 -128 -130 -348 -296 -557 -420 -727 -431 -1719 -492 -2428 -150 -289 139 -495 309 -646 532 -55 83 -127 220 -158 304 -34 93 -79 280 -92 390 -17 135 -17 438 0 560 30 214 113 476 202 637 98 177 264 360 439 485 119 85 378 214 535 266 341 114 581 158 1490 271 521 65 671 92 834 150 197 71 326 171 371 288 28 71 39 257 21 344 -38 184 -167 313 -383 385 -185 62 -246 69 -593 69 -327 -1 -406 -8 -567 -56 -309 -91 -493 -289 -574 -616 l-27 -113 -797 0 c-438 0 -799 2 -802 5 -8 8 30 230 61 360 225 929 899 1437 2082 1570 301 34 635 43 934 25z m3105 -7520 l0 -690 -3510 0 -3510 0 0 690 0 690 3510 0 3510 0 0 -690z M7234 6340 c-234 -113 -493 -182 -959 -255 -324 -51 -640 -139 -804 -225 -122 -63 -258 -184 -316 -280 -99 -164 -130 -395 -80 -591 79 -304 390 -479 852 -479 539 0 984 203 1219 556 87 131 144 282 181 479 17 90 32 846 17 844 -5 0 -54 -23 -110 -49z"/>
+</g>
+</svg>''';
+
 class _CarregamentoWidget extends StatefulWidget {
   const _CarregamentoWidget();
 
@@ -427,7 +433,6 @@ class _CarregamentoWidget extends StatefulWidget {
 class _CarregamentoWidgetState extends State<_CarregamentoWidget>
     with SingleTickerProviderStateMixin {
   late final AnimationController _draw;
-  ui.Image? _logo;
 
   @override
   void initState() {
@@ -436,15 +441,6 @@ class _CarregamentoWidgetState extends State<_CarregamentoWidget>
       vsync: this,
       duration: const Duration(milliseconds: 3400),
     )..repeat();
-    _loadLogo();
-  }
-
-  Future<void> _loadLogo() async {
-    try {
-      final data = await rootBundle.load('assets/ic_maestro_logo.png');
-      final img = await decodeImageFromList(data.buffer.asUint8List());
-      if (mounted) setState(() => _logo = img);
-    } catch (_) {}
   }
 
   double _motoDx(double t) {
@@ -473,9 +469,8 @@ class _CarregamentoWidgetState extends State<_CarregamentoWidget>
               builder: (_, __) {
                 final t = _draw.value;
                 final w = MediaQuery.of(context).size.width;
-                final zoom =
-                    1.0 - 0.12 * ((t - 0.8) / 0.2).clamp(0.0, 1.0);
-                final drawT = (t / 0.7).clamp(0.0, 1.0);
+                // "Desenha" da esquerda para a direita (15%–75% do ciclo).
+                final drawT = ((t - 0.15) / 0.60).clamp(0.0, 1.0);
                 return Stack(
                   alignment: Alignment.center,
                   children: [
@@ -487,11 +482,30 @@ class _CarregamentoWidgetState extends State<_CarregamentoWidget>
                         height: 128,
                       ),
                     ),
-                    Transform.scale(
-                      scale: zoom,
-                      child: CustomPaint(
-                        painter: _LogoDrawPainter(_logo, drawT),
-                        size: const Size(120, 120),
+                    SizedBox(
+                      width: 128,
+                      height: 128,
+                      child: Stack(
+                        children: [
+                          ClipRect(
+                            clipper: _LeftRevealClipper(drawT),
+                            child: SvgPicture.string(
+                              _kLogoSvg,
+                              width: 128,
+                              height: 128,
+                            ),
+                          ),
+                          if (drawT > 0.02 && drawT < 0.98)
+                            Positioned(
+                              left: 128 * drawT - 1.5,
+                              top: 4,
+                              bottom: 4,
+                              child: Container(
+                                width: 3,
+                                color: Colors.white,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],
@@ -508,50 +522,15 @@ class _CarregamentoWidgetState extends State<_CarregamentoWidget>
   }
 }
 
-/// O próprio logo "sendo desenhado": revelação em varredura circular
-/// com ponta luminosa, como traço de caneta.
-class _LogoDrawPainter extends CustomPainter {
-  final ui.Image? image;
-  final double progress;
-  _LogoDrawPainter(this.image, this.progress);
+/// Recorta o logo da esquerda para a direita, simulando a ponta da caneta.
+class _LeftRevealClipper extends CustomClipper<Rect> {
+  final double t;
+  _LeftRevealClipper(this.t);
 
   @override
-  void paint(Canvas canvas, Size size) {
-    if (image == null) return;
-    final center = Offset(size.width / 2, size.height / 2);
-    final side = size.shortestSide;
-    // Preserva a proporção original (68x114): sem esticar, sem borrar.
-    final iw = image!.width.toDouble();
-    final ih = image!.height.toDouble();
-    final s = math.min(size.width / iw, size.height / ih);
-    final src = Rect.fromLTWH(0, 0, iw, ih);
-    final dst =
-        Rect.fromCenter(center: center, width: iw * s, height: ih * s);
-    final paint = Paint()..filterQuality = FilterQuality.high;
-    final drawT = progress.clamp(0.0, 1.0);
-    if (drawT <= 0) return;
-    canvas.save();
-    if (drawT < 1) {
-      final sweep = drawT * math.pi * 2;
-      canvas.clipPath(Path()
-        ..moveTo(center.dx, center.dy)
-        ..arcTo(Rect.fromCircle(center: center, radius: side),
-            -math.pi / 2, sweep, false)
-        ..close());
-    }
-    canvas.drawImageRect(image!, src, dst, paint);
-    canvas.restore();
-    if (drawT > 0 && drawT < 1) {
-      final a = -math.pi / 2 + drawT * math.pi * 2;
-      final dot = Offset(center.dx + (side / 2) * math.cos(a),
-          center.dy + (side / 2) * math.sin(a));
-      canvas.drawCircle(
-          dot, 10, Paint()..color = Colors.white.withOpacity(0.35));
-      canvas.drawCircle(dot, 5, Paint()..color = Colors.white);
-    }
-  }
+  Rect getClip(Size size) =>
+      Rect.fromLTRB(0, 0, size.width * t.clamp(0.0, 1.0), size.height);
 
   @override
-  bool shouldRepaint(covariant _LogoDrawPainter old) =>
-      old.progress != progress || old.image != image;
+  bool shouldReclip(covariant _LeftRevealClipper old) => old.t != t;
 }
