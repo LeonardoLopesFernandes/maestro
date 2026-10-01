@@ -276,39 +276,72 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
         child: SafeArea(
           bottom: false,
-          child: Row(
-            children: [
-              const SizedBox(width: 4),
-              Expanded(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.25),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(_pedido.cliente?.nome ?? 'Cliente',
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.25),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(_pedido.cliente?.nome ?? 'Cliente',
                           style: const TextStyle(
                               color: Colors.white,
                               fontSize: 14,
                               fontWeight: FontWeight.bold),
-                          maxLines: 2,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis),
-                      const SizedBox(height: 2),
-                      Text('Nº ${_pedido.codigoExterno ?? _pedido.numero}',
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 12)),
+                    ),
+                    if (_pedido.canalDeVendas != null &&
+                        _pedido.canalDeVendas!.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      _pillHeader(
+                          _pedido.canalDeVendas!,
+                          _corCanal(_pedido.canalDeVendas ?? '')),
                     ],
-                  ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text('Nº ${_pedido.codigoExterno ?? _pedido.numero}',
+                        style: const TextStyle(
+                            color: Colors.white, fontSize: 12)),
+                    if (_pedido.tipoEntrega != null &&
+                        _pedido.tipoEntrega!.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      _pillHeader(
+                          _labelTipoEntrega(_pedido.tipoEntrega!),
+                          const Color(0xFF760018)),
+                    ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       );
+
+  Widget _pillHeader(String texto, Color cor) {
+    final compacto = texto.length > 12;
+    return Container(
+      padding: EdgeInsets.symmetric(
+          horizontal: compacto ? 7 : 10, vertical: 2),
+      decoration: BoxDecoration(
+        color: cor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(texto,
+          style: TextStyle(
+              color: Colors.white,
+              fontSize: compacto ? 9.5 : 11,
+              fontWeight: FontWeight.bold)),
+    );
+  }
 
   Widget _headerStatus(({String texto, Color cor}) status) => Container(
         color: Colors.white,
@@ -331,40 +364,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                           fontSize: 12,
                           fontWeight: FontWeight.bold)),
                 ),
-                if (_pedido.canalDeVendas != null &&
-                    _pedido.canalDeVendas!.isNotEmpty) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: _corCanal(_pedido.canalDeVendas ?? ''),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(_pedido.canalDeVendas!,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold)),
-                  ),
-                ],
-                if (_pedido.tipoEntrega != null &&
-                    _pedido.tipoEntrega!.isNotEmpty) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF760018),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(_labelTipoEntrega(_pedido.tipoEntrega!),
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold)),
-                  ),
-                ],
               ],
             ),
             const SizedBox(height: 12),
