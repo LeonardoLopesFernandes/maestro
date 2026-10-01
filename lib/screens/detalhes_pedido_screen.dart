@@ -225,6 +225,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           ? _skeleton()
           : Column(
               children: [
+                _toolbar(status.cor),
                 Expanded(
                   child: NotificationListener<ScrollNotification>(
                     onNotification: (n) {
@@ -239,30 +240,22 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                       }
                       return false;
                     },
-                    child: CustomScrollView(
+                    child: ListView(
                       controller: _scrollController,
-                      physics: const ClampingScrollPhysics(),
-                      slivers: [
-                        _sliverAppBar(status),
-                        SliverPadding(
-                          padding: const EdgeInsets.all(16),
-                          sliver: SliverList(
-                            delegate: SliverChildListDelegate([
-                              _secaoTimeline(),
-                              const SizedBox(height: 12),
-                              _cardCliente(),
-                              const SizedBox(height: 10),
-                              _cardRecebedor(),
-                              const SizedBox(height: 10),
-                              _cardMotivo(),
-                              const SizedBox(height: 10),
-                              _cardItens(),
-                              const SizedBox(height: 10),
-                              _cardTokens(),
-                              const SizedBox(height: 90),
-                            ]),
-                          ),
-                        ),
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        _headerStatus(status),
+                        const SizedBox(height: 12),
+                        _cardCliente(),
+                        const SizedBox(height: 10),
+                        _cardRecebedor(),
+                        const SizedBox(height: 10),
+                        _cardMotivo(),
+                        const SizedBox(height: 10),
+                        _cardItens(),
+                        const SizedBox(height: 10),
+                        _cardTokens(),
+                        const SizedBox(height: 90),
                       ],
                     ),
                   ),
@@ -278,87 +271,103 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         child: CircularProgressIndicator(),
       );
 
-  Widget _sliverAppBar(({String texto, Color cor}) status) => SliverAppBar(
-        expandedHeight: 168,
-        pinned: true,
-        stretch: true,
-        backgroundColor: status.cor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        flexibleSpace: FlexibleSpaceBar(
-          collapseMode: CollapseMode.parallax,
-          stretchModes: const [StretchMode.zoomBackground],
-          titlePadding:
-              const EdgeInsetsDirectional.only(start: 56, end: 16, bottom: 14),
-          title: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _toolbar(Color cor) => Container(
+        color: cor,
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+        child: SafeArea(
+          bottom: false,
+          child: Row(
             children: [
-              Text(_pedido.cliente?.nome ?? 'Cliente',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis),
-              const SizedBox(height: 4),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    Text('Nº ${_pedido.codigoExterno ?? _pedido.numero}',
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 12)),
-                    if (_pedido.canalDeVendas != null &&
-                        _pedido.canalDeVendas!.isNotEmpty) ...[
-                      const SizedBox(width: 8),
-                      _pillHeader(_pedido.canalDeVendas!,
-                          _corCanal(_pedido.canalDeVendas ?? '')),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(_pedido.cliente?.nome ?? 'Cliente',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 2),
+                      Text('Nº ${_pedido.codigoExterno ?? _pedido.numero}',
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 12)),
                     ],
-                    if (_pedido.tipoEntrega != null &&
-                        _pedido.tipoEntrega!.isNotEmpty) ...[
-                      const SizedBox(width: 8),
-                      _pillHeader(_labelTipoEntrega(_pedido.tipoEntrega!),
-                          const Color(0xFF760018)),
-                    ],
-                  ],
+                  ),
                 ),
               ),
             ],
           ),
-          background: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  status.cor,
-                  Color.lerp(status.cor, Colors.black, 0.25)!,
-                ],
-              ),
-            ),
-          ),
         ),
       );
 
-  Widget _pillHeader(String texto, Color cor) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-        decoration: BoxDecoration(
-          color: cor,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(texto,
-            style: const TextStyle(
-                color: Colors.white,
-                fontSize: 11,
-                fontWeight: FontWeight.bold)),
-      );
-
-  Widget _secaoTimeline() => Container(
+  Widget _headerStatus(({String texto, Color cor}) status) => Container(
         color: Colors.white,
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: status.cor,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(status.texto,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold)),
+                ),
+                if (_pedido.canalDeVendas != null &&
+                    _pedido.canalDeVendas!.isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: _corCanal(_pedido.canalDeVendas ?? ''),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(_pedido.canalDeVendas!,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                ],
+                if (_pedido.tipoEntrega != null &&
+                    _pedido.tipoEntrega!.isNotEmpty) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF760018),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(_labelTipoEntrega(_pedido.tipoEntrega!),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 12),
             InkWell(
               onTap: () => setState(() => _timelineAberta = !_timelineAberta),
               child: Row(
