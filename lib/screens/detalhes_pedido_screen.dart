@@ -1387,10 +1387,13 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     // Recarrega (novo status no badge) sem sair dos detalhes; as abas da
     // home atualizam ao voltar (onVoltarDetalhes).
     await _recarregarAteMudar(statusAnterior);
-    // Otimista: se a API confirmou, assume PRONTO_PARA_RETIRADA.
+    // Otimista: se a API confirmou, assume PRONTO_PARA_SAIR.
     if (mounted) {
       setState(
-          () => _pedido = _pedido.copyWith(status: 'PRONTO_PARA_RETIRADA'));
+          () => _pedido = _pedido.copyWith(status: 'PRONTO_PARA_SAIR'));
+    }
+    if (mounted) {
+      _sucesso('Pedido confirmado! Status: Pronto para Retirada.');
     }
   }
 
