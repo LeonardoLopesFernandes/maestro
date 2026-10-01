@@ -1498,6 +1498,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   Future<void> _confirmarRetirada({String? token}) async {
     final isLoja = _normOrigem(_pedido.origem) == 'PEGUE_NA_LOJA_HOJE' ||
         (_pedido.tipoEntrega ?? '').toUpperCase() == 'RETIRADA';
+    final statusAnterior = _pedido.status;
     if (isLoja) {
       await widget.apiService.retirarPedidoPackk(
           _pedido.codigoExterno ?? _pedido.numero);
@@ -1509,6 +1510,20 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     // exibir depois (ex.: histórico como ENTREGUE).
     if (token != null && token.isNotEmpty) {
       widget.session.saveDeliveryToken(_pedido.numero, token);
+    }
+    // Otimista: Pegue na Loja Hoje -> ENTREGUE; Delivery -> SAIU_PARA_ENTREGA.
+    final novoStatus = isLoja ? 'ENTREGUE' : 'SAIU_PARA_ENTREGA';
+    if (mounted) {
+      setState(() => _pedido = _pedido.copyWith(status: novoStatus));
+    }
+    await _recarregarAteMudar(statusAnterior);
+    if (mounted) {
+      setState(() => _pedido = _pedido.copyWith(status: novoStatus));
+    }
+    if (mounted) {
+      _sucesso(isLoja
+          ? 'Pedido retirado! Status: Entregue.'
+          : 'Pedido retirado! Status: Saiu para Entrega.');
     }
   }
 
