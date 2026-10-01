@@ -298,7 +298,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                     ),
                     if (_mostrarStatusHeader) ...[
                       const SizedBox(width: 8),
-                      _pillHeader(status.texto, status.cor),
+                      _pillHeader(status.texto, status.cor,
+                          fontSize: status.texto.length > 12 ? 11 : 12.5),
                     ],
                   ],
                 ),
@@ -342,7 +343,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         t == 'Cancelado';
   }
 
-  Widget _pillHeader(String texto, Color cor) {
+  Widget _pillHeader(String texto, Color cor, {double? fontSize}) {
     final compacto = texto.length > 12;
     return Container(
       padding: EdgeInsets.symmetric(
@@ -354,7 +355,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       child: Text(texto,
           style: TextStyle(
               color: Colors.white,
-              fontSize: compacto ? 9.5 : 11,
+              fontSize: fontSize ?? (compacto ? 9.5 : 11),
               fontWeight: FontWeight.bold)),
     );
   }
