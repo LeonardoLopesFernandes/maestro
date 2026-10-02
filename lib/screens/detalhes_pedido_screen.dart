@@ -1031,8 +1031,21 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       (origem ?? 'SHIP_FROM_STORE').trim().replaceAll(' ', '_').toUpperCase();
 
   void _sucesso(String msg, {bool recarregar = true}) {
-    showDialog(
+    final navigator = Navigator.of(context);
+    var fechado = false;
+    void fechar() {
+      if (fechado) return;
+      fechado = true;
+      navigator.pop();
+      // Em fluxos que já atualizam o status localmente (ex.: confirmar ->
+      // PRONTO_PARA_SAIR) não recarrega, para o badge não reverter enquanto
+      // a API propaga.
+      if (recarregar) _carregar(silencioso: true);
+    }
+
+    showDialog<void>(
       context: context,
+      barrierDismissible: false,
       builder: (_) => Dialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -1057,14 +1070,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Fecha o diálogo de sucesso e mantém a tela de detalhes
-                    // aberta. Em fluxos que já atualizam o status localmente
-                    // (ex.: confirmar -> PRONTO_PARA_SAIR) não recarrega, para
-                    // o badge de ação não reverter enquanto a API propaga.
-                    Navigator.of(context).pop();
-                    if (recarregar) _carregar(silencioso: true);
-                  },
+                  onPressed: fechar,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE31837),
                     foregroundColor: Colors.white,
@@ -1080,7 +1086,12 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           ),
         ),
       ),
-    );
+    ).then((_) => fechado = true);
+
+    // Fecha sozinho após 2s, sem precisar apertar o OK.
+    Timer(const Duration(seconds: 2), () {
+      if (mounted) fechar();
+    });
   }
 
   void _aviso(String msg) {
