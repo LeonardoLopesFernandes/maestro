@@ -1030,7 +1030,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   String _normOrigem(String? origem) =>
       (origem ?? 'SHIP_FROM_STORE').trim().replaceAll(' ', '_').toUpperCase();
 
-  void _sucesso(String msg) {
+  void _sucesso(String msg, {bool recarregar = true}) {
     showDialog(
       context: context,
       builder: (_) => Dialog(
@@ -1058,12 +1058,12 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Fecha o diálogo de sucesso, mantém a tela de detalhes
-                    // aberta e recarrega o pedido: o status muda (ex: NOVO →
-                    // EM_SEPARACAO → PRONTO_PARA_RETIRADA) e os badges de
-                    // ação avançam sem sair da tela.
+                    // Fecha o diálogo de sucesso e mantém a tela de detalhes
+                    // aberta. Em fluxos que já atualizam o status localmente
+                    // (ex.: confirmar -> PRONTO_PARA_SAIR) não recarrega, para
+                    // o badge de ação não reverter enquanto a API propaga.
                     Navigator.of(context).pop();
-                    _carregar(silencioso: true);
+                    if (recarregar) _carregar(silencioso: true);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFE31837),
@@ -1325,7 +1325,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       {required bool editado,
       String? motivo,
       Map<String, List<String>>? imeisEditados}) async {
-    final statusAnterior = _pedido.status;
     final itensAtualizados =
         _buildItensBody(itens, novaQtd, imeisEditados);
     final novoValorTotal = _calcularValorTotal(itens, novaQtd);
@@ -1384,16 +1383,17 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         }).toList());
       });
     }
-    // Recarrega (novo status no badge) sem sair dos detalhes; as abas da
-    // home atualizam ao voltar (onVoltarDetalhes).
-    await _recarregarAteMudar(statusAnterior);
-    // Otimista: se a API confirmou, assume PRONTO_PARA_SAIR.
+    // Fiel ao Kotlin: após confirmar, assume PRONTO_PARA_SAIR localmente e
+    // re-renderiza os detalhes (header + badge de ação -> "RETIRAR PEDIDO"),
+    // sem reload da API que pudesse reverter o status. As abas da home
+    // atualizam ao voltar (onVoltarDetalhes).
     if (mounted) {
       setState(
           () => _pedido = _pedido.copyWith(status: 'PRONTO_PARA_SAIR'));
     }
     if (mounted) {
-      _sucesso('Pedido confirmado! Status: Pronto para Retirada.');
+      _sucesso('Pedido confirmado! Status: Pronto para Retirada.',
+          recarregar: false);
     }
   }
 
