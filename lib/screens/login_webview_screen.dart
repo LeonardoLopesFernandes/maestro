@@ -414,18 +414,105 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
 const _kMotoSvg =
     '''<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><title>sharp-motorcycle</title><path fill="#fffdfd" d="M19.44 9.03L15.41 5H11v2h3.59l2 2H5c-2.8 0-5 2.2-5 5s2.2 5 5 5c2.46 0 4.45-1.69 4.9-4h1.65l2.77-2.77c-.21.54-.32 1.14-.32 1.77c0 2.8 2.2 5 5 5s5-2.2 5-5c0-2.65-1.97-4.77-4.56-4.97M7.82 15C7.4 16.15 6.28 17 5 17c-1.63 0-3-1.37-3-3s1.37-3 3-3c1.28 0 2.4.85 2.82 2H5v2zM19 17c-1.66 0-3-1.34-3-3s1.34-3 3-3s3 1.34 3 3s-1.34 3-3 3"/></svg>''';
 
-class _CarregamentoWidget extends StatelessWidget {
+class _CarregamentoWidget extends StatefulWidget {
   const _CarregamentoWidget();
+
+  @override
+  State<_CarregamentoWidget> createState() => _CarregamentoWidgetState();
+}
+
+class _CarregamentoWidgetState extends State<_CarregamentoWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  double _lerp(double a, double b, double t) => a + (b - a) * t;
+
+  // Moto: sai pela direita, volta pela esquerda e para no centro.
+  double _motoDx(double t) {
+    if (t < 0.30) return _lerp(0.0, 1.3, t / 0.30);
+    if (t < 0.55) return _lerp(-1.3, 0.0, (t - 0.30) / 0.25);
+    return 0.0;
+  }
+
+  // A moto some quando o nome dá o zoom in.
+  double _motoOpacity(double t) {
+    if (t < 0.70) return 1.0;
+    return _lerp(1.0, 0.0, (t - 0.70) / 0.30);
+  }
+
+  // "maestro" surge abaixo após a moto parar no centro.
+  double _nomeOpacity(double t) {
+    if (t < 0.55) return 0.0;
+    if (t < 0.68) return _lerp(0.0, 1.0, (t - 0.55) / 0.13);
+    return 1.0;
+  }
+
+  double _nomeScale(double t) {
+    if (t < 0.68) return 1.0;
+    return _lerp(1.0, 1.6, (t - 0.68) / 0.32);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: const Color(0xFFE60000),
       child: Center(
-        child: SvgPicture.string(
-          _kMotoSvg,
-          width: 140,
-          height: 140,
+        child: AnimatedBuilder(
+          animation: _ctrl,
+          builder: (context, _) {
+            final t = _ctrl.value;
+            final w = MediaQuery.of(context).size.width;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 140,
+                  height: 140,
+                  child: Opacity(
+                    opacity: _motoOpacity(t),
+                    child: Transform.translate(
+                      offset: Offset(_motoDx(t) * w, 0),
+                      child: SvgPicture.string(
+                        _kMotoSvg,
+                        width: 140,
+                        height: 140,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Opacity(
+                  opacity: _nomeOpacity(t),
+                  child: Transform.scale(
+                    scale: _nomeScale(t),
+                    child: const Text(
+                      'maestro',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 34,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
