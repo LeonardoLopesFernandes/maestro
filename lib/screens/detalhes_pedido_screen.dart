@@ -931,7 +931,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           _acaoDevolverEstoque));
     } else if (s.contains('FINALIZADO')) {
       badges.add(_badgeAcao(
-          'CANCELAR', const Color(0xFFF80032), _acaoCancelarHistorico,
+          'DEVOLVIDO', const Color(0xFFF80032), _acaoCancelarHistorico,
           raio: 8));
     }
     if (badges.isEmpty) return const SizedBox.shrink();
