@@ -681,7 +681,7 @@ class MaestroDialogs {
     BuildContext context, {
     required int totalItens,
     required List<(String, int, int)> alterados,
-    required List<String> motivos,
+    required List<MotivoOpcao> motivos,
   }) {
     String? motivo;
     return showDialog<String>(
@@ -848,8 +848,8 @@ class MaestroDialogs {
                     underline: const SizedBox(),
                     items: motivos
                         .map((m) => DropdownMenuItem(
-                            value: m,
-                            child: Text(m,
+                            value: m.code,
+                            child: Text(m.label,
                                 style: const TextStyle(fontSize: 14))))
                         .toList(),
                     onChanged: (v) => set(() => motivo = v),
@@ -885,7 +885,8 @@ class MaestroDialogs {
 
   // Escolha de motivo (rádio)
   static Future<String?> motivoRadio(BuildContext context,
-      {String titulo = 'Selecione o motivo', List<String> opcoes = const []}) {
+      {String titulo = 'Selecione o motivo',
+      List<MotivoOpcao> opcoes = const []}) {
     String? sel;
     return showDialog<String>(
       context: context,
@@ -903,10 +904,10 @@ class MaestroDialogs {
                 mainAxisSize: MainAxisSize.min,
                 children: opcoes
                     .map((o) => RadioListTile<String>(
-                          title: Text(o,
+                          title: Text(o.label,
                               style: const TextStyle(
                                   fontSize: 14, color: Color(0xFF333333))),
-                          value: o,
+                          value: o.code,
                           groupValue: sel,
                           activeColor: const Color(0xFFE60014),
                           onChanged: (v) => set(() => sel = v),

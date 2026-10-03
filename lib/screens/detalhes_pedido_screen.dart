@@ -1455,9 +1455,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     }
   }
 
-  Future<List<String>> _carregarMotivosRecusa(String origem, String status) async {
+  Future<List<MotivoOpcao>> _carregarMotivosRecusa(
+      String origem, String status) async {
     try {
-      return await widget.apiService.getMotivosRecusa();
+      return await widget.apiService.getMotivosRecusa(
+          origem: origem, status: status);
     } catch (_) {
       return [];
     }

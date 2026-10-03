@@ -175,17 +175,34 @@ class ApiService {
     return [];
   }
 
-  Future<List<String>> getMotivosRecusa() async {
-    final json = await client.get('v2/backend/pedido/motivo/recusa')
-        as Map<String, dynamic>;
+  Future<List<MotivoOpcao>> getMotivosRecusa(
+      {String? origem, String? status}) async {
+    final json = await client.get('v2/backend/pedido/motivo/recusa', query: {
+      if (origem != null && origem.isNotEmpty) 'origem': origem,
+      if (status != null && status.isNotEmpty) 'status': status,
+    }) as Map<String, dynamic>;
     final data = json['data'];
     if (data is List) {
-      return data
-          .map<String>((e) => (e is Map
-              ? (e['nome'] ?? e['description'] ?? e['motivo'] ?? '')
-              : e.toString()))
-          .where((s) => s.isNotEmpty)
-          .toList();
+      final opcoes = <MotivoOpcao>[];
+      for (final e in data) {
+        if (e is! Map) continue;
+        final m = Map<String, dynamic>.from(e);
+        final subs = m['subItems'];
+        if (subs is List && subs.isNotEmpty) {
+          for (final s in subs) {
+            if (s is! Map) continue;
+            final code = (s['code'] ?? '').toString();
+            final label = (s['description'] ?? '').toString();
+            if (code.isNotEmpty) opcoes.add(MotivoOpcao(code, label));
+          }
+        } else {
+          final code = (m['code'] ?? '').toString();
+          final label =
+              (m['description'] ?? m['nome'] ?? m['motivo'] ?? '').toString();
+          if (code.isNotEmpty) opcoes.add(MotivoOpcao(code, label));
+        }
+      }
+      return opcoes;
     }
     return [];
   }

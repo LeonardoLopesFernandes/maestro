@@ -425,3 +425,10 @@ class PedidoResponse {
     );
   }
 }
+
+/// Opção de motivo de recusa: `code` é enviado à API, `label` é exibido.
+class MotivoOpcao {
+  final String code;
+  final String label;
+  const MotivoOpcao(this.code, this.label);
+}
