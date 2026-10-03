@@ -934,28 +934,42 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           'DEVOLVIDO', const Color(0xFFF80032), _acaoCancelarHistorico,
           raio: 8));
     }
-    if (badges.isEmpty) return const SizedBox.shrink();
+    if (badges.isEmpty &&
+        (_pedido.notaFiscalChave ?? '').isEmpty &&
+        (_pedido.notaFiscalDevolucaoChave ?? '').isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     // NOTA FISCAL: só para pedidos entregues (Histórico / FINALIZADO / ENTREGUE)
     final temNota = (_pedido.notaFiscalChave ?? '').isNotEmpty &&
         (s.contains('FINALIZADO') || s.contains('ENTREGUE'));
+    // NOTA FISCAL DE DEVOLUÇÃO: pedidos devolvidos/cancelados com NF de devolução
+    final temNotaDev = (_pedido.notaFiscalDevolucaoChave ?? '').isNotEmpty;
+
+    final notas = <Widget>[
+      if (temNota) _badgeAcaoNotaFiscal(),
+      if (temNotaDev) _badgeAcaoNotaFiscalDevolucao(),
+    ];
+
+    if (badges.isEmpty && notas.isEmpty) return const SizedBox.shrink();
 
     final children = <Widget>[];
-    if (temNota) {
-      if (badges.length == 1) {
-        children.add(Row(
-          children: [
-            Expanded(child: _badgeAcaoNotaFiscal()),
-            const SizedBox(width: 8),
-            Expanded(child: badges.first),
-          ],
-        ));
-      } else {
-        children.add(_badgeAcaoNotaFiscal());
-        children.add(const SizedBox(height: 8));
-        children.addAll(badges);
-      }
+    if (notas.length == 1 && badges.length == 1) {
+      children.add(Row(
+        children: [
+          Expanded(child: notas.first),
+          const SizedBox(width: 8),
+          Expanded(child: badges.first),
+        ],
+      ));
     } else {
+      for (var i = 0; i < notas.length; i++) {
+        children.add(notas[i]);
+        if (i < notas.length - 1) children.add(const SizedBox(height: 8));
+      }
+      if (notas.isNotEmpty && badges.isNotEmpty) {
+        children.add(const SizedBox(height: 8));
+      }
       children.addAll(badges);
     }
 
@@ -1003,6 +1017,45 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                           fontSize: 15,
                           fontWeight: FontWeight.bold)),
                 ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+  Widget _badgeAcaoNotaFiscalDevolucao() => Container(
+        height: 48,
+        decoration: BoxDecoration(
+            color: Colors.black, borderRadius: BorderRadius.circular(8)),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => VisualizarDanfeScreen(
+                  session: widget.session,
+                  apiService: widget.apiService,
+                  chave: _pedido.notaFiscalDevolucaoChave!,
+                  url: _pedido.notaFiscalDevolucaoUrl,
+                ),
+              ));
+            },
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.description, color: Colors.white, size: 20),
+                    SizedBox(width: 8),
+                    Text('NOTA FISCAL DE DEVOLUÇÃO',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold)),
+                  ],
+                ),
               ),
             ),
           ),

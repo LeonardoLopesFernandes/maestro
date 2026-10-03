@@ -27,6 +27,8 @@ class Pedido {
   final String? searchtext;
   final String? notaFiscalChave;
   final String? notaFiscalUrl;
+  final String? notaFiscalDevolucaoChave;
+  final String? notaFiscalDevolucaoUrl;
   final String? transportadora;
   final int? tempoConfirmacao;
   final List<MotivoCancelamento>? motivo;
@@ -60,6 +62,8 @@ class Pedido {
       this.searchtext,
       this.notaFiscalChave,
       this.notaFiscalUrl,
+      this.notaFiscalDevolucaoChave,
+      this.notaFiscalDevolucaoUrl,
       this.transportadora,
       this.tempoConfirmacao,
       this.motivo,
@@ -110,6 +114,10 @@ class Pedido {
       notaFiscalUrl: json['notaFiscal']?['nfe'] ??
           json['notaFiscal']?['url'] ??
           json['notaFiscal']?['link'],
+      notaFiscalDevolucaoChave: json['notaFiscalDevolucao']?['chave'],
+      notaFiscalDevolucaoUrl: json['notaFiscalDevolucao']?['nfe'] ??
+          json['notaFiscalDevolucao']?['url'] ??
+          json['notaFiscalDevolucao']?['link'],
       transportadora: json['transportadora'],
       tempoConfirmacao: _toInt(json['tempoConfirmacao']),
       motivo: (json['motivo'] as List?)
@@ -154,6 +162,8 @@ class Pedido {
       searchtext: searchtext,
       notaFiscalChave: notaFiscalChave,
       notaFiscalUrl: notaFiscalUrl,
+      notaFiscalDevolucaoChave: notaFiscalDevolucaoChave,
+      notaFiscalDevolucaoUrl: notaFiscalDevolucaoUrl,
       transportadora: transportadora,
       tempoConfirmacao: tempoConfirmacao,
       motivo: motivo,
