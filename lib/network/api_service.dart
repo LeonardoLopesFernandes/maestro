@@ -175,7 +175,7 @@ class ApiService {
     return [];
   }
 
-  Future<List<MotivoOpcao>> getMotivosRecusa(
+  Future<List<MotivoRecusa>> getMotivosRecusa(
       {String? origem, String? status}) async {
     final json = await client.get('v2/backend/pedido/motivo/recusa', query: {
       if (origem != null && origem.isNotEmpty) 'origem': origem,
@@ -183,26 +183,11 @@ class ApiService {
     }) as Map<String, dynamic>;
     final data = json['data'];
     if (data is List) {
-      final opcoes = <MotivoOpcao>[];
-      for (final e in data) {
-        if (e is! Map) continue;
-        final m = Map<String, dynamic>.from(e);
-        final subs = m['subItems'];
-        if (subs is List && subs.isNotEmpty) {
-          for (final s in subs) {
-            if (s is! Map) continue;
-            final code = (s['code'] ?? '').toString();
-            final label = (s['description'] ?? '').toString();
-            if (code.isNotEmpty) opcoes.add(MotivoOpcao(code, label));
-          }
-        } else {
-          final code = (m['code'] ?? '').toString();
-          final label =
-              (m['description'] ?? m['nome'] ?? m['motivo'] ?? '').toString();
-          if (code.isNotEmpty) opcoes.add(MotivoOpcao(code, label));
-        }
-      }
-      return opcoes;
+      return data
+          .whereType<Map>()
+          .map((e) => MotivoRecusa.fromJson(Map<String, dynamic>.from(e)))
+          .where((m) => m.code.isNotEmpty)
+          .toList();
     }
     return [];
   }

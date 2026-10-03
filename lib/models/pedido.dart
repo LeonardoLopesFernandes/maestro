@@ -426,9 +426,38 @@ class PedidoResponse {
   }
 }
 
-/// Opção de motivo de recusa: `code` é enviado à API, `label` é exibido.
-class MotivoOpcao {
+/// Motivo de recusa retornado pela API. O `code` é o valor enviado à API;
+/// `description` é o texto exibido. Pode conter subitens (submotivos).
+class MotivoRecusa {
   final String code;
-  final String label;
-  const MotivoOpcao(this.code, this.label);
+  final String description;
+  final List<MotivoRecusaSub> subItems;
+  const MotivoRecusa({
+    required this.code,
+    required this.description,
+    this.subItems = const [],
+  });
+
+  factory MotivoRecusa.fromJson(Map<String, dynamic> j) => MotivoRecusa(
+        code: (j['code'] ?? '').toString(),
+        description:
+            (j['description'] ?? j['nome'] ?? j['motivo'] ?? '').toString(),
+        subItems: (j['subItems'] as List?)
+                ?.whereType<Map>()
+                .map((e) =>
+                    MotivoRecusaSub.fromJson(Map<String, dynamic>.from(e)))
+                .toList() ??
+            const [],
+      );
+}
+
+class MotivoRecusaSub {
+  final String code;
+  final String description;
+  const MotivoRecusaSub({required this.code, required this.description});
+
+  factory MotivoRecusaSub.fromJson(Map<String, dynamic> j) => MotivoRecusaSub(
+        code: (j['code'] ?? '').toString(),
+        description: (j['description'] ?? '').toString(),
+      );
 }

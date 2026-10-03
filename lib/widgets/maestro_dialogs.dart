@@ -675,262 +675,399 @@ class MaestroDialogs {
     );
   }
 
-  // 2º Diálogo (quando houve alteração): confirmação parcial com motivo.
-  // Mostra as quantidades alteradas e pede o motivo da recusa/alteração.
-  static Future<String?> confirmacaoParcial(
+  // ===== Passo 1: "Itens do Pedido" — escolha do motivo (retorna o code) =====
+  static Future<String?> recusaMotivo(
     BuildContext context, {
-    required int totalItens,
-    required List<(String, int, int)> alterados,
-    required List<MotivoOpcao> motivos,
+    required String titulo,
+    required List<MotivoRecusa> motivos,
   }) {
-    String? motivo;
+    String? selecionado;
+    final expandidos = <String>{};
     return showDialog<String>(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, set) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-          contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-          actionsPadding:
-              const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          title: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
+        builder: (ctx, set) {
+          Widget radio(bool sel) => Container(
+                width: 20,
+                height: 20,
+                margin: const EdgeInsets.only(top: 2),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFEBEE),
-                  borderRadius: BorderRadius.circular(12),
+                  shape: BoxShape.circle,
+                  color: sel ? const Color(_vermelho) : Colors.transparent,
+                  border: Border.all(
+                    color: sel
+                        ? const Color(_vermelho)
+                        : const Color(0xFFBDBDBD),
+                    width: 2,
+                  ),
                 ),
-                child: const Icon(Icons.edit_note,
-                    color: Color(0xFFE60014), size: 24),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
+                child: sel
+                    ? const Icon(Icons.check, size: 12, color: Colors.white)
+                    : null,
+              );
+
+          Widget linha({required Widget leading, required String texto}) =>
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: const BoxDecoration(
+                  border: Border(
+                      bottom: BorderSide(color: Color(0xFFEEEEEE))),
+                ),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Confirmação parcial',
-                        style: TextStyle(
-                            fontSize: 17, fontWeight: FontWeight.bold)),
-                    Text(
-                      '$totalItens ${totalItens == 1 ? 'item' : 'itens'} no pedido',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.normal),
+                    SizedBox(width: 24, child: leading),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(texto,
+                          style: const TextStyle(
+                              fontSize: 15,
+                              color: Color(0xFF757575),
+                              height: 1.4)),
                     ),
                   ],
                 ),
+              );
+
+          Widget motivoWidget(MotivoRecusa m) {
+            if (m.subItems.isEmpty) {
+              final sel = selecionado == m.code;
+              return InkWell(
+                onTap: () => set(() => selecionado = m.code),
+                child: linha(leading: radio(sel), texto: m.description),
+              );
+            }
+            final aberto = expandidos.contains(m.code);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                InkWell(
+                  onTap: () => set(() {
+                    if (aberto) {
+                      expandidos.remove(m.code);
+                    } else {
+                      expandidos.add(m.code);
+                    }
+                  }),
+                  child: linha(
+                    leading: Text(aberto ? '-' : '+',
+                        style: const TextStyle(
+                            color: Color(_vermelho),
+                            fontSize: 22,
+                            height: 1,
+                            fontWeight: FontWeight.w500)),
+                    texto: m.description,
+                  ),
+                ),
+                if (aberto)
+                  ...m.subItems.map((s) {
+                    final sel = selecionado == s.code;
+                    return InkWell(
+                      onTap: () => set(() => selecionado = s.code),
+                      child: Container(
+                        padding: const EdgeInsets.only(
+                            left: 40, top: 12, bottom: 12),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                              bottom: BorderSide(color: Color(0xFFEEEEEE))),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            radio(sel),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text(s.description,
+                                  style: const TextStyle(
+                                      fontSize: 15,
+                                      color: Color(0xFF757575),
+                                      height: 1.4)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+              ],
+            );
+          }
+
+          return _dialogFull(
+            header: _stepperHeader(
+                passo: 1, onBack: () => Navigator.of(ctx).pop()),
+            body: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(titulo,
+                      style: const TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF212121),
+                          height: 1.4,
+                          fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  ...motivos.map(motivoWidget),
+                ],
               ),
+            ),
+            footer: _stepFooter(
+              onFechar: () => Navigator.of(ctx).pop(),
+              onSim: selecionado == null
+                  ? null
+                  : () => Navigator.of(ctx).pop(selecionado),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ===== Passo 2: "Confirmação" — reconfirma as quantidades alteradas =====
+  static Future<bool?> confirmarQuantidades(
+    BuildContext context, {
+    required List<(String, int, int)> alterados,
+  }) {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _dialogFull(
+        header: _stepperHeader(passo: 2),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                  'Deseja confirmar a solicitação com as quantidades abaixo?',
+                  style: TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF212121),
+                      height: 1.4,
+                      fontWeight: FontWeight.w600)),
+              const SizedBox(height: 16),
+              ...alterados.map((a) {
+                final diff = a.$3 - a.$2;
+                final recusa = diff < 0;
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(a.$1,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Text('${a.$2}',
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey[500],
+                                        decoration:
+                                            TextDecoration.lineThrough)),
+                                const Padding(
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: 6),
+                                  child: Icon(Icons.arrow_forward,
+                                      size: 14, color: Colors.grey),
+                                ),
+                                Text('${a.$3}',
+                                    style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFFE61937))),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: recusa
+                              ? const Color(0xFFFFEBEE)
+                              : const Color(0xFFE8F5E9),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(diff > 0 ? '+$diff' : '$diff',
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: recusa
+                                    ? const Color(0xFFE60014)
+                                    : const Color(0xFF2E7D32))),
+                      ),
+                    ],
+                  ),
+                );
+              }),
             ],
           ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                Text('ITENS ALTERADOS (${alterados.length})',
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[600],
-                        letterSpacing: 0.5)),
-                const SizedBox(height: 8),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 210),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: alterados.map((a) {
-                        final diff = a.$3 - a.$2;
-                        final recusa = diff < 0;
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                                color: const Color(0xFFE2E8F0)),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Text(a.$1,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600)),
-                                    const SizedBox(height: 4),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          '${a.$2}',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: Colors.grey[500],
-                                            decoration: TextDecoration
-                                                .lineThrough,
-                                          ),
-                                        ),
-                                        const Padding(
-                                          padding: EdgeInsets.symmetric(
-                                              horizontal: 6),
-                                          child: Icon(Icons.arrow_forward,
-                                              size: 14, color: Colors.grey),
-                                        ),
-                                        Text(
-                                          '${a.$3}',
-                                          style: const TextStyle(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFFE61937)),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: recusa
-                                      ? const Color(0xFFFFEBEE)
-                                      : const Color(0xFFE8F5E9),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  diff > 0 ? '+$diff' : '$diff',
-                                  style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: recusa
-                                          ? const Color(0xFFE60014)
-                                          : const Color(0xFF2E7D32)),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text('MOTIVO DA RECUSA *',
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[600],
-                        letterSpacing: 0.5)),
-                const SizedBox(height: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFD1D5DB)),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: DropdownButton<String>(
-                    isExpanded: true,
-                    hint: const Text('Selecione um motivo...'),
-                    value: motivo,
-                    underline: const SizedBox(),
-                    items: motivos
-                        .map((m) => DropdownMenuItem(
-                            value: m.code,
-                            child: Text(m.label,
-                                style: const TextStyle(fontSize: 14))))
-                        .toList(),
-                    onChanged: (v) => set(() => motivo = v),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('CANCELAR',
-                  style: TextStyle(color: Color(0xFF6B7280))),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: motivo != null
-                      ? const Color(_verde)
-                      : const Color(0xFFD1D5DB),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10))),
-              onPressed: motivo != null
-                  ? () => Navigator.of(ctx).pop(motivo)
-                  : null,
-              child: const Text('CONFIRMAR',
-                  style: TextStyle(color: Colors.white)),
-            ),
-          ],
+        ),
+        footer: _stepFooter(
+          onFechar: () => Navigator.of(ctx).pop(false),
+          onSim: () => Navigator.of(ctx).pop(true),
         ),
       ),
     );
   }
 
-  // Escolha de motivo (rádio)
-  static Future<String?> motivoRadio(BuildContext context,
-      {String titulo = 'Selecione o motivo',
-      List<MotivoOpcao> opcoes = const []}) {
-    String? sel;
-    return showDialog<String>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, set) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(titulo,
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          content: SizedBox(
-            width: double.infinity,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: opcoes
-                    .map((o) => RadioListTile<String>(
-                          title: Text(o.label,
-                              style: const TextStyle(
-                                  fontSize: 14, color: Color(0xFF333333))),
-                          value: o.code,
-                          groupValue: sel,
-                          activeColor: const Color(0xFFE60014),
-                          onChanged: (v) => set(() => sel = v),
-                        ))
-                    .toList(),
-              ),
+  static Widget _dialogFull({
+    required Widget header,
+    required Widget body,
+    required Widget footer,
+  }) {
+    return Dialog(
+      insetPadding: EdgeInsets.zero,
+      backgroundColor: Colors.white,
+      child: SizedBox(
+        width: double.infinity,
+        height: double.infinity,
+        child: SafeArea(
+          child: Column(
+            children: [
+              header,
+              Expanded(child: body),
+              footer,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static Widget _stepperHeader({required int passo, VoidCallback? onBack}) {
+    const vermelho = Color(0xFFD32F2F);
+    Widget item({required bool check, required String label, String? numero}) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: const BoxDecoration(
+                color: vermelho, shape: BoxShape.circle),
+            alignment: Alignment.center,
+            child: check
+                ? const Icon(Icons.check, size: 14, color: Colors.white)
+                : Text(numero ?? '',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(height: 4),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF212121))),
+        ],
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE))),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 40,
+            child: onBack == null
+                ? null
+                : IconButton(
+                    icon: const Icon(Icons.arrow_back,
+                        color: Color(0xFF212121)),
+                    onPressed: onBack,
+                  ),
+          ),
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                item(check: true, label: 'Itens do Pedido'),
+                Expanded(
+                  child: Container(
+                    height: 2,
+                    margin:
+                        const EdgeInsets.only(top: 11, left: 8, right: 8),
+                    color: const Color(0xFFE0E0E0),
+                  ),
+                ),
+                item(check: passo >= 2, label: 'Confirmação', numero: '2'),
+              ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('CANCELAR',
-                  style: TextStyle(color: Color(0xFF6B7280))),
+          const SizedBox(width: 40),
+        ],
+      ),
+    );
+  }
+
+  static Widget _stepFooter({
+    required VoidCallback onFechar,
+    required VoidCallback? onSim,
+  }) {
+    final habilitado = onSim != null;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          TextButton(
+            onPressed: onFechar,
+            child: const Text('FECHAR',
+                style: TextStyle(
+                    color: Color(0xFF212121), fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            onPressed: onSim,
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  habilitado ? const Color(_verde) : const Color(0xFFE0E0E0),
+              foregroundColor:
+                  habilitado ? Colors.white : const Color(0xFF9E9E9E),
+              elevation: 0,
+              shape:
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(_verde)),
-              onPressed: () => Navigator.of(ctx).pop(sel),
-              child: const Text('CONFIRMAR',
-                  style: TextStyle(color: Colors.white)),
+            child: Row(
+              children: [
+                const Text('SIM',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(width: 8),
+                Icon(Icons.check,
+                    size: 16,
+                    color: habilitado ? Colors.white : const Color(0xFF9E9E9E)),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

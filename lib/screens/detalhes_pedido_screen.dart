@@ -1201,8 +1201,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       final motivos = await _carregarMotivosRecusa(origem, _pedido.status ?? '');
       final motivo = motivos.isEmpty
           ? 'RECUSA_TOTAL'
-          : await MaestroDialogs.motivoRadio(
-              context, titulo: 'Selecione o motivo da recusa', opcoes: motivos);
+          : await MaestroDialogs.recusaMotivo(context,
+              titulo: 'Selecione o motivo da recusa:',
+              motivos: motivos);
       if (motivo == null || motivo.isEmpty) return;
       try {
         await widget.apiService.updateInventory(numero, [], 0.0,
@@ -1233,9 +1234,14 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       final motivos = await _carregarMotivosRecusa(origem, _pedido.status ?? '');
       final motivo = motivos.isEmpty
           ? null
-          : await MaestroDialogs.confirmacaoParcial(context,
-              totalItens: total, alterados: alterados, motivos: motivos);
+          : await MaestroDialogs.recusaMotivo(context,
+              titulo:
+                  'Confirmação Parcial de $total ${total == 1 ? 'item' : 'itens'}. Selecione o motivo para o(s) produto(s) recusado(s):',
+              motivos: motivos);
       if (motivo == null) return;
+      final confirma = await MaestroDialogs.confirmarQuantidades(context,
+          alterados: alterados);
+      if (confirma != true) return;
       // atualiza inventário (somente itens alterados) e confirma
       try {
         final itensComErro = _buildItensBody(itens, novaQtd)
@@ -1298,9 +1304,14 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       final motivos = await _carregarMotivosRecusa(origem, _pedido.status ?? '');
       final motivo = motivos.isEmpty
           ? null
-          : await MaestroDialogs.confirmacaoParcial(context,
-              totalItens: total, alterados: alterados, motivos: motivos);
+          : await MaestroDialogs.recusaMotivo(context,
+              titulo:
+                  'Confirmação Parcial de $total ${total == 1 ? 'item' : 'itens'}. Selecione o motivo para o(s) produto(s) recusado(s):',
+              motivos: motivos);
       if (motivo == null) return;
+      final confirma = await MaestroDialogs.confirmarQuantidades(context,
+          alterados: alterados);
+      if (confirma != true) return;
       try {
         final itensComErro = _buildItensBody(itens, novaQtd, imeis)
             .where((m) {
@@ -1455,7 +1466,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     }
   }
 
-  Future<List<MotivoOpcao>> _carregarMotivosRecusa(
+  Future<List<MotivoRecusa>> _carregarMotivosRecusa(
       String origem, String status) async {
     try {
       return await widget.apiService.getMotivosRecusa(
