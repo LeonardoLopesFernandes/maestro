@@ -1099,6 +1099,51 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         .showSnackBar(SnackBar(content: Text(msg)));
   }
 
+  // Cancelamento/devolução: mantém a tela aberta, atualiza o status exibido,
+  // mostra o aviso de sucesso por 2s e só então sai da tela de detalhes.
+  Future<void> _sucessoComSaida(String msg, String novoStatus) async {
+    if (mounted) {
+      setState(() => _pedido = _pedido.copyWith(status: novoStatus));
+    }
+    final navigator = Navigator.of(context);
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const _SucessoAnimado(),
+                const SizedBox(height: 16),
+                const Text('Sucesso',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1A1A))),
+                const SizedBox(height: 8),
+                Text(msg,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        color: Color(0xFF555555), fontSize: 14)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+    navigator.pop();
+    navigator.pop();
+  }
+
   Future<void> _acaoSeparar() async {
     try {
       await widget.apiService.separarPedido(
@@ -1213,7 +1258,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     }
 
     // Sem alteração: diálogo "tudo certo"
-    final conf = await MaestroDialogs.tudoCerto(context, itens.length);
+    final totalQtd = itens.fold<int>(0, (s, it) => s + novaQtd(it));
+    final conf = await MaestroDialogs.tudoCerto(context, totalQtd);
     if (conf != true) return;
     try {
       await _executarConfirmacao(origem, codigoExterno, itens, novaQtd,
@@ -1274,7 +1320,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       return;
     }
 
-    final conf = await MaestroDialogs.tudoCerto(context, itens.length);
+    final totalQtd = itens.fold<int>(0, (s, it) => s + novaQtd(it));
+    final conf = await MaestroDialogs.tudoCerto(context, totalQtd);
     if (conf != true) return;
     try {
       await _executarConfirmacao(origem, codigoExterno, itens, novaQtd,
@@ -1549,7 +1596,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       await widget.apiService.cancelarPedido(
           _normOrigem(_pedido.origem), _pedido.codigoExterno ?? _pedido.numero,
           'Cancelado pelo usuário', 'CANCELAMENTO');
-      _sucesso('Pedido cancelado.');
+      await _sucessoComSaida('Pedido cancelado.', 'CANCELADO');
     } catch (e) {
       _erroMsg(e);
     }
@@ -1587,7 +1634,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     try {
       await widget.apiService.retornarParaEstoque(
           _normOrigem(_pedido.origem), numero);
-      _sucesso('Pedido devolvido ao estoque.');
+      await _sucessoComSaida(
+          'Pedido devolvido ao estoque.', 'RETORNAR_PARA_ESTOQUE');
     } catch (e) {
       _erroMsg(e);
     }

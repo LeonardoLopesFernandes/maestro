@@ -397,13 +397,13 @@ class MaestroDialogs {
   }
 
   // Confirmação "Tudo certo" (sem alterações)
-  static Future<bool?> tudoCerto(BuildContext context, int itens) {
+  static Future<bool?> tudoCerto(BuildContext context, int quantidade) {
     return showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         contentPadding: const EdgeInsets.all(28),
-        title: Text('Confirma a separação de $itens itens?',
+        title: Text('Confirma a separação de $quantidade itens?',
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center),
         actions: [
