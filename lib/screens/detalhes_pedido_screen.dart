@@ -602,12 +602,17 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     return sb.toString();
   }
 
-  bool _temMaisDe3Dias() {
-    final d = _pedido.dataInclusao;
-    if (d == null || d.isEmpty) return false;
+  // Cancelamento pela loja permitido quando o pedido está com erro ou está
+  // há 3 dias ou mais (contando da criação), como no app nativo.
+  bool _podeCancelarRetirada() {
+    if ((_pedido.erro ?? '').trim().isNotEmpty) return true;
+    final d = (_pedido.dataCriacao ?? '').isNotEmpty
+        ? _pedido.dataCriacao!
+        : _pedido.dataInclusao;
+    if (d.isEmpty) return false;
     try {
       final dt = DateTime.parse(d).toLocal();
-      return DateTime.now().difference(dt).inDays > 3;
+      return DateTime.now().difference(dt).inDays >= 3;
     } catch (_) {
       return false;
     }
@@ -898,8 +903,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     } else if (s.contains('SEPARACAO')) {
       badges.add(_badgeAcao('CONFIRMAR', const Color(0xFF12CD0C), _acaoConfirmar));
     } else if (s.contains('PRONTO')) {
-      if (_temMaisDe3Dias()) {
-        // RETIRAR PEDIDO + CANCELAR PEDIDO lado a lado (larguras/alturas iguais)
+      if (_podeCancelarRetirada()) {
+        // RETIRAR PEDIDO + CANCELAR lado a lado (larguras/alturas iguais)
         badges.add(Row(
           children: [
             Expanded(
@@ -909,7 +914,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             const SizedBox(width: 8),
             Expanded(
               child: _badgeAcao(
-                  'CANCELAR PEDIDO', const Color(0xFFF80032), _acaoCancelarRetirada,
+                  'CANCELAR', const Color(0xFFF80032), _acaoCancelarRetirada,
                   raio: 8),
             ),
           ],
@@ -1606,9 +1611,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         textoSim: 'SIM, CANCELAR');
     if (ok != true) return;
     try {
-      await widget.apiService.cancelarPedido(
-          _normOrigem(_pedido.origem), _pedido.codigoExterno ?? _pedido.numero,
-          'Cancelado pelo usuário', 'CANCELAMENTO');
+      await widget.apiService.cancelarPedidoProntoRetirada(
+          _normOrigem(_pedido.origem), _pedido.codigoExterno ?? _pedido.numero);
       await _sucessoComSaida('Pedido cancelado.', 'CANCELADO');
     } catch (e) {
       _erroMsg(e);

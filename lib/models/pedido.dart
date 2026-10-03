@@ -8,6 +8,8 @@ class Pedido {
   final String? tipoEntrega;
   final String dataInclusao;
   final String? dataAlteracao;
+  final String? dataCriacao;
+  final String? erro;
   final Cliente? cliente;
   final Recebedor? recebedor;
   final List<Item> itens;
@@ -39,6 +41,8 @@ class Pedido {
     this.tipoEntrega,
     this.dataInclusao = "",
     this.dataAlteracao,
+    this.dataCriacao,
+    this.erro,
     this.cliente,
     this.recebedor,
     this.itens = const [],
@@ -72,6 +76,8 @@ class Pedido {
       tipoEntrega: json['tipoEntrega'],
       dataInclusao: json['dataInclusao'] ?? "",
       dataAlteracao: json['dataAlteracao'],
+      dataCriacao: json['dataCriacao'],
+      erro: json['erro'],
       cliente: json['cliente'] != null ? Cliente.fromJson(json['cliente']) : null,
       recebedor: json['recebedor'] != null
           ? Recebedor.fromJson(json['recebedor'])
@@ -129,6 +135,8 @@ class Pedido {
       tipoEntrega: tipoEntrega,
       dataInclusao: dataInclusao,
       dataAlteracao: dataAlteracao,
+      dataCriacao: dataCriacao,
+      erro: erro,
       cliente: cliente,
       recebedor: recebedor,
       itens: itens ?? this.itens,
