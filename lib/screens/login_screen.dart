@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:convert';
 import '../network/session_manager.dart';
 import '../utils/constants.dart';
@@ -18,12 +19,24 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _salvarCredenciais = true;
   bool _carregando = false;
   bool _reconectando = false;
+  String _versao = '';
   late final SessionManager _session;
 
   @override
   void initState() {
     super.initState();
+    _carregarVersao();
     _init();
+  }
+
+  Future<void> _carregarVersao() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() =>
+            _versao = 'versão ${info.version} (${info.buildNumber})');
+      }
+    } catch (_) {}
   }
 
   Future<void> _init() async {
@@ -256,9 +269,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 20),
                           // 4. Rodapé versão
-                          const Text(
-                            'versão 1.6.2 (62)',
-                            style: TextStyle(
+                          Text(
+                            _versao.isEmpty ? 'versão' : _versao,
+                            style: const TextStyle(
                               color: Color(0xFFFFCCCC),
                               fontSize: 14,
                             ),

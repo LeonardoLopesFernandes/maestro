@@ -98,6 +98,14 @@ class SessionManager {
 
   void clearAll() => _prefs.clear();
 
+  /// Desloga da conta: encerra a sessão e remove as credenciais salvas
+  /// (para não relogar automaticamente no próximo início).
+  void logout() {
+    clearToken();
+    clearCredentials();
+    disableDemo();
+  }
+
   // ---------- Modo Demonstração (preview sem credenciais) ----------
   void enableDemo() {
     _prefs.setBool(_keyDemo, true);

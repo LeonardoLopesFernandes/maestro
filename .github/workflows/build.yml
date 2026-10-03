@@ -49,10 +49,21 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Build release APK (split arm64-v8a)
+      - name: Definir versão (tag vX.Y.Z ou run_number)
+        id: version
         env:
-          BUILD_NUMBER: ${{ github.run_number }}
-        run: flutter build apk --split-per-abi --target-platform android-arm64 --build-number=$BUILD_NUMBER --build-name="1.0.$BUILD_NUMBER"
+          REF_NAME: ${{ github.ref_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          if [[ "$REF_NAME" == v* ]]; then
+            echo "name=${REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=1.0.$RUN_NUMBER" >> "$GITHUB_OUTPUT"
+          fi
+          echo "code=$RUN_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Build release APK (split arm64-v8a)
+        run: flutter build apk --split-per-abi --target-platform android-arm64 --build-number=${{ steps.version.outputs.code }} --build-name="${{ steps.version.outputs.name }}"
 
       - name: Renomear APK
         run: cp build/app/outputs/flutter-apk/*arm64-v8a*.apk build/app/outputs/flutter-apk/maestro_flutter.apk && ls -la build/app/outputs/flutter-apk/maestro_flutter.apk

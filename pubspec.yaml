@@ -20,6 +20,9 @@ dependencies:
   provider: ^6.1.1
   shared_preferences: ^2.2.2
 
+  # Versão dinâmica (rodapé do login)
+  package_info_plus: ^9.0.0
+
   # Ícones vetoriais convertidos de VectorDrawable
   flutter_svg: ^2.0.9
 

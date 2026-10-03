@@ -318,8 +318,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _confirmarSaida,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        await _confirmarSaida();
+      },
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
@@ -909,7 +913,11 @@ class _PerfilDialogState extends State<_PerfilDialog> {
                         borderRadius: BorderRadius.circular(8)),
                   ),
                   onPressed: () {
-                    SystemNavigator.pop();
+                    final nav = Navigator.of(context);
+                    widget.session.logout();
+                    nav.pop();
+                    nav.pushNamedAndRemoveUntil(
+                        '/login', (route) => false);
                   },
                   child: const Text('SAIR',
                       style: TextStyle(
