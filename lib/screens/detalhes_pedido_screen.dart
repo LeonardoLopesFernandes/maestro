@@ -9,7 +9,6 @@ import '../network/api_service.dart';
 import '../network/session_manager.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/maestro_dialogs.dart';
-import 'scanner_imei_screen.dart';
 import 'visualizar_danfe_screen.dart';
 import '../widgets/smartphone_confirmacao_dialog.dart';
 
@@ -37,7 +36,6 @@ class DetalhesPedidoScreen extends StatefulWidget {
 class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   late Pedido _pedido;
   bool _carregando = true;
-  bool _erro = false;
   Map<String, dynamic>? _tokens;
   bool _timelineAberta = false;
   final ScrollController _scrollController = ScrollController();
@@ -90,9 +88,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         });
       }
       _carregarTokens();
-    } catch (_) {
-      if (mounted && !silencioso) setState(() => _erro = true);
-    }
+    } catch (_) {}
   }
 
   /// Recarrega até o status mudar (o backend pode demorar a propagar).

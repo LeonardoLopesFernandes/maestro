@@ -1,7 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SessionManager {
-  static const String _prefsName = "MaestroPrefs";
   static const String _keyBearerToken = "BEARER_TOKEN";
   static const String _keyTokenExpiry = "TOKEN_EXPIRY";
   static const String _keyUserEmail = "USER_EMAIL";

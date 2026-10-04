@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'dart:convert';
 import '../network/session_manager.dart';
-import '../utils/constants.dart';
 import 'login_webview_screen.dart';
 
 class LoginScreen extends StatefulWidget {

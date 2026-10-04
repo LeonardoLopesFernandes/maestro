@@ -7,7 +7,6 @@ const _verde = 0xFF12CD0C;
 const _verdeEscuro = 0xFF2E7D32;
 const _vermelho = 0xFFF80032;
 const _vermelhoDark = 0xFFD50000;
-const _laranja = 0xFFFFAA02;
 
 class MaestroDialogs {
   // Confirmação simples (usado em vários fluxos)

@@ -22,7 +22,6 @@ class LoginWebViewScreen extends StatefulWidget {
 class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
   late final WebViewController _controller;
   late final SessionManager _session;
-  late final ApiService _apiService;
 
   bool _loginConcluido = false;
   bool _carregando = true;
@@ -44,7 +43,6 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
 
   Future<void> _initAsync() async {
     _session = await SessionManager.create();
-    _apiService = ApiService(ApiClient(session: _session));
     final args = widget.args ?? {};
     _autoLogin = args['autoLogin'] == true;
     _pedirCredenciais = args['pedirCredenciais'] == true;
@@ -262,23 +260,6 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
     return null;
   }
 
-  String? _extrairClaim(String token, String claim) {
-    try {
-      final parts = token.split('.');
-      if (parts.length < 2) return null;
-      var payload = parts[1];
-      payload = payload.padRight(payload.length + (4 - payload.length % 4) % 4, '=');
-      final json = jsonDecode(utf8.decode(base64Url.decode(payload)));
-      if (json is Map) {
-        for (final c in ['email', 'upn', 'preferred_username', 'unique_name', claim]) {
-          final v = json[c];
-          if (v != null && v.toString().isNotEmpty) return v.toString();
-        }
-      }
-    } catch (_) {}
-    return null;
-  }
-
   Map<String, dynamic>? _decodificarClaims(String token) {
     try {
       final parts = token.split('.');
@@ -389,11 +370,8 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if (_loginConcluido) return false;
-        return true;
-      },
+    return PopScope(
+      canPop: !_loginConcluido,
       child: Scaffold(
         backgroundColor: const Color(0xFFE60000),
         body: Stack(
@@ -430,7 +408,7 @@ class _CarregamentoWidgetState extends State<_CarregamentoWidget>
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3200),
+      duration: const Duration(milliseconds: 4200),
     )..repeat();
   }
 
@@ -442,29 +420,29 @@ class _CarregamentoWidgetState extends State<_CarregamentoWidget>
 
   double _lerp(double a, double b, double t) => a + (b - a) * t;
 
-  // Moto: sai pela direita, volta pela esquerda e para no centro.
+  // Moto: entra pela esquerda até o centro e depois sai pela direita.
   double _motoDx(double t) {
-    if (t < 0.30) return _lerp(0.0, 1.3, t / 0.30);
-    if (t < 0.55) return _lerp(-1.3, 0.0, (t - 0.30) / 0.25);
+    if (t < 0.30) return _lerp(-1.3, 0.0, t / 0.30);
+    if (t < 0.72) return 0.0;
+    return _lerp(0.0, 1.3, (t - 0.72) / 0.28);
+  }
+
+  // Moto sobe para o "maestro" surgir no lugar dela.
+  double _motoDy(double t) {
+    if (t < 0.30) return 0.0;
+    if (t < 0.45) return _lerp(0.0, -72.0, (t - 0.30) / 0.15);
+    if (t < 0.62) return -72.0;
+    if (t < 0.72) return _lerp(-72.0, 0.0, (t - 0.62) / 0.10);
     return 0.0;
   }
 
-  // A moto some quando o nome dá o zoom in.
-  double _motoOpacity(double t) {
-    if (t < 0.70) return 1.0;
-    return _lerp(1.0, 0.0, (t - 0.70) / 0.30);
-  }
-
-  // "maestro" surge abaixo após a moto parar no centro.
+  // Nome "maestro": surge quando a moto sobe e some antes dela sair.
   double _nomeOpacity(double t) {
-    if (t < 0.55) return 0.0;
-    if (t < 0.68) return _lerp(0.0, 1.0, (t - 0.55) / 0.13);
-    return 1.0;
-  }
-
-  double _nomeScale(double t) {
-    if (t < 0.68) return 1.0;
-    return _lerp(1.0, 1.6, (t - 0.68) / 0.32);
+    if (t < 0.30) return 0.0;
+    if (t < 0.45) return _lerp(0.0, 1.0, (t - 0.30) / 0.15);
+    if (t < 0.62) return 1.0;
+    if (t < 0.72) return _lerp(1.0, 0.0, (t - 0.62) / 0.10);
+    return 0.0;
   }
 
   @override
@@ -477,29 +455,22 @@ class _CarregamentoWidgetState extends State<_CarregamentoWidget>
           builder: (context, _) {
             final t = _ctrl.value;
             final w = MediaQuery.of(context).size.width;
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 140,
-                  height: 140,
-                  child: Opacity(
-                    opacity: _motoOpacity(t),
-                    child: Transform.translate(
-                      offset: Offset(_motoDx(t) * w, 0),
-                      child: SvgPicture.string(
-                        _kMotoSvg,
-                        width: 140,
-                        height: 140,
-                      ),
+            return SizedBox(
+              height: 220,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Transform.translate(
+                    offset: Offset(_motoDx(t) * w, _motoDy(t)),
+                    child: SvgPicture.string(
+                      _kMotoSvg,
+                      width: 130,
+                      height: 130,
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Opacity(
-                  opacity: _nomeOpacity(t),
-                  child: Transform.scale(
-                    scale: _nomeScale(t),
+                  Opacity(
+                    opacity: _nomeOpacity(t),
                     child: const Text(
                       'maestro',
                       style: TextStyle(
@@ -509,8 +480,8 @@ class _CarregamentoWidgetState extends State<_CarregamentoWidget>
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           },
         ),

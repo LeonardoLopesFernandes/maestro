@@ -11,7 +11,6 @@ import '../network/session_manager.dart';
 import '../utils/constants.dart';
 import '../utils/log_helper.dart';
 import 'historico_screen.dart';
-import 'price_tags_screen.dart';
 import '../widgets/pedido_card.dart';
 import 'detalhes_pedido_screen.dart';
 
@@ -31,15 +30,6 @@ const List<int> _tabColors = [
   0xFF7F8C8D, // Histórico - cinza
 ];
 
-const List<IconData> _tabIcons = [
-  Icons.assignment_outlined,
-  Icons.autorenew,
-  Icons.shopping_bag_outlined,
-  Icons.local_shipping_outlined,
-  Icons.inventory_2_outlined,
-  Icons.history,
-];
-
 const List<String> _tabIconAssets = [
   'assets/icons/ic_clipboard.png',
   'assets/icons/ic_sync.png',
@@ -47,15 +37,6 @@ const List<String> _tabIconAssets = [
   'assets/icons/ic_truck.png',
   'assets/icons/ic_estoque.png',
   'assets/icons/ic_historico.png',
-];
-
-const List<String> _tabIconKeys = [
-  'clipboard',
-  'sync',
-  'bag',
-  'truck',
-  'estoque',
-  'historico',
 ];
 
 class HomeScreen extends StatefulWidget {
@@ -70,9 +51,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   CountResponse _counts = CountResponse();
-  bool _carregandoCounts = true;
   final TextEditingController _searchController = TextEditingController();
-  bool _buscando = false;
   Timer? _pollTimer;
   int _currentIndex = 0;
   final Map<String, GlobalKey<_PedidoListTabState>> _listKeys = {};
@@ -164,8 +143,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (mounted) setState(() => _counts = c);
       _verificarSomNovo(c.novoPedido);
     } catch (_) {
-    } finally {
-      if (mounted) setState(() => _carregandoCounts = false);
     }
   }
 
