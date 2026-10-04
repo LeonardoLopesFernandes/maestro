@@ -314,14 +314,16 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                       const SizedBox(width: 8),
                       _pillHeader(
                           _pedido.canalDeVendas!,
-                          _corCanal(_pedido.canalDeVendas ?? '')),
+                          _corCanal(_pedido.canalDeVendas ?? ''),
+                          fontSize: 11),
                     ],
                     if (_pedido.tipoEntrega != null &&
                         _pedido.tipoEntrega!.isNotEmpty) ...[
                       const SizedBox(width: 8),
                       _pillHeader(
                           _labelTipoEntrega(_pedido.tipoEntrega!),
-                          const Color(0xFF760018)),
+                          const Color(0xFF760018),
+                          fontSize: 11),
                     ],
                   ],
                 ),
