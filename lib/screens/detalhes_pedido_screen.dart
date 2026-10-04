@@ -43,6 +43,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   bool _mostrarTokens = false;
   bool _didInitFim = false;
   Timer? _pollingEntregador;
+  Timer? _badgeTimer;
+  bool _badgeOculto = false;
+  bool _nomeExtenso = false;
 
   @override
   void initState() {
@@ -75,6 +78,18 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       _carregarTokens();
       _carregar(silencioso: true);
     }
+    // Pisca o badge "Pronto para Retirada" quando o nome do cliente é
+    // extenso demais, para exibir o nome completo por alguns segundos.
+    _badgeTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted) return;
+      final deveAnimar =
+          _nomeExtenso && _statusBadge.texto == 'Pronto para Retirada';
+      if (deveAnimar) {
+        setState(() => _badgeOculto = !_badgeOculto);
+      } else if (_badgeOculto) {
+        setState(() => _badgeOculto = false);
+      }
+    });
   }
 
   Future<void> _carregar({bool silencioso = false}) async {
@@ -105,6 +120,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   @override
   void dispose() {
     _pollingEntregador?.cancel();
+    _badgeTimer?.cancel();
     super.dispose();
   }
 
@@ -281,23 +297,41 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(_pedido.cliente?.nome ?? 'Cliente',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                    ),
-                    if (_mostrarStatusHeader) ...[
-                      const SizedBox(width: 8),
-                      _pillHeader(status.texto, status.cor,
-                          fontSize: 11),
-                    ],
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final nome = _pedido.cliente?.nome ?? 'Cliente';
+                    final ehPronto =
+                        status.texto == 'Pronto para Retirada';
+                    bool extenso = false;
+                    if (_mostrarStatusHeader && ehPronto) {
+                      final nomeW =
+                          _larguraTexto(nome, 14, FontWeight.bold);
+                      final badgeW =
+                          _larguraTexto(status.texto, 12, FontWeight.bold) +
+                              20;
+                      extenso = nomeW + badgeW + 8 > constraints.maxWidth;
+                    }
+                    _nomeExtenso = extenso;
+                    final ocultar = extenso && ehPronto && _badgeOculto;
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: Text(nome,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                        if (_mostrarStatusHeader && !ocultar) ...[
+                          const SizedBox(width: 8),
+                          _pillHeader(status.texto, status.cor,
+                              fontSize: 12),
+                        ],
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: 4),
                 Row(
@@ -315,7 +349,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                       _pillHeader(
                           _pedido.canalDeVendas!,
                           _corCanal(_pedido.canalDeVendas ?? ''),
-                          fontSize: 11),
+                          fontSize: 12),
                     ],
                     if (_pedido.tipoEntrega != null &&
                         _pedido.tipoEntrega!.isNotEmpty) ...[
@@ -323,7 +357,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                       _pillHeader(
                           _labelTipoEntrega(_pedido.tipoEntrega!),
                           const Color(0xFF760018),
-                          fontSize: 11),
+                          fontSize: 12),
                     ],
                   ],
                 ),
@@ -341,6 +375,16 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         t == 'Cancelado';
   }
 
+  double _larguraTexto(String texto, double tamanho, FontWeight peso) {
+    final tp = TextPainter(
+      text: TextSpan(
+          text: texto, style: TextStyle(fontSize: tamanho, fontWeight: peso)),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout();
+    return tp.width;
+  }
+
   Widget _pillHeader(String texto, Color cor, {double? fontSize}) {
     final compacto = texto.length > 12;
     return Container(
@@ -353,7 +397,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       child: Text(texto,
           style: TextStyle(
               color: Colors.white,
-              fontSize: fontSize ?? (compacto ? 9.5 : 11),
+              fontSize: fontSize ?? 12,
               fontWeight: FontWeight.bold)),
     );
   }
