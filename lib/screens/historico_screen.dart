@@ -180,109 +180,83 @@ class HistoricoScreenState extends State<HistoricoScreen> {
   Widget _barraBusca() => Container(
         color: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(
-          children: [
-            _badgeContagem(),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Container(
-                height: 42,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF2F2F2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: TextField(
-                  controller: _busca,
-                  decoration: InputDecoration(
-                    hintText: 'Pesquisar no histórico...',
-                    border: InputBorder.none,
-                    prefixIcon: const Icon(Icons.search,
-                        color: Color(0xFF94A3B8)),
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 8),
-                    suffixIcon: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (_dataFiltro != null)
-                          Container(
-                            margin: const EdgeInsets.only(right: 2),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF80032),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(_dataCurta,
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold)),
-                                const SizedBox(width: 4),
-                                GestureDetector(
-                                  onTap: () {
-                                    setState(() => _dataFiltro = null);
-                                    _carregar(reset: true);
-                                  },
-                                  child: const Icon(Icons.close,
-                                      size: 14, color: Colors.white),
-                                ),
-                              ],
-                            ),
+        child: Container(
+          height: 42,
+          decoration: BoxDecoration(
+            color: const Color(0xFFF2F2F2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: TextField(
+            controller: _busca,
+            decoration: InputDecoration(
+              hintText: 'Pesquisar no histórico...',
+              border: InputBorder.none,
+              prefixIcon: const Icon(Icons.search,
+                  color: Color(0xFF94A3B8)),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 8),
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_dataFiltro != null)
+                    Container(
+                      margin: const EdgeInsets.only(right: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF80032),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(_dataCurta,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold)),
+                          const SizedBox(width: 4),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() => _dataFiltro = null);
+                              _carregar(reset: true);
+                            },
+                            child: const Icon(Icons.close,
+                                size: 14, color: Colors.white),
                           ),
-                        IconButton(
-                          onPressed: _abrirCalendario,
-                          padding: const EdgeInsets.all(8),
-                          constraints: const BoxConstraints(),
-                          icon: Icon(Icons.calendar_month,
-                              size: 20,
-                              color: _dataFiltro != null
-                                  ? const Color(0xFFF80032)
-                                  : const Color(0xFF94A3B8)),
-                        ),
-                        ValueListenableBuilder<TextEditingValue>(
-                          valueListenable: _busca,
-                          builder: (_, v, __) => v.text.isNotEmpty
-                              ? IconButton(
-                                  onPressed: () {
-                                    _busca.clear();
-                                    _carregar(reset: true);
-                                  },
-                                  padding: const EdgeInsets.all(8),
-                                  constraints: const BoxConstraints(),
-                                  icon: const Icon(Icons.close,
-                                      size: 20,
-                                      color: Color(0xFF6B7280)),
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                  IconButton(
+                    onPressed: _abrirCalendario,
+                    padding: const EdgeInsets.all(8),
+                    constraints: const BoxConstraints(),
+                    icon: Icon(Icons.calendar_month,
+                        size: 20,
+                        color: _dataFiltro != null
+                            ? const Color(0xFFF80032)
+                            : const Color(0xFF94A3B8)),
                   ),
-                ),
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _busca,
+                    builder: (_, v, __) => v.text.isNotEmpty
+                        ? IconButton(
+                            onPressed: () {
+                              _busca.clear();
+                              _carregar(reset: true);
+                            },
+                            padding: const EdgeInsets.all(8),
+                            constraints: const BoxConstraints(),
+                            icon: const Icon(Icons.close,
+                                size: 20,
+                                color: Color(0xFF6B7280)),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      );
-
-  Widget _badgeContagem() => Container(
-        height: 36,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF5D6D7E),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          '${_pedidos.length} em Histórico',
-          maxLines: 1,
-          style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.bold),
+          ),
         ),
       );
 
