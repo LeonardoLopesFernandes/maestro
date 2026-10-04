@@ -108,11 +108,11 @@ class HistoricoScreenState extends State<HistoricoScreen> {
     }
   }
 
-  String get _dataFiltroText {
+  String get _dataCurta {
     final d = _dataFiltro;
     if (d == null) return '';
     final p = (int v) => v.toString().padLeft(2, '0');
-    return '${p(d.day)}/${p(d.month)}/${d.year}';
+    return '${p(d.day)}/${p(d.month)}';
   }
 
   Future<void> reload() => _carregar(reset: true);
@@ -182,6 +182,8 @@ class HistoricoScreenState extends State<HistoricoScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(
           children: [
+            _badgeContagem(),
+            const SizedBox(width: 8),
             Expanded(
               child: Container(
                 height: 42,
@@ -191,76 +193,99 @@ class HistoricoScreenState extends State<HistoricoScreen> {
                 ),
                 child: TextField(
                   controller: _busca,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'Pesquisar no histórico...',
                     border: InputBorder.none,
-                    prefixIcon:
-                        Icon(Icons.search, color: Color(0xFF94A3B8)),
-                    contentPadding: EdgeInsets.symmetric(vertical: 8),
+                    prefixIcon: const Icon(Icons.search,
+                        color: Color(0xFF94A3B8)),
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 8),
+                    suffixIcon: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_dataFiltro != null)
+                          Container(
+                            margin: const EdgeInsets.only(right: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF80032),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(_dataCurta,
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold)),
+                                const SizedBox(width: 4),
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() => _dataFiltro = null);
+                                    _carregar(reset: true);
+                                  },
+                                  child: const Icon(Icons.close,
+                                      size: 14, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                        IconButton(
+                          onPressed: _abrirCalendario,
+                          padding: const EdgeInsets.all(8),
+                          constraints: const BoxConstraints(),
+                          icon: Icon(Icons.calendar_month,
+                              size: 20,
+                              color: _dataFiltro != null
+                                  ? const Color(0xFFF80032)
+                                  : const Color(0xFF94A3B8)),
+                        ),
+                        ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _busca,
+                          builder: (_, v, __) => v.text.isNotEmpty
+                              ? IconButton(
+                                  onPressed: () {
+                                    _busca.clear();
+                                    _carregar(reset: true);
+                                  },
+                                  padding: const EdgeInsets.all(8),
+                                  constraints: const BoxConstraints(),
+                                  icon: const Icon(Icons.close,
+                                      size: 20,
+                                      color: Color(0xFF6B7280)),
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-            _badgeData(),
-            if (_busca.text.isNotEmpty)
-              IconButton(
-                icon: const Icon(Icons.close, color: Color(0xFF6B7280)),
-                onPressed: () {
-                  _busca.clear();
-                  _carregar(reset: true);
-                },
-              ),
           ],
         ),
       );
 
-  Widget _badgeData() {
-    final ativo = _dataFiltro != null;
-    return Container(
-      height: 42,
-      decoration: BoxDecoration(
-        color: ativo ? const Color(0xFFF80032) : const Color(0xFFF2F2F2),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: _abrirCalendario,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Row(
-              children: [
-                Icon(Icons.calendar_month,
-                    size: 20,
-                    color: ativo
-                        ? Colors.white
-                        : const Color(0xFF94A3B8)),
-                if (ativo) ...[
-                  const SizedBox(width: 6),
-                  Text(_dataFiltroText,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold)),
-                  const SizedBox(width: 2),
-                  InkWell(
-                    onTap: () {
-                      setState(() => _dataFiltro = null);
-                      _carregar(reset: true);
-                    },
-                    child: const Icon(Icons.close,
-                        size: 16, color: Colors.white),
-                  ),
-                ],
-              ],
-            ),
-          ),
+  Widget _badgeContagem() => Container(
+        height: 36,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF5D6D7E),
+          borderRadius: BorderRadius.circular(18),
         ),
-      ),
-    );
-  }
+        alignment: Alignment.center,
+        child: Text(
+          '${_pedidos.length} em Histórico',
+          maxLines: 1,
+          style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.bold),
+        ),
+      );
+
 
   Future<void> _abrirCalendario() async {
     final picked = await showDatePicker(
