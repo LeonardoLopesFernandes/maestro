@@ -295,7 +295,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                     if (_mostrarStatusHeader) ...[
                       const SizedBox(width: 8),
                       _pillHeader(status.texto, status.cor,
-                          fontSize: status.texto.length > 12 ? 11 : 12.5),
+                          fontSize: 11),
                     ],
                   ],
                 ),
