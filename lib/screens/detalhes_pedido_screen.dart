@@ -147,11 +147,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   Future<void> _carregarTokens() async {
     try {
       final t = await widget.apiService
-          .getDeliveryTokens(_pedido.codigoExterno ?? _pedido.numero);
+          .getDeliveryTokens(_pedido.codigoExterno);
       if (mounted) {
-        final data = (t is Map && t['data'] is Map) ? t['data'] : t;
-        setState(() => _tokens =
-            data is Map ? Map<String, dynamic>.from(data as Map) : null);
+        final data = t['data'] is Map ? t['data'] : t;
+        setState(() =>
+            _tokens = data is Map ? Map<String, dynamic>.from(data) : null);
       }
     } catch (_) {}
   }
@@ -275,7 +275,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.25),
+              color: Colors.black.withValues(alpha: 0.25),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Column(
@@ -303,7 +303,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text('Nº ${_pedido.codigoExterno ?? _pedido.numero}',
+                      child: Text('Nº ${_pedido.codigoExterno}',
                           style: const TextStyle(
                               color: Colors.white, fontSize: 12),
                           maxLines: 1,
@@ -371,7 +371,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                         : 'assets/vectors/ic_arrow_down.svg',
                     width: 20,
                     height: 20,
-                    color: const Color(0xFF64748B),
+                    colorFilter: const ColorFilter.mode(
+                        Color(0xFF64748B), BlendMode.srcIn),
                   ),
                   const Text('Linha do Tempo',
                       style: TextStyle(
@@ -1201,7 +1202,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   Future<void> _acaoSeparar() async {
     try {
       await widget.apiService.separarPedido(
-          _normOrigem(_pedido.origem), _pedido.codigoExterno ?? _pedido.numero);
+          _normOrigem(_pedido.origem), _pedido.codigoExterno);
       final anterior = _pedido.status;
       if (mounted) {
         setState(() => _pedido = _pedido.copyWith(status: 'EM_SEPARACAO'));
@@ -1237,7 +1238,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     final (quantidadesEditadas, nenhum) = res;
     final itens = _pedido.itens;
     final origem = _normOrigem(_pedido.origem);
-    final codigoExterno = _pedido.codigoExterno ?? _pedido.numero;
+    final codigoExterno = _pedido.codigoExterno;
     final numero = _pedido.numero;
 
     int novaQtd(Item it) {
@@ -1252,7 +1253,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             itens.every((it) => novaQtd(it) == 0);
 
     if (recusaTotal) {
-      final motivos = await _carregarMotivosRecusa(origem, _pedido.status ?? '');
+      final motivos = await _carregarMotivosRecusa(origem, _pedido.status);
       final motivo = motivos.isEmpty
           ? 'RECUSA_TOTAL'
           : await MaestroDialogs.recusaMotivo(context,
@@ -1285,7 +1286,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         }
       }
       final total = itens.fold<int>(0, (s, it) => s + novaQtd(it));
-      final motivos = await _carregarMotivosRecusa(origem, _pedido.status ?? '');
+      final motivos = await _carregarMotivosRecusa(origem, _pedido.status);
       final motivo = motivos.isEmpty
           ? null
           : await MaestroDialogs.recusaMotivo(context,
@@ -1333,7 +1334,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       Map<String, int> quantidades, Map<String, List<String>> imeis) async {
     final itens = _pedido.itens;
     final origem = _normOrigem(_pedido.origem);
-    final codigoExterno = _pedido.codigoExterno ?? _pedido.numero;
+    final codigoExterno = _pedido.codigoExterno;
     final numero = _pedido.numero;
 
     int novaQtd(Item it) {
@@ -1355,7 +1356,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         }
       }
       final total = itens.fold<int>(0, (s, it) => s + novaQtd(it));
-      final motivos = await _carregarMotivosRecusa(origem, _pedido.status ?? '');
+      final motivos = await _carregarMotivosRecusa(origem, _pedido.status);
       final motivo = motivos.isEmpty
           ? null
           : await MaestroDialogs.recusaMotivo(context,
@@ -1436,8 +1437,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     final subtotal =
         itens.fold<double>(0.0, (s, it) => s + it.valorUnitario * novaQtd(it));
     return subtotal -
-        (_pedido.valorDesconto ?? 0.0) +
-        (_pedido.valorEntrega ?? 0.0);
+        (_pedido.valorDesconto) +
+        (_pedido.valorEntrega);
   }
 
   Future<void> _executarConfirmacao(
@@ -1486,11 +1487,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         widget.session.savePedidoItens(
             _pedido.id, itensJson,
             numero: _pedido.numero,
-            codigoExterno: _pedido.codigoExterno ?? '');
+            codigoExterno: _pedido.codigoExterno);
         widget.session.saveEditFlag(
             _pedido.id,
             numero: _pedido.numero,
-            codigoExterno: _pedido.codigoExterno ?? '');
+            codigoExterno: _pedido.codigoExterno);
       } catch (_) {}
     }
     // Atualiza localmente os itens com a quantidade alterada, para o card
@@ -1559,7 +1560,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     // Kotlin: se há tokenRetirada, valida o código localmente (sem rede);
     // caso contrário, chama a API de verificação.
     Future<bool> validarCodigo(String codigo) async {
-      if (tokenRetirada != null && tokenRetirada!.isNotEmpty) {
+      if (tokenRetirada != null && tokenRetirada.isNotEmpty) {
         if (codigo != tokenRetirada) {
           _erroMsg('Código inválido!');
           return false;
@@ -1596,21 +1597,21 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         // dialog de token de insucesso (esse é para fluxo de entrega/entregador).
         final codigo = await MaestroDialogs.token(context,
             nome: _pedido.cliente?.nome ?? '',
-            numero: _pedido.codigoExterno ?? _pedido.numero);
+            numero: _pedido.codigoExterno);
         if (codigo == null || codigo.isEmpty) return;
         if (!await validarCodigo(codigo)) return;
         await _confirmarRetirada(token: codigo);
-      } else if (tokenInsucesso != null && tokenInsucesso!.isNotEmpty) {
+      } else if (tokenInsucesso != null && tokenInsucesso.isNotEmpty) {
         // Demais deliveries (ex.: iFood EXTERNA): token de insucesso é
         // informativo; ao fechar, volta para a lista (Kotlin finaliza a activity).
-        await MaestroDialogs.tokenInsucesso(context, tokenInsucesso!,
+        await MaestroDialogs.tokenInsucesso(context, tokenInsucesso,
             reserva: false);
         Navigator.of(context).maybePop();
       } else {
         // iFood Delivery (sem token de insucesso): digitamos o token informado
         final codigo = await MaestroDialogs.token(context,
             nome: _pedido.cliente?.nome ?? '',
-            numero: _pedido.codigoExterno ?? _pedido.numero);
+            numero: _pedido.codigoExterno);
         if (codigo == null || codigo.isEmpty) return;
         if (!await validarCodigo(codigo)) return;
         await _confirmarRetirada(token: codigo);
@@ -1626,10 +1627,10 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     final statusAnterior = _pedido.status;
     if (isLoja) {
       await widget.apiService.retirarPedidoPackk(
-          _pedido.codigoExterno ?? _pedido.numero);
+          _pedido.codigoExterno);
     } else {
       await widget.apiService.retirarPedidoShipFromStore(
-          _pedido.codigoExterno ?? _pedido.numero);
+          _pedido.codigoExterno);
     }
     // Persiste o token digitado/validado (Kotlin: salvarTokenEPedido) para
     // exibir depois (ex.: histórico como ENTREGUE).
@@ -1661,7 +1662,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     if (ok != true) return;
     try {
       await widget.apiService.cancelarPedidoProntoRetirada(
-          _normOrigem(_pedido.origem), _pedido.codigoExterno ?? _pedido.numero);
+          _normOrigem(_pedido.origem), _pedido.codigoExterno);
       await _sucessoComSaida('Pedido cancelado.', 'CANCELADO');
     } catch (e) {
       _erroMsg(e);
@@ -1681,7 +1682,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     try {
       await widget.apiService.devolverPedido(
           _normOrigem(_pedido.origem),
-          _pedido.codigoExterno ?? _pedido.numero,
+          _pedido.codigoExterno,
           recaptchaToken: res.$3,
           observacao: res.$2);
     } catch (e) {
@@ -1690,7 +1691,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoDevolverEstoque() async {
-    final numero = _pedido.codigoExterno ?? _pedido.numero;
+    final numero = _pedido.codigoExterno;
     final ok = await MaestroDialogs.confirmar(context,
         titulo: 'Devolver ao estoque',
         mensagem:
@@ -1713,7 +1714,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     try {
       await widget.apiService.cancelarPedido(
           _normOrigem(_pedido.origem),
-          _pedido.codigoExterno ?? _pedido.numero,
+          _pedido.codigoExterno,
           res.$1,
           'CANCELAMENTO');
       _sucesso('Pedido cancelado.');

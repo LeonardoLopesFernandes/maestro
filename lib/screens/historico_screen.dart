@@ -79,9 +79,9 @@ class HistoricoScreenState extends State<HistoricoScreen> {
       case 'IFOOD':
         return (p.canalDeVendas ?? '').toUpperCase().contains('IFOOD');
       case 'CANCELADO':
-        return (p.status ?? '').toUpperCase() == 'CANCELADO';
+        return (p.status).toUpperCase() == 'CANCELADO';
       case 'DEVOLVIDO':
-        return (p.status ?? '').toUpperCase() == 'DEVOLVIDO';
+        return (p.status).toUpperCase() == 'DEVOLVIDO';
       default:
         return true;
     }
@@ -375,7 +375,7 @@ class HistoricoScreenState extends State<HistoricoScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 5, vertical: 1),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.28),
+                          color: Colors.white.withValues(alpha: 0.28),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text('${_contagemPara(f)}',
@@ -411,11 +411,11 @@ class HistoricoScreenState extends State<HistoricoScreen> {
             .length;
       case 'CANCELADO':
         return _todos
-            .where((p) => (p.status ?? '').toUpperCase() == 'CANCELADO')
+            .where((p) => (p.status).toUpperCase() == 'CANCELADO')
             .length;
       case 'DEVOLVIDO':
         return _todos
-            .where((p) => (p.status ?? '').toUpperCase() == 'DEVOLVIDO')
+            .where((p) => (p.status).toUpperCase() == 'DEVOLVIDO')
             .length;
       default:
         return _todos.length;
@@ -457,7 +457,7 @@ class HistoricoScreenState extends State<HistoricoScreen> {
           final tokenSalvo = p.deliveryToken?.tokenRetirada ??
               widget.session.getDeliveryToken(p.numero);
           final editado = widget.session.pedidoFoiEditado(
-              p.id, numero: p.numero, codigoExterno: p.codigoExterno ?? '');
+              p.id, numero: p.numero, codigoExterno: p.codigoExterno);
           return PedidoCard(
             pedido: p,
             tokenRetirada: tokenSalvo,

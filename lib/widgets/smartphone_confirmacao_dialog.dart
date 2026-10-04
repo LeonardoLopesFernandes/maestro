@@ -28,8 +28,7 @@ class _SmartphoneConfirmacaoDialogState
   final Map<String, List<TextEditingController>> _imeiCtrls = {};
 
   List<Item> get _itens =>
-      widget.pedido.itens?.where((i) => i.quantidadeImeis > 0).toList() ??
-      const [];
+      widget.pedido.itens.where((i) => i.quantidadeImeis > 0).toList();
 
   String _key(Item i) => i.codigoSAP ?? i.codigoEAN ?? i.descricao ?? '';
 
@@ -157,7 +156,7 @@ class _SmartphoneConfirmacaoDialogState
                 ),
                 width: double.infinity,
                 child: Text(
-                  'Confirmação de Pedido - ${widget.pedido.codigoExterno ?? widget.pedido.numero ?? ''}',
+                  'Confirmação de Pedido - ${widget.pedido.codigoExterno}',
                   style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,

@@ -65,8 +65,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   // Filtros
   int _minDias = 7;
   bool _ordemDataInclusao = true;
-  bool _retirada = true;
-  bool _pagamento = true;
 
   final List<_Aba> _abas = const [
     _Aba('Novos', Constants.statusNovoPedido, 0),
@@ -210,26 +208,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Color get _corAba => Color(_tabColors[_currentIndex]);
-
-  Future<void> _abrirFiltro() async {
-    final result = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (_) => _FiltroDialog(
-        minDias: _minDias,
-        ordemDataInclusao: _ordemDataInclusao,
-        retirada: _retirada,
-        pagamento: _pagamento,
-      ),
-    );
-    if (result != null) {
-      setState(() {
-        _minDias = result['minDias'];
-        _ordemDataInclusao = result['ordemDataInclusao'];
-        _retirada = result['retirada'];
-        _pagamento = result['pagamento'];
-      });
-    }
-  }
 
   void _abrirPerfil() {
     showDialog(
@@ -647,7 +625,7 @@ class _PedidoListTabState extends State<_PedidoListTab> {
           }
           final p = _pedidos[i];
           final editado = widget.session.pedidoFoiEditado(
-              p.id, numero: p.numero, codigoExterno: p.codigoExterno ?? '');
+              p.id, numero: p.numero, codigoExterno: p.codigoExterno);
           return PedidoCard(
             pedido: p,
             editado: editado,
@@ -667,110 +645,6 @@ class _PedidoListTabState extends State<_PedidoListTab> {
           );
         },
       ),
-    );
-  }
-}
-
-class _FiltroDialog extends StatefulWidget {
-  final int minDias;
-  final bool ordemDataInclusao;
-  final bool retirada;
-  final bool pagamento;
-
-  const _FiltroDialog({
-    required this.minDias,
-    required this.ordemDataInclusao,
-    required this.retirada,
-    required this.pagamento,
-  });
-
-  @override
-  State<_FiltroDialog> createState() => _FiltroDialogState();
-}
-
-class _FiltroDialogState extends State<_FiltroDialog> {
-  late int _minDias;
-  late bool _ordem;
-  late bool _retirada;
-  late bool _pagamento;
-
-  @override
-  void initState() {
-    super.initState();
-    _minDias = widget.minDias;
-    _ordem = widget.ordemDataInclusao;
-    _retirada = widget.retirada;
-    _pagamento = widget.pagamento;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text('Filtrar pedidos',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Align(
-                alignment: Alignment.centerLeft,
-                child: Text('Buscar por código ou cliente',
-                    style:
-                        TextStyle(fontSize: 13, fontWeight: FontWeight.bold))),
-            const SizedBox(height: 6),
-            DropdownButtonFormField<int>(
-              value: _minDias,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              ),
-              items: [7, 15, 30, 60, 90]
-                  .map((d) => DropdownMenuItem(value: d, child: Text('$d dias')))
-                  .toList(),
-              onChanged: (v) => setState(() => _minDias = v ?? 7),
-            ),
-            const SizedBox(height: 8),
-            SwitchListTile(
-              title: const Text('Ordenar por data de inclusão'),
-              value: _ordem,
-              activeColor: Color(_red),
-              onChanged: (v) => setState(() => _ordem = v),
-            ),
-            SwitchListTile(
-              title: const Text('Retirada'),
-              value: _retirada,
-              activeColor: Color(_red),
-              onChanged: (v) => setState(() => _retirada = v),
-            ),
-            SwitchListTile(
-              title: const Text('Pagamento'),
-              value: _pagamento,
-              activeColor: Color(_red),
-              onChanged: (v) => setState(() => _pagamento = v),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Limpar',
-              style: TextStyle(color: Color(0xFF333333))),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Color(_redDark)),
-          onPressed: () => Navigator.of(context).pop({
-            'minDias': _minDias,
-            'ordemDataInclusao': _ordem,
-            'retirada': _retirada,
-            'pagamento': _pagamento,
-          }),
-          child: const Text('Aplicar',
-              style: TextStyle(color: Colors.white)),
-        ),
-      ],
     );
   }
 }

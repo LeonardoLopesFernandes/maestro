@@ -56,10 +56,8 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
       ..setNavigationDelegate(
         NavigationDelegate(
           onPageStarted: (url) {
-            if (url != null) {
-              _verificarUrl(url);
-              _garantirSelectAccount(url);
-            }
+            _verificarUrl(url);
+            _garantirSelectAccount(url);
           },
           onPageFinished: (url) async {
             if (!_loginConcluido) {
@@ -69,12 +67,10 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
             if (!_loginConcluido && mounted) {
               setState(() => _carregando = false);
             }
-            if (url != null) _verificarUrl(url);
+            _verificarUrl(url);
             // Auto-login: preenche e submete o formulário Microsoft quando
             // as credenciais salvas estiverem disponíveis.
-            if (_autoLogin &&
-                url != null &&
-                url.contains('login.microsoftonline.com')) {
+            if (_autoLogin && url.contains('login.microsoftonline.com')) {
               _preencherLoginAutomatico();
             }
           },

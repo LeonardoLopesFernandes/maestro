@@ -21,8 +21,7 @@ class PedidoCard extends StatelessWidget {
       this.tokenRetirada,
       this.editado = false});
 
-  String get _statusNormalizado =>
-      (pedido.status ?? '').toUpperCase().trim();
+  String get _statusNormalizado => pedido.status.toUpperCase().trim();
 
   ({String texto, Color cor}) get _badge {
     switch (_statusNormalizado) {
@@ -47,7 +46,7 @@ class PedidoCard extends StatelessWidget {
       case 'RETORNAR_PARA_ESTOQUE':
         return (texto: 'Retornar Para Estoque', cor: const Color(0xFFF80032));
       default:
-        return (texto: _formatStatus(pedido.status ?? ''),
+        return (texto: _formatStatus(pedido.status),
             cor: Colors.transparent);
     }
   }
@@ -105,7 +104,7 @@ class PedidoCard extends StatelessWidget {
 
   String get _dataFormatada {
     final d = pedido.dataInclusao;
-    if (d == null || d.isEmpty) return '--/--/---- --:--';
+    if (d.isEmpty) return '--/--/---- --:--';
     try {
       final dt = DateTime.parse(d).toLocal();
       final p = (int n) => n.toString().padLeft(2, '0');
@@ -161,7 +160,7 @@ class PedidoCard extends StatelessWidget {
                             size: 16, color: Color(0xFFDC3545)),
                       ),
                     Expanded(
-                      child: Text(pedido.codigoExterno ?? '',
+                      child: Text(pedido.codigoExterno,
                           style: TextStyle(
                               fontSize: 13,
                               color: prontoAtrasado
@@ -319,7 +318,7 @@ class _DuracaoSeparacaoState extends State<_DuracaoSeparacao> {
       _baseMs = tc;
     } else {
       final di = widget.pedido.dataInclusao;
-      if (di != null && di.isNotEmpty) {
+      if (di.isNotEmpty) {
         try {
           final dt = DateTime.parse(di).toLocal();
           _baseMs =

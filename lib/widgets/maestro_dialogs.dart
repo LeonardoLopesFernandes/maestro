@@ -494,8 +494,6 @@ class MaestroDialogs {
                             final i = e.key;
                             final it = e.value;
                             final sel = nenhum ? false : (selecionados[i] ?? false);
-                            final alterado =
-                                (qtd[i] ?? it.quantidade) != it.quantidade;
                             return InkWell(
                               onTap: () {
                                 if (nenhum) return;
