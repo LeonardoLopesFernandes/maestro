@@ -196,7 +196,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         return (texto: 'NOVO', cor: const Color(0xFF12CD0C));
       case 'EM_SEPARACAO':
       case 'SEPARACAO':
-        return (texto: 'Separação', cor: const Color(0xFFFFAA02));
+      case 'EDITADO':
+        return (texto: 'Separação', cor: const Color(0xFF00CBFE));
       case 'PRONTO_PARA_SAIR':
       case 'PRONTO':
         return (texto: 'Pronto para Retirada', cor: const Color(0xFFFFAA02));
