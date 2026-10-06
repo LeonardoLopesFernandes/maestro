@@ -338,7 +338,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text('Nº ${_pedido.codigoExterno}',
+                      child: Text(_pedido.codigoExterno,
                           style: const TextStyle(
                               color: Colors.white, fontSize: 12),
                           maxLines: 1,
@@ -368,13 +368,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         ),
       );
 
-  bool get _mostrarStatusHeader {
-    final t = _statusBadge.texto;
-    return t == 'Pronto para Retirada' ||
-        t == 'Entregue' ||
-        t == 'Devolvido' ||
-        t == 'Cancelado';
-  }
+  bool get _mostrarStatusHeader => true;
 
   double _larguraTexto(String texto, double tamanho, FontWeight peso) {
     final tp = TextPainter(
@@ -945,7 +939,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       badges.add(_badgeAcao(
           'POR EM SEPARAÇÃO', const Color(0xFF12CD0C), _acaoSeparar));
     } else if (s.contains('SEPARACAO')) {
-      badges.add(_badgeAcao('CONFIRMAR', const Color(0xFF12CD0C), _acaoConfirmar));
+      badges.add(_badgeAcao('CONFIRMAR', const Color(0xFF00CBFE), _acaoConfirmar));
     } else if (s.contains('PRONTO')) {
       if (_podeCancelarRetirada()) {
         // RETIRAR PEDIDO + CANCELAR lado a lado (larguras/alturas iguais)
