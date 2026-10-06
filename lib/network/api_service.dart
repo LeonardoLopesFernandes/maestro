@@ -27,7 +27,7 @@ class ApiService {
     int minDias = 7,
     bool ordemDataInclusao = true,
     String? find,
-    int? aba,
+    String? aba,
   }) async {
     final query = <String, String>{
       if (status.isNotEmpty) 'status': status,
@@ -35,7 +35,7 @@ class ApiService {
       'ordemDataInclusao': ordemDataInclusao.toString(),
     };
     if (find != null && find.isNotEmpty) query['find'] = find;
-    if (aba != null) query['aba'] = aba.toString();
+    if (aba != null && aba.isNotEmpty) query['aba'] = aba;
     final json = await client.get(
         'v2/backend/pedido/skip/$skip/limit/$limit',
         query: query) as Map<String, dynamic>;

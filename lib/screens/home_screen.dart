@@ -522,6 +522,9 @@ class _PedidoListTabState extends State<_PedidoListTab> {
   final int _limit = 20;
   bool _buscando = false;
   int _geracao = 0;
+  // Filtro de aba da Retirada ('' = GERAL).
+  String _aba = '';
+  Map<String, int> _abaCounts = const {};
 
   @override
   void initState() {
@@ -558,12 +561,14 @@ class _PedidoListTabState extends State<_PedidoListTab> {
         minDias: widget.minDias,
         ordemDataInclusao: widget.ordemDataInclusao,
         find: widget.search.isNotEmpty ? widget.search : null,
+        aba: _aba.isEmpty ? null : _aba,
       );
       if (mounted && ger == _geracao) {
         setState(() {
           _pedidos.addAll(resp.pedidos);
           _skip += resp.pedidos.length;
           _temMais = resp.pedidos.length >= _limit;
+          if (resp.counts.isNotEmpty) _abaCounts = resp.counts;
         });
       }
     } catch (e) {
@@ -581,8 +586,87 @@ class _PedidoListTabState extends State<_PedidoListTab> {
     }
   }
 
+  void _selecionarAba(String aba) {
+    if (_aba == aba) return;
+    setState(() => _aba = aba);
+    _carregar(reset: true);
+  }
+
+  Widget _chip(String label, String aba, IconData icon, int? count) {
+    final ativo = _aba == aba;
+    final bg = ativo ? const Color(_red) : const Color(0xFFE6E6E6);
+    final fg = ativo ? Colors.white : const Color(0xFF616161);
+    return GestureDetector(
+      onTap: () => _selecionarAba(aba),
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: fg),
+            const SizedBox(width: 6),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.bold, color: fg)),
+            if (count != null) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(
+                  color: ativo ? Colors.white24 : const Color(0xFFCFCFCF),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text('$count',
+                    style: TextStyle(
+                        fontSize: 11, fontWeight: FontWeight.bold, color: fg)),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _abasRow() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _chip('GERAL', '', Icons.list_alt, null),
+            _chip('COLETA TARDIA', 'COLETA_TARDIA', Icons.schedule,
+                _abaCounts['coletaTardia']),
+            _chip('EM ANÁLISE', 'EM_ANALISE', Icons.hourglass_empty,
+                _abaCounts['emAnalise']),
+            _chip('+3 DIAS PARADO', 'PARADO_3_DIAS', Icons.timer_off,
+                _abaCounts['parado3Dias']),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.status != Constants.statusProntoParaSair) {
+      return _buildConteudo();
+    }
+    return Column(
+      children: [
+        _abasRow(),
+        Expanded(child: _buildConteudo()),
+      ],
+    );
+  }
+
+  Widget _buildConteudo() {
     if (_carregando && _pedidos.isEmpty) {
       return const Center(
           child: CircularProgressIndicator(color: Color(_red)));

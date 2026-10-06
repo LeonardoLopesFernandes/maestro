@@ -88,24 +88,10 @@ class PedidoCard extends StatelessWidget {
     }
   }
 
-  bool get _ehIfood {
-    final c = (pedido.canalDeVendas ?? '').toUpperCase();
-    final o = (pedido.origem ?? '').toUpperCase();
-    return c.contains('IFOOD') || o.contains('IFOOD');
-  }
-
-  // iFood parado (PRONTO) há mais de 1 dia => "coleta tardia".
-  bool get _coletaTardia {
-    if (!_ehIfood || !_statusNormalizado.contains('PRONTO')) return false;
-    final d = pedido.dataInclusao;
-    if (d.isEmpty) return false;
-    try {
-      final dt = DateTime.parse(d).toLocal();
-      return DateTime.now().difference(dt) > const Duration(days: 1);
-    } catch (_) {
-      return false;
-    }
-  }
+  // iFood parado => "coleta tardia": o backend marca o pedido com
+  // aba=COLETA_TARDIA (mesmo critério do filtro da aba Retirada).
+  bool get _coletaTardia =>
+      (pedido.aba ?? '').toUpperCase() == 'COLETA_TARDIA';
 
   String get _canalTexto {
     final c = pedido.canalDeVendas ?? '';

@@ -31,6 +31,10 @@ class Pedido {
   final String? notaFiscalDevolucaoUrl;
   final String? transportadora;
   final int? tempoConfirmacao;
+  final String? aba;
+  final String? coletaTardia;
+  final String? pendencia;
+  final String? dataConfirmacao;
   final List<MotivoCancelamento>? motivo;
 
   Pedido({
@@ -66,6 +70,10 @@ class Pedido {
       this.notaFiscalDevolucaoUrl,
       this.transportadora,
       this.tempoConfirmacao,
+      this.aba,
+      this.coletaTardia,
+      this.pendencia,
+      this.dataConfirmacao,
       this.motivo,
     });
 
@@ -120,6 +128,10 @@ class Pedido {
           json['notaFiscalDevolucao']?['link'],
       transportadora: json['transportadora'],
       tempoConfirmacao: _toInt(json['tempoConfirmacao']),
+      aba: json['aba'],
+      coletaTardia: json['coletaTardia'],
+      pendencia: json['pendencia'],
+      dataConfirmacao: json['dataConfirmacao'],
       motivo: (json['motivo'] as List?)
               ?.map((e) => MotivoCancelamento.fromJson(e))
               .toList(),
@@ -166,6 +178,10 @@ class Pedido {
       notaFiscalDevolucaoUrl: notaFiscalDevolucaoUrl,
       transportadora: transportadora,
       tempoConfirmacao: tempoConfirmacao,
+      aba: aba,
+      coletaTardia: coletaTardia,
+      pendencia: pendencia,
+      dataConfirmacao: dataConfirmacao,
       motivo: motivo,
     );
   }
@@ -417,18 +433,31 @@ class PedidoResponse {
   final List<Pedido> pedidos;
   final int total;
   final bool completo;
+  // Contadores da aba Retirada: coletaTardia, emAnalise, parado3Dias.
+  final Map<String, int> counts;
 
-  PedidoResponse({this.pedidos = const [], this.total = 0, this.completo = false});
+  PedidoResponse(
+      {this.pedidos = const [],
+      this.total = 0,
+      this.completo = false,
+      this.counts = const {}});
 
   factory PedidoResponse.fromJson(Map<String, dynamic> json) {
     final data = json['data'];
     List<dynamic> records;
     int total;
     int? limit;
+    Map<String, int> counts = const {};
     if (data is Map) {
       records = (data['records'] is List) ? data['records'] : [];
       total = _toInt(data['total'] ?? data['count']);
       limit = _toInt(data['limit']);
+      final c = data['counts'];
+      if (c is Map) {
+        counts = {
+          for (final e in c.entries) e.key.toString(): _toInt(e.value),
+        };
+      }
     } else if (data is List) {
       records = data;
       total = data.length;
@@ -440,6 +469,7 @@ class PedidoResponse {
       pedidos: records.map((e) => Pedido.fromJson(e)).toList(),
       total: total,
       completo: limit != null && records.length < limit,
+      counts: counts,
     );
   }
 }
