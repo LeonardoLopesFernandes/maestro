@@ -629,6 +629,14 @@ class _PedidoListTabState extends State<_PedidoListTab> {
           return PedidoCard(
             pedido: p,
             editado: editado,
+            onAnalisarColeta: (opcao) async {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(opcao == 'confirmar'
+                    ? 'Coleta do pedido confirmada!'
+                    : 'Registrado: pedido não coletado.'),
+              ));
+            },
             onTap: () async {
               await Navigator.of(context).push(
                 MaterialPageRoute(

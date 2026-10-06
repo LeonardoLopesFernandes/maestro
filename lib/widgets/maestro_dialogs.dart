@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/pedido.dart';
 import 'recaptcha_dialog.dart';
 
@@ -7,6 +8,7 @@ const _verde = 0xFF12CD0C;
 const _verdeEscuro = 0xFF2E7D32;
 const _vermelho = 0xFFF80032;
 const _vermelhoDark = 0xFFD50000;
+const _ifoodRed = 0xFFEA1D2C;
 
 class MaestroDialogs {
   // Confirmação simples (usado em vários fluxos)
@@ -1399,5 +1401,225 @@ class MaestroDialogs {
         ),
       ),
     );
+  }
+
+  // Analisar coleta do pedido (iFood parado > 1 dia): confirma ou marca como
+  // não coletado. CONFIRMAR só habilita com uma opção selecionada.
+  // Retorna 'confirmar', 'nao_coletado' ou null (fechar).
+  static Future<String?> analisarColeta(BuildContext context) {
+    String? sel;
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) {
+          Widget opcao(String valor, String titulo, String descricao) {
+            final ativo = sel == valor;
+            return InkWell(
+              onTap: () => set(() => sel = valor),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 14),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: ativo ? const Color(0xFFF8F9FA) : Colors.white,
+                  border: Border.all(
+                      color: ativo
+                          ? const Color(0xFFC7CBD1)
+                          : const Color(0xFFE6E6E6)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 20,
+                      height: 20,
+                      margin: const EdgeInsets.only(top: 2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: ativo
+                              ? const Color(_ifoodRed)
+                              : const Color(0xFF9AA0A6),
+                          width: 2,
+                        ),
+                      ),
+                      child: ativo
+                          ? Center(
+                              child: Container(
+                                width: 10,
+                                height: 10,
+                                decoration: const BoxDecoration(
+                                  color: Color(_ifoodRed),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(titulo,
+                              style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1E1E1E))),
+                          const SizedBox(height: 6),
+                          Text(descricao,
+                              style: const TextStyle(
+                                  fontSize: 13.5,
+                                  height: 1.35,
+                                  color: Color(0xFF5E6164))),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return Dialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: Padding(
+              padding: const EdgeInsets.all(22),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Analisar coleta do pedido',
+                        style: TextStyle(
+                            fontSize: 21,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E1E1E))),
+                    const SizedBox(height: 18),
+                    opcao(
+                        'confirmar',
+                        'Confirmar coleta',
+                        'Marque essa opção se o entregador já retirou este pedido na loja.'),
+                    opcao(
+                        'nao_coletado',
+                        'Pedido não coletado',
+                        'Marque essa opção se o pedido não foi coletado e está na loja. Entre em contato com o SAL para analisarem o pedido.'),
+                    const Divider(height: 8, color: Color(0xFFE6E6E6)),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8F9FA),
+                        border: Border.all(color: const Color(0xFFE6E6E6)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.chat,
+                              color: Color(0xFF25D366), size: 24),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                    'SAL - Serviço de Atendimento à Loja',
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF1E1E1E))),
+                                const SizedBox(height: 2),
+                                Row(
+                                  children: [
+                                    const Text('WhatsApp: ',
+                                        style: TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFF5E6164))),
+                                    InkWell(
+                                      onTap: _abrirWhatsapp,
+                                      child: const Text('(11) 99149-2204',
+                                          style: TextStyle(
+                                              fontSize: 13,
+                                              color: Color(0xFF1E1E1E),
+                                              decoration:
+                                                  TextDecoration.underline)),
+                                    ),
+                                  ],
+                                ),
+                                const Text(
+                                    'Segunda a Sexta, das 09h às 21h.',
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        color: Color(0xFF5E6164))),
+                                const Text('Sábado, das 09h às 19h.',
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        color: Color(0xFF5E6164))),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Divider(height: 8, color: Color(0xFFE6E6E6)),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(_ifoodRed),
+                            side: const BorderSide(color: Color(0xFFFFCDD2)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6)),
+                          ),
+                          child: const Text('FECHAR',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1)),
+                        ),
+                        ElevatedButton(
+                          onPressed: sel == null
+                              ? null
+                              : () => Navigator.of(ctx).pop(sel),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(_ifoodRed),
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: const Color(0xFFE0E0E0),
+                            disabledForegroundColor: const Color(0xFF9E9E9E),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6)),
+                          ),
+                          child: const Text('CONFIRMAR',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  static Future<void> _abrirWhatsapp() async {
+    try {
+      await launchUrl(Uri.parse('https://wa.me/5511991492204'),
+          mode: LaunchMode.externalApplication);
+    } catch (_) {}
   }
 }

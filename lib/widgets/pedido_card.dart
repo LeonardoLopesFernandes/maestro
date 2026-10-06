@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import '../models/pedido.dart';
 import '../utils/currency_formatter.dart';
+import 'maestro_dialogs.dart';
 
 class PedidoCard extends StatelessWidget {
   final Pedido pedido;
@@ -12,6 +13,9 @@ class PedidoCard extends StatelessWidget {
   final String? tokenRetirada;
   // Indica se o pedido foi editado (lápis azul no card)
   final bool editado;
+  // Abre o dialog "Analisar coleta" (iFood parado > 1 dia). Recebe a opção
+  // escolhida: 'confirmar' ou 'nao_coletado'.
+  final Future<void> Function(String opcao)? onAnalisarColeta;
 
   const PedidoCard(
       {super.key,
@@ -19,7 +23,8 @@ class PedidoCard extends StatelessWidget {
       required this.onTap,
       this.onAcao,
       this.tokenRetirada,
-      this.editado = false});
+      this.editado = false,
+      this.onAnalisarColeta});
 
   String get _statusNormalizado => pedido.status.toUpperCase().trim();
 
@@ -78,6 +83,25 @@ class PedidoCard extends StatelessWidget {
     try {
       final dt = DateTime.parse(d).toLocal();
       return DateTime.now().difference(dt).inDays > 3;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  bool get _ehIfood {
+    final c = (pedido.canalDeVendas ?? '').toUpperCase();
+    final o = (pedido.origem ?? '').toUpperCase();
+    return c.contains('IFOOD') || o.contains('IFOOD');
+  }
+
+  // iFood parado (PRONTO) há mais de 1 dia => "coleta tardia".
+  bool get _coletaTardia {
+    if (!_ehIfood || !_statusNormalizado.contains('PRONTO')) return false;
+    final d = pedido.dataInclusao;
+    if (d.isEmpty) return false;
+    try {
+      final dt = DateTime.parse(d).toLocal();
+      return DateTime.now().difference(dt) > const Duration(days: 1);
     } catch (_) {
       return false;
     }
@@ -193,18 +217,17 @@ class PedidoCard extends StatelessWidget {
                   color: const Color(0xFFF1F5F9),
                 ),
                 // Bloco B: tags
-                if (mostraCanal || mostraEntrega || editado)
-                  Row(
+                if (mostraCanal || mostraEntrega || editado || _coletaTardia)
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       if (editado)
-                        const Padding(
-                          padding: EdgeInsets.only(right: 6),
-                          child: Icon(Icons.edit,
-                              size: 16, color: Color(0xFF2563EB)),
-                        ),
+                        const Icon(Icons.edit,
+                            size: 16, color: Color(0xFF2563EB)),
                       if (mostraCanal)
                         Container(
-                          margin: const EdgeInsets.only(right: 8),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
@@ -233,9 +256,32 @@ class PedidoCard extends StatelessWidget {
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold)),
                         ),
+                      if (_coletaTardia)
+                        GestureDetector(
+                          onTap: () async {
+                            final op =
+                                await MaestroDialogs.analisarColeta(context);
+                            if (op != null) {
+                              await onAnalisarColeta?.call(op);
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.black,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Text('Analisar',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                        ),
                     ],
                   ),
-                if (mostraCanal || mostraEntrega || editado)
+                if (mostraCanal || mostraEntrega || editado || _coletaTardia)
                   const SizedBox(height: 8),
                 // Bloco D: data + valor
                 Row(
