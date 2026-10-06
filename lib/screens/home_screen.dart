@@ -592,7 +592,7 @@ class _PedidoListTabState extends State<_PedidoListTab> {
     _carregar(reset: true);
   }
 
-  Widget _chip(String label, String aba, IconData icon, int? count) {
+  Widget _chip(String label, String aba, String icon, int? count) {
     final ativo = _aba == aba;
     final bg = ativo ? const Color(_red) : const Color(0xFFE6E6E6);
     final fg = ativo ? Colors.white : const Color(0xFF616161);
@@ -607,7 +607,11 @@ class _PedidoListTabState extends State<_PedidoListTab> {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 16, color: fg),
+            Image.asset(icon,
+                width: 16,
+                height: 16,
+                color: fg,
+                colorBlendMode: BlendMode.srcIn),
             const SizedBox(width: 6),
             Text(label,
                 style: TextStyle(
@@ -640,12 +644,12 @@ class _PedidoListTabState extends State<_PedidoListTab> {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            _chip('GERAL', '', Icons.list_alt, null),
-            _chip('COLETA TARDIA', 'COLETA_TARDIA', Icons.schedule,
+            _chip('GERAL', '', 'assets/icons/geral.png', null),
+            _chip('COLETA TARDIA', 'COLETA_TARDIA', 'assets/icons/tardia.png',
                 _abaCounts['coletaTardia']),
-            _chip('EM ANÁLISE', 'EM_ANALISE', Icons.hourglass_empty,
+            _chip('EM ANÁLISE', 'EM_ANALISE', 'assets/icons/analise.png',
                 _abaCounts['emAnalise']),
-            _chip('+3 DIAS PARADO', 'PARADO_3_DIAS', Icons.timer_off,
+            _chip('+3 DIAS PARADO', 'PARADO_3_DIAS', 'assets/icons/3dias.png',
                 _abaCounts['parado3Dias']),
           ],
         ),
