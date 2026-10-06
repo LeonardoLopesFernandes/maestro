@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import '../widgets/splash_anim.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../network/session_manager.dart';
@@ -384,106 +384,9 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
   }
 }
 
-/// Ícone da moto exibido na tela de autenticação.
-const _kMotoSvg =
-    '''<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><title>sharp-motorcycle</title><path fill="#fffdfd" d="M19.44 9.03L15.41 5H11v2h3.59l2 2H5c-2.8 0-5 2.2-5 5s2.2 5 5 5c2.46 0 4.45-1.69 4.9-4h1.65l2.77-2.77c-.21.54-.32 1.14-.32 1.77c0 2.8 2.2 5 5 5s5-2.2 5-5c0-2.65-1.97-4.77-4.56-4.97M7.82 15C7.4 16.15 6.28 17 5 17c-1.63 0-3-1.37-3-3s1.37-3 3-3c1.28 0 2.4.85 2.82 2H5v2zM19 17c-1.66 0-3-1.34-3-3s1.34-3 3-3s3 1.34 3 3s-1.34 3-3 3"/></svg>''';
-
-class _CarregamentoWidget extends StatefulWidget {
+class _CarregamentoWidget extends StatelessWidget {
   const _CarregamentoWidget();
 
   @override
-  State<_CarregamentoWidget> createState() => _CarregamentoWidgetState();
+  Widget build(BuildContext context) => const MaestroSplashAnim();
 }
-
-class _CarregamentoWidgetState extends State<_CarregamentoWidget>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 4200),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  double _lerp(double a, double b, double t) => a + (b - a) * t;
-
-  // Moto: entra pela esquerda até o centro e depois sai pela direita.
-  double _motoDx(double t) {
-    if (t < 0.30) return _lerp(-1.3, 0.0, t / 0.30);
-    if (t < 0.72) return 0.0;
-    return _lerp(0.0, 1.3, (t - 0.72) / 0.28);
-  }
-
-  // Moto sobe para o "maestro" surgir no lugar dela.
-  double _motoDy(double t) {
-    if (t < 0.30) return 0.0;
-    if (t < 0.45) return _lerp(0.0, -72.0, (t - 0.30) / 0.15);
-    if (t < 0.62) return -72.0;
-    if (t < 0.72) return _lerp(-72.0, 0.0, (t - 0.62) / 0.10);
-    return 0.0;
-  }
-
-  // Nome "maestro": surge quando a moto sobe e some antes dela sair.
-  double _nomeOpacity(double t) {
-    if (t < 0.30) return 0.0;
-    if (t < 0.45) return _lerp(0.0, 1.0, (t - 0.30) / 0.15);
-    if (t < 0.62) return 1.0;
-    if (t < 0.72) return _lerp(1.0, 0.0, (t - 0.62) / 0.10);
-    return 0.0;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFFE60000),
-      child: Center(
-        child: AnimatedBuilder(
-          animation: _ctrl,
-          builder: (context, _) {
-            final t = _ctrl.value;
-            final w = MediaQuery.of(context).size.width;
-            return SizedBox(
-              height: 220,
-              child: Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  Transform.translate(
-                    offset: Offset(_motoDx(t) * w, _motoDy(t)),
-                    child: SvgPicture.string(
-                      _kMotoSvg,
-                      width: 130,
-                      height: 130,
-                    ),
-                  ),
-                  Opacity(
-                    opacity: _nomeOpacity(t),
-                    child: const Text(
-                      'maestro',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 34,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-
