@@ -211,7 +211,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       case 'DEVOLVIDO':
         return (texto: 'Devolvido', cor: const Color(0xFFF80032));
       case 'RETORNAR_PARA_ESTOQUE':
-        return (texto: 'Retornar Para Estoque', cor: const Color(0xFFF80032));
+        return (texto: 'Retornar ao Estoque', cor: const Color(0xFFF80032));
       default:
         return (texto: s.isEmpty ? '—' : s, cor: const Color(0xFF9CA3AF));
     }
@@ -450,7 +450,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     if (n.contains('ENTREGA'))
       return (label: 'Saiu para Entrega', icon: 'assets/icons/saiu_para_entrega.png', cor: const Color(0xFFCE00FF), tint: true);
     if (n.contains('RETORNAR'))
-      return (label: 'Retornar para Estoque', icon: 'assets/icons/retornar_para_estoque.png', cor: const Color(0xFFDC2626), tint: true);
+      return (label: 'Retornar ao Estoque', icon: 'assets/icons/retornar_para_estoque.png', cor: const Color(0xFFDC2626), tint: true);
     if (n.contains('CANCEL'))
       return (label: 'Cancelado', icon: 'assets/icons/cancelado.png', cor: const Color(0xFFDC2626), tint: true);
     if (n.contains('DEVOLV'))

@@ -49,7 +49,7 @@ class PedidoCard extends StatelessWidget {
       case 'DEVOLVIDO':
         return (texto: 'Devolvido', cor: const Color(0xFFF80032));
       case 'RETORNAR_PARA_ESTOQUE':
-        return (texto: 'Retornar Para Estoque', cor: const Color(0xFFF80032));
+        return (texto: 'Retornar ao Estoque', cor: const Color(0xFFF80032));
       default:
         return (texto: _formatStatus(pedido.status),
             cor: Colors.transparent);
