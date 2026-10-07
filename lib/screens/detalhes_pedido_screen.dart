@@ -1003,7 +1003,21 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     if (badges.isEmpty && notas.isEmpty) return const SizedBox.shrink();
 
     final children = <Widget>[];
-    if (notas.length == 1 && badges.length == 1) {
+    // As duas NFs (nota fiscal + nota fiscal de devolução) sempre em uma única
+    // linha, lado a lado.
+    if (notas.length == 2) {
+      children.add(Row(
+        children: [
+          Expanded(child: notas[0]),
+          const SizedBox(width: 8),
+          Expanded(child: notas[1]),
+        ],
+      ));
+      if (badges.isNotEmpty) {
+        children.add(const SizedBox(height: 8));
+        children.addAll(badges);
+      }
+    } else if (notas.length == 1 && badges.length == 1) {
       children.add(Row(
         children: [
           Expanded(child: notas.first),
@@ -1038,12 +1052,12 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
 
   Widget _iconeNfe(String asset) => Image.asset(
         asset,
-        height: 30,
-        width: 30,
+        height: 24,
+        width: 24,
         color: Colors.white,
         colorBlendMode: BlendMode.srcIn,
         errorBuilder: (_, __, ___) =>
-            const Icon(Icons.description, color: Colors.white, size: 24),
+            const Icon(Icons.description, color: Colors.white, size: 20),
       );
 
   Widget _badgeAcaoNotaFiscal() => Container(
