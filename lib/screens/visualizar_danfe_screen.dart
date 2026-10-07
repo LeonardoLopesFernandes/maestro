@@ -58,11 +58,19 @@ class _VisualizarDanfeScreenState extends State<VisualizarDanfeScreen> {
       appBar: AppBar(
         backgroundColor: const Color(Constants.RED_600),
         automaticallyImplyLeading: false,
-        title: const Text('NOTA FISCAL',
-            style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1)),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset('assets/icons/ic_logo_header.png',
+                height: 28, width: 28),
+            const SizedBox(width: 8),
+            const Text('nota fiscal',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1)),
+          ],
+        ),
       ),
       body: _carregando
           ? const Center(child: CircularProgressIndicator())

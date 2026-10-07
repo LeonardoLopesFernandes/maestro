@@ -982,9 +982,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       return const SizedBox.shrink();
     }
 
-    // NOTA FISCAL: para qualquer status que já tenha NF (entregues e também
-    // iFood PRONTO, que emite a NF na confirmação).
-    final temNota = (_pedido.notaFiscalChave ?? '').isNotEmpty;
+    // NOTA FISCAL: somente no histórico (pedidos FINALIZADO/ENTREGUE)
+    final temNota = (_pedido.notaFiscalChave ?? '').isNotEmpty &&
+        (s.contains('FINALIZADO') || s.contains('ENTREGUE'));
     // NOTA FISCAL DE DEVOLUÇÃO: pedidos devolvidos/cancelados com NF de devolução
     final temNotaDev = (_pedido.notaFiscalDevolucaoChave ?? '').isNotEmpty;
 
@@ -1029,6 +1029,14 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     );
   }
 
+  Widget _iconeNfe(String asset) => Image.asset(
+        asset,
+        height: 22,
+        width: 22,
+        errorBuilder: (_, __, ___) =>
+            const Icon(Icons.description, color: Colors.white, size: 20),
+      );
+
   Widget _badgeAcaoNotaFiscal() => Container(
         height: 48,
         decoration: BoxDecoration(
@@ -1048,17 +1056,20 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
               ));
             },
             child: Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.description, color: Colors.white, size: 20),
-                  SizedBox(width: 8),
-                  Text('NOTA FISCAL',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold)),
-                ],
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _iconeNfe('assets/icons/nfe.png'),
+                    const SizedBox(width: 8),
+                    const Text('nota fiscal',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold)),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1088,10 +1099,10 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 fit: BoxFit.scaleDown,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.description, color: Colors.white, size: 20),
-                    SizedBox(width: 8),
-                    Text('NOTA FISCAL DE DEVOLUÇÃO',
+                  children: [
+                    _iconeNfe('assets/icons/nfe_dev.png'),
+                    const SizedBox(width: 8),
+                    const Text('nota fiscal de devolução',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 15,
