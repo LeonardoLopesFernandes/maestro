@@ -316,6 +316,23 @@ class PedidoCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                if ((pedido.pendencia ?? '').isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.info_outline,
+                            size: 14, color: Color(0xFF64748B)),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(pedido.pendencia!,
+                              style: const TextStyle(
+                                  fontSize: 12, color: Color(0xFF64748B))),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),

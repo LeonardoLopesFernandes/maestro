@@ -457,6 +457,10 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       return (label: 'Devolvido', icon: 'assets/icons/devolvido.png', cor: const Color(0xFFDC2626), tint: true);
     if (n.contains('ENTREGUE') || n.contains('FINALIZ'))
       return (label: 'Entregue', icon: 'assets/icons/entregue.png', cor: const Color(0xFF12CD0C), tint: true);
+    if (n.contains('AGUARDANDO_SAL'))
+      return (label: 'Aguardando análise do SAL', icon: 'assets/icons/editado.png', cor: const Color(0xFFED7D31), tint: false);
+    if (n.contains('AGUARDANDO_LOJA'))
+      return (label: 'Aguardando confirmação da loja', icon: 'assets/icons/editado.png', cor: const Color(0xFFED7D31), tint: false);
     return (label: nome, icon: 'assets/icons/criado.png', cor: const Color(0xFF9CA3AF), tint: true);
   }
 
@@ -978,9 +982,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       return const SizedBox.shrink();
     }
 
-    // NOTA FISCAL: só para pedidos entregues (Histórico / FINALIZADO / ENTREGUE)
-    final temNota = (_pedido.notaFiscalChave ?? '').isNotEmpty &&
-        (s.contains('FINALIZADO') || s.contains('ENTREGUE'));
+    // NOTA FISCAL: para qualquer status que já tenha NF (entregues e também
+    // iFood PRONTO, que emite a NF na confirmação).
+    final temNota = (_pedido.notaFiscalChave ?? '').isNotEmpty;
     // NOTA FISCAL DE DEVOLUÇÃO: pedidos devolvidos/cancelados com NF de devolução
     final temNotaDev = (_pedido.notaFiscalDevolucaoChave ?? '').isNotEmpty;
 
