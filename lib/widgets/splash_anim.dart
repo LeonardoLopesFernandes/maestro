@@ -32,7 +32,7 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
 
     controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 4200),
+      duration: const Duration(milliseconds: 6000),
     )..addListener(() {
         setState(() {});
 
@@ -84,8 +84,11 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
 
   void _createParticles() {
     final textPoints = _imagePoints;
+    if (textPoints.isEmpty) return;
 
-    const int total = 520;
+    // Distribui as partículas por TODA a silhueta (antes pegava só os
+    // primeiros pontos, deixando o logo "riscado").
+    final total = min(textPoints.length, 2000);
 
     for (int i = 0; i < total; i++) {
       final angle = random.nextDouble() * pi * 2;
@@ -101,14 +104,15 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
         sin(angle) * explosionDistance,
       );
 
-      final target = textPoints[i % textPoints.length];
+      final target =
+          textPoints[(i * textPoints.length ~/ total).clamp(0, textPoints.length - 1)];
 
       particles.add(
         _Particle(
           start: start,
           explosion: explosion,
           target: target,
-          size: 0.8 + random.nextDouble() * 2.2,
+          size: 1.2 + random.nextDouble() * 2.4,
           delay: random.nextDouble() * 0.15,
           rotation: random.nextDouble() * pi * 2,
         ),
