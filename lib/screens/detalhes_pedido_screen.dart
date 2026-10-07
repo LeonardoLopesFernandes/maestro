@@ -982,10 +982,17 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       return const SizedBox.shrink();
     }
 
-    // NOTA FISCAL: somente no histórico (pedidos FINALIZADO/ENTREGUE)
-    final temNota = (_pedido.notaFiscalChave ?? '').isNotEmpty &&
-        (s.contains('FINALIZADO') || s.contains('ENTREGUE'));
-    // NOTA FISCAL DE DEVOLUÇÃO: pedidos devolvidos/cancelados com NF de devolução
+    // Histórico: entregues/devolvidos (e finalizados/cancelados) podem ter as
+    // duas NFs — a nota fiscal e a nota fiscal de devolução.
+    final ehHistorico = s.contains('FINALIZADO') ||
+        s.contains('ENTREGUE') ||
+        s.contains('DEVOLV') ||
+        s.contains('CANCEL') ||
+        s.contains('RETORNAR');
+    // NOTA FISCAL (nfe.png): somente no histórico
+    final temNota =
+        (_pedido.notaFiscalChave ?? '').isNotEmpty && ehHistorico;
+    // NOTA FISCAL DE DEVOLUÇÃO (nfe_dev.png): quando houver NF de devolução
     final temNotaDev = (_pedido.notaFiscalDevolucaoChave ?? '').isNotEmpty;
 
     final notas = <Widget>[
@@ -1031,10 +1038,12 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
 
   Widget _iconeNfe(String asset) => Image.asset(
         asset,
-        height: 22,
-        width: 22,
+        height: 30,
+        width: 30,
+        color: Colors.white,
+        colorBlendMode: BlendMode.srcIn,
         errorBuilder: (_, __, ___) =>
-            const Icon(Icons.description, color: Colors.white, size: 20),
+            const Icon(Icons.description, color: Colors.white, size: 24),
       );
 
   Widget _badgeAcaoNotaFiscal() => Container(
