@@ -3,9 +3,21 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-/// Splash animado do maestro: a moto entra, explode em partículas que formam
-/// o texto "maestro". Fundo escuro; roda uma vez.
+/// SVG da moto (Material "sharp-motorcycle"), usado na tela de splash e no
+/// carregamento da autenticação (login webview).
+const String _motoSvg = '<svg xmlns="http://www.w3.org/2000/svg" '
+    'width="24" height="24" viewBox="0 0 24 24"><path fill="#ffffff" '
+    'd="M19.44 9.03L15.41 5H11v2h3.59l2 2H5c-2.8 0-5 2.2-5 5s2.2 5 5 5c2.46 '
+    '0 4.45-1.69 4.9-4h1.65l2.77-2.77c-.21.54-.32 1.14-.32 1.77c0 2.8 2.2 5 '
+    '5 5s5-2.2 5-5c0-2.65-1.97-4.77-4.56-4.97M7.82 15C7.4 16.15 6.28 17 5 '
+    '17c-1.63 0-3-1.37-3-3s1.37-3 3-3c1.28 0 2.4.85 2.82 2H5v2zM19 17c-1.66 '
+    '0-3-1.34-3-3s1.34-3 3-3s3 1.34 3 3s-1.34 3-3 3"/></svg>';
+
+/// Splash animado do maestro: a moto entra, para no centro, se desfaz em
+/// partículas (com a silhueta exata da moto) e as partículas se juntam para
+/// formar o logo/nome "maestro". Fundo vermelho; roda uma vez.
 class MaestroSplashAnim extends StatefulWidget {
   const MaestroSplashAnim({super.key});
 
@@ -15,48 +27,75 @@ class MaestroSplashAnim extends StatefulWidget {
 
 class _MaestroSplashAnimState extends State<MaestroSplashAnim>
     with SingleTickerProviderStateMixin {
-  late AnimationController controller;
+  static const double _motoSize = 190;
+
+  late final AnimationController controller;
+  late final Widget _motoWidget;
 
   final Random random = Random();
 
   final List<_Particle> particles = [];
-  List<Offset> _imagePoints = [];
+  List<Offset> _motoPoints = [];
+  List<Offset> _logoPoints = [];
 
   bool particlesCreated = false;
+  bool _ready = false;
 
   @override
   void initState() {
     super.initState();
 
-    _loadImagePoints();
+    // Criado uma única vez: o mesmo widget é reutilizado a cada frame, então o
+    // SVG não é reprocessado durante a animação.
+    _motoWidget = SvgPicture.string(
+      _motoSvg,
+      width: _motoSize,
+      height: _motoSize,
+    );
 
     controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 6000),
+      duration: const Duration(milliseconds: 7200),
     )..addListener(() {
         setState(() {});
-
-        if (controller.value > 0.54 &&
-            !particlesCreated &&
-            _imagePoints.isNotEmpty) {
-          particlesCreated = true;
-          _createParticles();
-        }
+        _maybeCreateParticles();
       });
 
+    _loadPoints();
     controller.forward();
   }
 
-  /// Extrai os pontos (silhueta) do PNG do logo pelo canal alfa, para as
-  /// partículas formarem a imagem em vez do texto.
-  Future<void> _loadImagePoints() async {
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  /// Carrega os pontos da silhueta do logo "maestro" (assets/splash.png) e da
+  /// moto (rasterizando o SVG).
+  Future<void> _loadPoints() async {
+    final results = await Future.wait([
+      _loadLogoPoints(),
+      _rasterizeSvg(_motoSvg, _motoSize),
+    ]);
+    if (!mounted) return;
+    setState(() {
+      _logoPoints = results[0];
+      _motoPoints = results[1];
+      _ready = true;
+    });
+    _maybeCreateParticles();
+  }
+
+  /// Extrai os pontos (silhueta) do PNG do logo pelo canal alfa.
+  Future<List<Offset>> _loadLogoPoints() async {
     final data = await rootBundle.load('assets/splash.png');
     final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
     final frame = await codec.getNextFrame();
     final image = frame.image;
     final bytesData =
         await image.toByteData(format: ui.ImageByteFormat.rawRgba);
-    if (bytesData == null) return;
+    if (bytesData == null) return [];
     final bytes = bytesData.buffer.asUint8List();
     const targetW = 170.0;
     final scale = targetW / image.width;
@@ -72,66 +111,94 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
         }
       }
     }
-    if (!mounted) return;
-    setState(() => _imagePoints = pts);
+    return pts;
   }
 
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
+  /// Rasteriza o SVG no tamanho [size] e devolve a silhueta (pontos com alfa),
+  /// centrada na origem. É isso que permite as partículas nascerem com o
+  /// desenho exato da moto.
+  Future<List<Offset>> _rasterizeSvg(String svg, double size) async {
+    final info = await vg.loadPicture(SvgStringLoader(svg), null);
+    final svgSize = info.size;
+    if (svgSize.width <= 0 || svgSize.height <= 0) return [];
+
+    final scale = size / svgSize.width;
+    final w = (svgSize.width * scale).round();
+    final h = (svgSize.height * scale).round();
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    canvas.scale(scale);
+    canvas.drawPicture(info.picture);
+    info.picture.dispose();
+
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(w, h);
+    picture.dispose();
+
+    final bytesData =
+        await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+    if (bytesData == null) return [];
+    final bytes = bytesData.buffer.asUint8List();
+
+    final pts = <Offset>[];
+    for (int y = 0; y < image.height; y += 2) {
+      for (int x = 0; x < image.width; x += 2) {
+        final index = (y * image.width + x) * 4;
+        if (bytes[index + 3] > 100) {
+          pts.add(Offset(
+            x - image.width / 2,
+            y - image.height / 2,
+          ));
+        }
+      }
+    }
+    return pts;
+  }
+
+  void _maybeCreateParticles() {
+    if (particlesCreated) return;
+    if (!_ready) return;
+    if (controller.value < 0.48) return;
+    particlesCreated = true;
+    _createParticles();
   }
 
   void _createParticles() {
-    final textPoints = _imagePoints;
-    if (textPoints.isEmpty) return;
+    if (_motoPoints.isEmpty || _logoPoints.isEmpty) return;
 
-    // Distribui as partículas por TODA a silhueta (antes pegava só os
-    // primeiros pontos, deixando o logo "riscado").
-    final total = min(textPoints.length, 2000);
+    final total = min(_motoPoints.length, 1200);
 
     for (int i = 0; i < total; i++) {
+      final mp = _motoPoints[
+          (i * _motoPoints.length ~/ total).clamp(0, _motoPoints.length - 1)];
+      final tp = _logoPoints[
+          (i * _logoPoints.length ~/ total).clamp(0, _logoPoints.length - 1)];
+
       final angle = random.nextDouble() * pi * 2;
-      final explosionDistance = 20 + random.nextDouble() * 150;
-
-      final start = Offset(
-        cos(angle) * 45,
-        sin(angle) * 45,
-      );
-
-      final explosion = Offset(
-        cos(angle) * explosionDistance,
-        sin(angle) * explosionDistance,
-      );
-
-      final target =
-          textPoints[(i * textPoints.length ~/ total).clamp(0, textPoints.length - 1)];
 
       particles.add(
         _Particle(
-          start: start,
-          explosion: explosion,
-          target: target,
-          size: 1.2 + random.nextDouble() * 2.4,
-          delay: random.nextDouble() * 0.15,
+          start: mp,
+          target: tp,
+          dir: Offset(cos(angle), sin(angle)),
+          bulge: 4 + random.nextDouble() * 16,
+          size: 1.0 + random.nextDouble() * 2.0,
+          delay: random.nextDouble() * 0.30,
           rotation: random.nextDouble() * pi * 2,
         ),
       );
     }
   }
 
-  double _motorProgress() {
-    return Curves.easeOutCubic.transform(
-      (controller.value / 0.48).clamp(0.0, 1.0),
-    );
-  }
+  double _motorProgress() => Curves.easeOutCubic.transform(
+        (controller.value / 0.36).clamp(0.0, 1.0),
+      );
 
+  // A moto para no centro (0.36) e começa a se desfazer devagar (0.46 → 0.90).
   double _particleProgress() {
-    if (controller.value < 0.52) return 0;
-
-    return Curves.easeInOutCubic.transform(
-      ((controller.value - 0.52) / 0.40).clamp(0.0, 1.0),
-    );
+    if (controller.value < 0.46) return 0;
+    return ((controller.value - 0.46) / 0.44).clamp(0.0, 1.0);
   }
 
   @override
@@ -145,32 +212,41 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
             constraints.maxHeight / 2,
           );
 
+          final p = _motorProgress();
+          final startX = -_motoSize - 60;
+          final endX = center.dx - _motoSize / 2;
+          final motoX = startX + (endX - startX) * p;
+          final bob = sin(p * pi * 3) * (1 - p) * 6;
+          final tilt = (1 - p) * -0.06;
+          // A moto some devagar, acompanhando o início do desmanche.
+          final motoOpacity =
+              (1 - ((controller.value - 0.48) / 0.16)).clamp(0.0, 1.0);
+          final finalOpacity =
+              ((controller.value - 0.88) / 0.12).clamp(0.0, 1.0);
+
           return Stack(
             children: [
               // Brilho central.
               Positioned.fill(
                 child: CustomPaint(
-                  painter: _GlowPainter(
-                    progress: controller.value,
-                  ),
+                  painter: _GlowPainter(progress: controller.value),
                 ),
               ),
 
-              // Moto.
-              if (controller.value < 0.72)
-                CustomPaint(
-                  size: Size(
-                    constraints.maxWidth,
-                    constraints.maxHeight,
-                  ),
-                  painter: _MotorcyclePainter(
-                    progress: _motorProgress(),
-                    particleProgress: _particleProgress(),
-                    center: center,
+              // Moto (SVG).
+              if (controller.value < 0.66 && motoOpacity > 0)
+                Transform.translate(
+                  offset: Offset(motoX, center.dy - _motoSize / 2 + bob),
+                  child: Transform.rotate(
+                    angle: tilt,
+                    child: Opacity(
+                      opacity: motoOpacity,
+                      child: _motoWidget,
+                    ),
                   ),
                 ),
 
-              // Partículas.
+              // Partículas: saem da silhueta da moto e formam o "maestro".
               if (particlesCreated)
                 Positioned.fill(
                   child: CustomPaint(
@@ -182,15 +258,16 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
                   ),
                 ),
 
-              // Pequeno brilho final.
-              if (controller.value > 0.82)
+              // Logo final.
+              if (finalOpacity > 0)
                 Center(
                   child: Opacity(
-                    opacity: ((controller.value - 0.82) / 0.18)
-                        .clamp(0.0, 1.0),
+                    opacity: finalOpacity,
                     child: Image.asset(
                       'assets/splash.png',
                       width: 180,
+                      color: Colors.white,
+                      colorBlendMode: BlendMode.srcIn,
                       fit: BoxFit.contain,
                     ),
                   ),
@@ -205,16 +282,18 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
 
 class _Particle {
   final Offset start;
-  final Offset explosion;
   final Offset target;
+  final Offset dir;
+  final double bulge;
   final double size;
   final double delay;
   final double rotation;
 
   _Particle({
     required this.start,
-    required this.explosion,
     required this.target,
+    required this.dir,
+    required this.bulge,
     required this.size,
     required this.delay,
     required this.rotation,
@@ -234,6 +313,8 @@ class _ParticlePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (progress <= 0) return;
+
     for (final particle in particles) {
       final localProgress =
           ((progress - particle.delay) / (1 - particle.delay))
@@ -241,40 +322,21 @@ class _ParticlePainter extends CustomPainter {
 
       if (localProgress <= 0) continue;
 
-      Offset position;
+      final eased = Curves.easeInOutSine.transform(localProgress);
 
-      if (localProgress < 0.28) {
-        // Explosão.
-        final p = Curves.easeOut.transform(
-          localProgress / 0.28,
-        );
+      // Vai da silhueta da moto para a do logo, com um leve "estufar" no meio.
+      final base = Offset.lerp(particle.start, particle.target, eased)!;
+      final bulge = particle.dir * (sin(localProgress * pi) * particle.bulge);
+      final position = base + bulge;
 
-        position = Offset.lerp(
-          particle.start,
-          particle.explosion,
-          p,
-        )!;
-      } else {
-        // Formação do texto.
-        final p = Curves.easeInOutCubic.transform(
-          (localProgress - 0.28) / 0.72,
-        );
-
-        position = Offset.lerp(
-          particle.explosion,
-          particle.target,
-          p,
-        )!;
-      }
-
-      final opacity = localProgress < 0.12
-          ? localProgress / 0.12
-          : 1.0;
+      final opacity = localProgress < 0.1
+          ? localProgress / 0.1
+          : localProgress > 0.88
+              ? (1 - localProgress) / 0.12
+              : 1.0;
 
       final paint = Paint()
-        ..color = Colors.white.withValues(
-          alpha: opacity.clamp(0.0, 1.0),
-        )
+        ..color = Colors.white.withValues(alpha: opacity.clamp(0.0, 1.0))
         ..style = PaintingStyle.fill;
 
       final pulse =
@@ -289,184 +351,37 @@ class _ParticlePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _ParticlePainter oldDelegate) {
-    return true;
-  }
-}
-
-class _MotorcyclePainter extends CustomPainter {
-  final double progress;
-  final double particleProgress;
-  final Offset center;
-
-  _MotorcyclePainter({
-    required this.progress,
-    required this.particleProgress,
-    required this.center,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (progress <= 0) return;
-
-    final paint = Paint()
-      ..color = Colors.white.withValues(
-        alpha: (1 - particleProgress * 1.4).clamp(0.0, 1.0),
-      )
-      ..style = PaintingStyle.fill;
-
-    final x = -size.width * 0.65 + (size.width * 0.65 * progress);
-
-    final y = center.dy;
-
-    canvas.save();
-
-    canvas.translate(x, y);
-
-    canvas.scale(
-      1.0 + sin(progress * pi) * 0.04,
-    );
-
-    // Inclinação durante a chegada.
-    canvas.rotate(
-      (1 - progress) * -0.08,
-    );
-
-    final path = Path();
-
-    path.moveTo(17.42, 10);
-    path.lineTo(13.41, 6);
-    path.lineTo(9, 6);
-    path.lineTo(9, 8);
-    path.lineTo(12.59, 8);
-    path.lineTo(14.59, 10);
-    path.lineTo(6.5, 10);
-
-    path.cubicTo(
-      4,
-      10,
-      2,
-      12,
-      2,
-      14.5,
-    );
-
-    path.cubicTo(
-      2,
-      17,
-      4,
-      19,
-      6.5,
-      19,
-    );
-
-    path.cubicTo(
-      8.72,
-      19,
-      10.56,
-      17.38,
-      10.92,
-      15.27,
-    );
-
-    path.lineTo(13.04, 14);
-
-    path.cubicTo(
-      13,
-      14.17,
-      13,
-      14.33,
-      13,
-      14.5,
-    );
-
-    path.cubicTo(
-      13,
-      17,
-      15,
-      19,
-      17.5,
-      19,
-    );
-
-    path.cubicTo(
-      20,
-      19,
-      22,
-      17,
-      22,
-      14.5,
-    );
-
-    path.cubicTo(
-      22,
-      12,
-      20,
-      10,
-      17.42,
-      10,
-    );
-
-    canvas.scale(6);
-
-    canvas.drawPath(path, paint);
-
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(covariant _MotorcyclePainter oldDelegate) {
-    return true;
-  }
+  bool shouldRepaint(covariant _ParticlePainter oldDelegate) => true;
 }
 
 class _GlowPainter extends CustomPainter {
   final double progress;
 
-  _GlowPainter({
-    required this.progress,
-  });
+  _GlowPainter({required this.progress});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(
-      size.width / 2,
-      size.height / 2,
-    );
+    final center = Offset(size.width / 2, size.height / 2);
 
-    if (progress < 0.42 || progress > 0.85) return;
+    if (progress < 0.40 || progress > 0.88) return;
 
-    final p = ((progress - 0.42) / 0.43).clamp(0.0, 1.0);
-
+    final p = ((progress - 0.40) / 0.48).clamp(0.0, 1.0);
     final intensity = sin(p * pi);
 
     final paint = Paint()
       ..shader = RadialGradient(
         colors: [
-          Colors.white.withValues(
-            alpha: intensity * 0.20,
-          ),
-          Colors.white.withValues(
-            alpha: intensity * 0.04,
-          ),
+          Colors.white.withValues(alpha: intensity * 0.20),
+          Colors.white.withValues(alpha: intensity * 0.04),
           Colors.transparent,
         ],
       ).createShader(
-        Rect.fromCircle(
-          center: center,
-          radius: 220,
-        ),
+        Rect.fromCircle(center: center, radius: 220),
       );
 
-    canvas.drawCircle(
-      center,
-      220,
-      paint,
-    );
+    canvas.drawCircle(center, 220, paint);
   }
 
   @override
-  bool shouldRepaint(covariant _GlowPainter oldDelegate) {
-    return true;
-  }
+  bool shouldRepaint(covariant _GlowPainter oldDelegate) => true;
 }
