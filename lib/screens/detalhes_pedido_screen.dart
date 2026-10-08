@@ -969,7 +969,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       badges.add(_badgeAcao(
           'ENTREGADOR VOLTOU', const Color(0xFFF80032), _acaoEntregadorVoltou));
     } else if (s.contains('RETORNAR')) {
-      badges.add(_badgeAcao('DEVOLVER PARA O ESTOQUE', const Color(0xFFF80032),
+      badges.add(_badgeAcao('RETORNAR AO ESTOQUE', const Color(0xFFF80032),
           _acaoDevolverEstoque));
     } else if (s.contains('FINALIZADO')) {
       badges.add(_badgeAcao(
