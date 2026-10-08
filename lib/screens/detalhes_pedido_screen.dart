@@ -1050,16 +1050,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     );
   }
 
-  Widget _iconeNfe(String asset) => Image.asset(
-        asset,
-        height: 24,
-        width: 24,
-        color: Colors.white,
-        colorBlendMode: BlendMode.srcIn,
-        errorBuilder: (_, __, ___) =>
-            const Icon(Icons.description, color: Colors.white, size: 20),
-      );
-
   Widget _badgeAcaoNotaFiscal() => Container(
         height: 48,
         decoration: BoxDecoration(
@@ -1083,10 +1073,10 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 fit: BoxFit.scaleDown,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _iconeNfe('assets/icons/nfe.png'),
-                    const SizedBox(width: 8),
-                    const Text('nota fiscal',
+                  children: const [
+                    Icon(Icons.receipt_long, color: Colors.white, size: 20),
+                    SizedBox(width: 8),
+                    Text('nota fiscal',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 15,
@@ -1122,10 +1112,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 fit: BoxFit.scaleDown,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _iconeNfe('assets/icons/nfe_dev.png'),
-                    const SizedBox(width: 8),
-                    const Text('NF-e de devolução',
+                  children: const [
+                    Icon(Icons.assignment_return,
+                        color: Colors.white, size: 20),
+                    SizedBox(width: 8),
+                    Text('NF-e de devolução',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 15,
