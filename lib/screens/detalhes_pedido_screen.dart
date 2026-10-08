@@ -1125,7 +1125,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                   children: [
                     _iconeNfe('assets/icons/nfe_dev.png'),
                     const SizedBox(width: 8),
-                    const Text('nota fiscal de devolução',
+                    const Text('NF-e de devolução',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: 15,
