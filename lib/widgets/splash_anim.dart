@@ -31,7 +31,7 @@ class MaestroSplashAnim extends StatefulWidget {
 class _MaestroSplashAnimState extends State<MaestroSplashAnim>
     with SingleTickerProviderStateMixin {
   static const double _motoSize = 190;
-  static const Duration _duration = Duration(milliseconds: 3400);
+  static const Duration _duration = Duration(milliseconds: 4500);
 
   // Frações da linha do tempo.
   static const double _rideEnd = 0.2647; // 0,9 s
@@ -401,8 +401,11 @@ class _ParticlePainter extends CustomPainter {
           1 + sin((explosion + formation) * pi * 8 + particle.rotation) * 0.2;
       final p = center + position;
 
-      // Halo luminoso + núcleo.
-      canvas.drawCircle(p, particle.size * pulse * 2.2, haloPaint);
+      // Halo luminoso apenas na explosão. Na formação ele some, para o nome
+      // "maestro" ficar nítido (sem brilho estragando o efeito).
+      if (formation <= 0) {
+        canvas.drawCircle(p, particle.size * pulse * 2.2, haloPaint);
+      }
       canvas.drawCircle(p, particle.size * pulse, paint);
     }
   }
