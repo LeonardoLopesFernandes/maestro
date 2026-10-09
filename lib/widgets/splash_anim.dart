@@ -31,12 +31,13 @@ class MaestroSplashAnim extends StatefulWidget {
 class _MaestroSplashAnimState extends State<MaestroSplashAnim>
     with SingleTickerProviderStateMixin {
   static const double _motoSize = 190;
-  static const Duration _duration = Duration(milliseconds: 4500);
+  static const Duration _duration = Duration(milliseconds: 5000);
 
-  // Frações da linha do tempo.
-  static const double _rideEnd = 0.2647; // 0,9 s
-  static const double _brakeEnd = 0.3824; // 1,3 s
-  static const double _explosionEnd = 0.6471; // 2,2 s
+  // Frações da linha do tempo. Entrada/frenagem curtas; explosão e formação
+  // (partículas) ocupam a maior parte, para o efeito não ficar rápido.
+  static const double _rideEnd = 0.12; // 0,6 s
+  static const double _brakeEnd = 0.19; // 0,95 s
+  static const double _explosionEnd = 0.54; // 2,7 s
 
   late final AnimationController controller;
   late final Widget _motoWidget;
@@ -165,7 +166,7 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
 
   void _maybeCreateParticles() {
     if (particlesCreated || !_ready) return;
-    if (controller.value < 0.36) return;
+    if (controller.value < 0.18) return;
     particlesCreated = true;
     _createParticles();
   }
@@ -190,7 +191,7 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
           explosion: mp + Offset(cos(angle), sin(angle)) * distance,
           target: tp,
           size: 1.0 + random.nextDouble() * 2.0,
-          delay: random.nextDouble() * 0.30,
+          delay: random.nextDouble() * 0.18,
           rotation: random.nextDouble() * pi * 2,
         ),
       );
@@ -255,7 +256,7 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
 
           // Some devagar no início da explosão.
           final motoOpacity =
-              (1 - ((t - _brakeEnd) / 0.10)).clamp(0.0, 1.0);
+              (1 - ((t - _brakeEnd) / 0.08)).clamp(0.0, 1.0);
 
           final finalOpacity = ((t - 0.88) / 0.12).clamp(0.0, 1.0);
 
@@ -283,7 +284,7 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
             }
           }
 
-          if (t < 0.50 && motoOpacity > 0) {
+          if (t < 0.34 && motoOpacity > 0) {
             children.add(_motoAt(
               Offset(motoX(ride) + impact * 5, motoTop),
               motoOpacity,
@@ -378,7 +379,7 @@ class _ParticlePainter extends CustomPainter {
         position = Offset.lerp(
           particle.start,
           particle.explosion,
-          Curves.easeOutCubic.transform(ep),
+          Curves.easeOutSine.transform(ep),
         )!;
         opacity = ep < 0.1 ? ep / 0.1 : 1.0;
       } else {
@@ -386,7 +387,7 @@ class _ParticlePainter extends CustomPainter {
         position = Offset.lerp(
           particle.explosion,
           particle.target,
-          Curves.easeInOutCubic.transform(formation),
+          Curves.easeInOutSine.transform(formation),
         )!;
         opacity = formation < 0.82
             ? 1.0
@@ -424,9 +425,9 @@ class _GlowPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
 
     // Brilho no momento da frenagem/impacto.
-    if (progress < 0.24 || progress > 0.58) return;
+    if (progress < 0.11 || progress > 0.42) return;
 
-    final p = ((progress - 0.24) / 0.34).clamp(0.0, 1.0);
+    final p = ((progress - 0.11) / 0.31).clamp(0.0, 1.0);
     final intensity = sin(p * pi);
 
     final paint = Paint()
