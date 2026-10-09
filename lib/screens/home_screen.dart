@@ -290,7 +290,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         body: Column(
           children: [
             _header(),
-            _statusBar(),
+            // No Histórico o contador já está no header, então a barra branca
+            // (statusBar) não aparece: a pesquisa sobe no lugar dela.
+            if (_currentIndex != 5) _statusBar(),
             if (widget.session.isDemo())
               Container(
                 width: double.infinity,
@@ -342,6 +344,26 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           children: [
             Image.asset('assets/icons/ic_logo_header.png',
                 height: 40, width: 40),
+            // No Histórico o contador fica no header, ao lado do ícone, e a
+            // barra de pesquisa sobe para o lugar dele.
+            if (_currentIndex == 5) ...[
+              const SizedBox(width: 10),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  _contagemTexto(5),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
             const Spacer(),
             IconButton(
               icon: Image.asset('assets/icons/ic_profile.png',
