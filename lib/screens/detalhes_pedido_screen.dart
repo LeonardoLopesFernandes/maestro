@@ -193,7 +193,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     switch (s) {
       case 'NOVO_PEDIDO':
       case 'NOVO':
-        return (texto: 'NOVO', cor: const Color(0xFF12CD0C));
+        return (texto: 'Novo pedido', cor: const Color(0xFF12CD0C));
       case 'EM_SEPARACAO':
       case 'SEPARACAO':
       case 'EDITADO':

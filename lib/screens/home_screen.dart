@@ -185,7 +185,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final n = _contagemPara(index);
     switch (index) {
       case 0:
-        return '$n ${n == 1 ? 'Novo' : 'Novos'}';
+        return '$n ${n == 1 ? 'Novo pedido' : 'Novos pedidos'}';
       case 1:
         return '$n Em Separação';
       case 2:
