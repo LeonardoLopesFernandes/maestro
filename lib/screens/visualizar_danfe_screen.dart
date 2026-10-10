@@ -61,7 +61,7 @@ class _VisualizarDanfeScreenState extends State<VisualizarDanfeScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset('assets/icons/ic_logo_header.png',
+            Image.asset('assets/icons/ic_logo_header.webp',
                 height: 28, width: 28),
             const SizedBox(width: 8),
             const Text('nota fiscal',

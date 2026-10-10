@@ -12,6 +12,7 @@ import '../utils/constants.dart';
 import '../utils/log_helper.dart';
 import 'historico_screen.dart';
 import '../widgets/pedido_card.dart';
+import '../widgets/app_icon.dart';
 import 'detalhes_pedido_screen.dart';
 
 // Cores da marca Maestro (vermelho) — não copiamos o azul do Kotlin.
@@ -31,12 +32,12 @@ const List<int> _tabColors = [
 ];
 
 const List<String> _tabIconAssets = [
-  'assets/icons/ic_clipboard.png',
-  'assets/icons/ic_sync.png',
-  'assets/icons/ic_bag.png',
-  'assets/icons/ic_truck.png',
-  'assets/icons/ic_estoque.png',
-  'assets/icons/ic_historico.png',
+  'assets/icons/ic_clipboard.svg',
+  'assets/icons/ic_sync.svg',
+  'assets/icons/ic_bag.svg',
+  'assets/icons/ic_truck.svg',
+  'assets/icons/ic_estoque.svg',
+  'assets/icons/ic_historico.svg',
 ];
 
 class HomeScreen extends StatefulWidget {
@@ -342,7 +343,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
         child: Row(
           children: [
-            Image.asset('assets/icons/ic_logo_header.png',
+            Image.asset('assets/icons/ic_logo_header.webp',
                 height: 40, width: 40),
             // No Histórico o contador fica no header, ao lado do ícone, e a
             // barra de pesquisa sobe para o lugar dele.
@@ -366,8 +367,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ],
             const Spacer(),
             IconButton(
-              icon: Image.asset('assets/icons/ic_profile.png',
-                  height: 24, width: 24, color: Colors.white),
+              icon: appIcon('assets/icons/ic_profile.svg',
+                  width: 24, height: 24, color: Colors.white),
               onPressed: _abrirPerfil,
             ),
           ],
@@ -432,12 +433,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        Image.asset(
+                        appIcon(
                             _tabIconAssets[i],
                             width: 28,
                             height: 28,
-                            color: ativo ? cor : const Color(0xFF9AA0A6),
-                            colorBlendMode: BlendMode.srcIn),
+                            color: ativo ? cor : const Color(0xFF9AA0A6)),
                         if (count > 0)
                           Positioned(
                             top: -8,
@@ -629,11 +629,8 @@ class _PedidoListTabState extends State<_PedidoListTab> {
         ),
         child: Row(
           children: [
-            Image.asset(icon,
-                width: 16,
-                height: 16,
-                color: fg,
-                colorBlendMode: BlendMode.srcIn),
+            appIcon(icon,
+                width: 16, height: 16, color: fg),
             const SizedBox(width: 6),
             Text(label,
                 style: TextStyle(
@@ -666,12 +663,12 @@ class _PedidoListTabState extends State<_PedidoListTab> {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: [
-            _chip('GERAL', '', 'assets/icons/geral.png', null),
-            _chip('COLETA TARDIA', 'COLETA_TARDIA', 'assets/icons/tardia.png',
+            _chip('GERAL', '', 'assets/icons/geral.svg', null),
+            _chip('COLETA TARDIA', 'COLETA_TARDIA', 'assets/icons/tardia.svg',
                 _abaCounts['coletaTardia']),
-            _chip('EM ANÁLISE', 'EM_ANALISE', 'assets/icons/analise.png',
+            _chip('EM ANÁLISE', 'EM_ANALISE', 'assets/icons/analise.svg',
                 _abaCounts['emAnalise']),
-            _chip('+3 DIAS PARADO', 'PARADO_3_DIAS', 'assets/icons/3dias.png',
+            _chip('+3 DIAS PARADO', 'PARADO_3_DIAS', 'assets/icons/3dias.svg',
                 _abaCounts['parado3Dias']),
           ],
         ),
@@ -702,12 +699,11 @@ class _PedidoListTabState extends State<_PedidoListTab> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(
+            appIcon(
               widget.tabIcon,
               width: 90,
               height: 90,
               color: Colors.grey.shade400,
-              colorBlendMode: BlendMode.srcIn,
             ),
             const SizedBox(height: 16),
             const Text('Não há pedidos!',

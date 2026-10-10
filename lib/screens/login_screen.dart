@@ -125,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 56),
                           // 1. Logo + título
                           Image.asset(
-                            'assets/ic_maestro_logo.png',
+                            'assets/ic_maestro_logo.webp',
                             width: 96,
                             height: 96,
                             fit: BoxFit.contain,

@@ -1125,7 +1125,7 @@ class MaestroDialogs {
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
-                  secondary: Image.asset('assets/icons/ic_recaptcha_logo.png',
+                  secondary: Image.asset('assets/icons/ic_recaptcha_logo.webp',
                       height: 28),
                   title: const Text('Não sou um robô',
                       style: TextStyle(fontSize: 14)),
@@ -1204,7 +1204,7 @@ class MaestroDialogs {
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
-                  secondary: Image.asset('assets/icons/ic_recaptcha_logo.png',
+                  secondary: Image.asset('assets/icons/ic_recaptcha_logo.webp',
                       height: 28),
                   title: const Text('Não sou um robô',
                       style: TextStyle(fontSize: 14)),
@@ -1297,7 +1297,7 @@ class MaestroDialogs {
                 CheckboxListTile(
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
-                  secondary: Image.asset('assets/icons/ic_recaptcha_logo.png',
+                  secondary: Image.asset('assets/icons/ic_recaptcha_logo.webp',
                       height: 28),
                   title: const Text('Não sou um robô',
                       style: TextStyle(fontSize: 14)),

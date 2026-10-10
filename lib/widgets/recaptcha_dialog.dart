@@ -25,7 +25,7 @@ class RecaptchaDialog {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/icons/ic_recaptcha_logo.png', height: 44),
+                Image.asset('assets/icons/ic_recaptcha_logo.webp', height: 44),
                 const SizedBox(height: 18),
                 const CircularProgressIndicator(color: Color(0xFF12CD0C)),
                 const SizedBox(height: 14),

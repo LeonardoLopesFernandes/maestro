@@ -9,6 +9,7 @@ import '../network/api_service.dart';
 import '../network/session_manager.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/maestro_dialogs.dart';
+import '../widgets/app_icon.dart';
 import 'visualizar_danfe_screen.dart';
 import '../widgets/smartphone_confirmacao_dialog.dart';
 
@@ -436,32 +437,32 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   ({String label, String icon, Color cor, bool tint}) _timelineInfo(String nome) {
     final n = nome.toUpperCase();
     if (n.contains('NOVO') || n.contains('INCLUIDO') || n.contains('CHEGADA'))
-      return (label: 'Chegada', icon: 'assets/icons/criado.png', cor: const Color(0xFF12CD0C), tint: true);
+      return (label: 'Chegada', icon: 'assets/icons/criado.svg', cor: const Color(0xFF12CD0C), tint: true);
     if (n.contains('VISUALIZ'))
-      return (label: 'Visualizado', icon: 'assets/icons/criado.png', cor: const Color(0xFF12CD0C), tint: true);
+      return (label: 'Visualizado', icon: 'assets/icons/criado.svg', cor: const Color(0xFF12CD0C), tint: true);
     if (n.contains('CRIADO'))
-      return (label: 'Criado', icon: 'assets/icons/criado.png', cor: const Color(0xFF12CD0C), tint: true);
+      return (label: 'Criado', icon: 'assets/icons/criado.svg', cor: const Color(0xFF12CD0C), tint: true);
     if (n.contains('SEPARACAO'))
-      return (label: 'Em Separação', icon: 'assets/icons/em_separacao.png', cor: const Color(0xFF00CBFE), tint: true);
+      return (label: 'Em Separação', icon: 'assets/icons/em_separacao.svg', cor: const Color(0xFF00CBFE), tint: true);
     if (n.contains('EDITADO'))
-      return (label: 'Editado', icon: 'assets/icons/editado.png', cor: const Color(0xFFED7D31), tint: false);
+      return (label: 'Editado', icon: 'assets/icons/editado.webp', cor: const Color(0xFFED7D31), tint: false);
     if (n.contains('PRONTO'))
-      return (label: 'Pronto para Retirada', icon: 'assets/icons/pronto_para_retirada.png', cor: const Color(0xFFFFAA02), tint: true);
+      return (label: 'Pronto para Retirada', icon: 'assets/icons/pronto_para_retirada.svg', cor: const Color(0xFFFFAA02), tint: true);
     if (n.contains('ENTREGA'))
-      return (label: 'Saiu para Entrega', icon: 'assets/icons/saiu_para_entrega.png', cor: const Color(0xFFCE00FF), tint: true);
+      return (label: 'Saiu para Entrega', icon: 'assets/icons/saiu_para_entrega.svg', cor: const Color(0xFFCE00FF), tint: true);
     if (n.contains('RETORNAR'))
-      return (label: 'Retornar ao Estoque', icon: 'assets/icons/retornar_para_estoque.png', cor: const Color(0xFFDC2626), tint: true);
+      return (label: 'Retornar ao Estoque', icon: 'assets/icons/retornar_para_estoque.svg', cor: const Color(0xFFDC2626), tint: true);
     if (n.contains('CANCEL'))
-      return (label: 'Cancelado', icon: 'assets/icons/cancelado.png', cor: const Color(0xFFDC2626), tint: true);
+      return (label: 'Cancelado', icon: 'assets/icons/cancelado.svg', cor: const Color(0xFFDC2626), tint: true);
     if (n.contains('DEVOLV'))
-      return (label: 'Devolvido', icon: 'assets/icons/devolvido.png', cor: const Color(0xFFDC2626), tint: true);
+      return (label: 'Devolvido', icon: 'assets/icons/devolvido.svg', cor: const Color(0xFFDC2626), tint: true);
     if (n.contains('ENTREGUE') || n.contains('FINALIZ'))
-      return (label: 'Entregue', icon: 'assets/icons/entregue.png', cor: const Color(0xFF12CD0C), tint: true);
+      return (label: 'Entregue', icon: 'assets/icons/entregue.svg', cor: const Color(0xFF12CD0C), tint: true);
     if (n.contains('AGUARDANDO_SAL'))
-      return (label: 'Aguardando análise do SAL', icon: 'assets/icons/editado.png', cor: const Color(0xFFED7D31), tint: false);
+      return (label: 'Aguardando análise do SAL', icon: 'assets/icons/editado.webp', cor: const Color(0xFFED7D31), tint: false);
     if (n.contains('AGUARDANDO_LOJA'))
-      return (label: 'Aguardando confirmação da loja', icon: 'assets/icons/editado.png', cor: const Color(0xFFED7D31), tint: false);
-    return (label: nome, icon: 'assets/icons/criado.png', cor: const Color(0xFF9CA3AF), tint: true);
+      return (label: 'Aguardando confirmação da loja', icon: 'assets/icons/editado.webp', cor: const Color(0xFFED7D31), tint: false);
+    return (label: nome, icon: 'assets/icons/criado.svg', cor: const Color(0xFF9CA3AF), tint: true);
   }
 
   String _formatarDataBr(String? data) {
@@ -526,7 +527,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                           color: Colors.white,
                         ),
                         child: Center(
-                          child: Image.asset(
+                          child: appIcon(
                             info.icon,
                             width: 30,
                             height: 30,
