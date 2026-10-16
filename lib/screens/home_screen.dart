@@ -737,11 +737,26 @@ class _PedidoListTabState extends State<_PedidoListTab> {
             editado: editado,
             onAnalisarColeta: (opcao) async {
               if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(opcao == 'confirmar'
-                    ? 'Coleta do pedido confirmada!'
-                    : 'Registrado: pedido não coletado.'),
-              ));
+              if (opcao == 'nao_coletado') {
+                try {
+                  await widget.apiService.marcarNaoColetado(
+                      p.origem ?? 'SHIP_FROM_STORE', p.codigoExterno);
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text(
+                        'Registrado: pedido não coletado (aguardando análise do SAL).'),
+                  ));
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Erro ao registrar não coletado: $e'),
+                  ));
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Coleta do pedido confirmada!'),
+                ));
+              }
             },
             onTap: () async {
               await Navigator.of(context).push(

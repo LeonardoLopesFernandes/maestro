@@ -53,6 +53,10 @@ class ApiService {
   Future<void> separarPedido(String origem, String codigoExterno) =>
       _putStatus('api/pedidos/$origem/$codigoExterno/emSeparacao', {});
 
+  /// Analisar coleta: marca o pedido como NÃO COLETADO (aguarda análise do SAL).
+  Future<void> marcarNaoColetado(String origem, String codigoExterno) =>
+      _putStatus('api/pedidos/$origem/$codigoExterno/naoColetado', {});
+
   Future<void> confirmarPedido(
     String origem,
     String codigoExterno, {
