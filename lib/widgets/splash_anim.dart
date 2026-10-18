@@ -48,10 +48,20 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
               height: 200,
               fit: BoxFit.contain,
               repeat: true,
-              errorBuilder: (_, __, ___) => const Icon(
-                Icons.two_wheeler,
-                color: Colors.white,
-                size: 120,
+              errorBuilder: (_, error, __) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.two_wheeler, color: Colors.white, size: 80),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      'Lottie: $error',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white, fontSize: 9),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 12),
