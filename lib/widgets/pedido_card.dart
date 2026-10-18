@@ -35,7 +35,7 @@ class PedidoCard extends StatelessWidget {
         return (texto: 'NOVO', cor: const Color(0xFF12CD0C));
       case 'EM_SEPARACAO':
       case 'SEPARACAO':
-        return (texto: 'Separação', cor: const Color(0xFFFFAA02));
+        return (texto: 'Em Separação', cor: const Color(0xFF00CBFE));
       case 'PRONTO_PARA_SAIR':
       case 'PRONTO':
         return (texto: 'Pronto para Retirada', cor: const Color(0xFFFFAA02));
@@ -112,6 +112,15 @@ class PedidoCard extends StatelessWidget {
     return t;
   }
 
+  Color get _corBorda {
+    if (_separadoComAtraso) return const Color(0xFFDC3545);
+    if (_statusNormalizado.contains('NOVO')) return const Color(0xFF12CD0C);
+    if (_statusNormalizado.contains('SEPARACAO')) {
+      return const Color(0xFF00CBFE);
+    }
+    return const Color(0xFF475569);
+  }
+
   String get _dataFormatada {
     final d = pedido.dataInclusao;
     if (d.isEmpty) return '--/--/---- --:--';
@@ -139,7 +148,7 @@ class PedidoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF475569), width: 1),
+        border: Border.all(color: _corBorda, width: 1),
         boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 3, offset: Offset(0, 1)),
         ],
@@ -180,21 +189,6 @@ class PedidoCard extends StatelessWidget {
                                   ? FontWeight.bold
                                   : FontWeight.normal)),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: badge.cor,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(badge.texto,
-                          style: TextStyle(
-                              color: badge.cor == Colors.transparent
-                                  ? const Color(0xFF1A1A1A)
-                                  : Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold)),
-                    ),
                   ],
                 ),
                 Container(
@@ -202,73 +196,98 @@ class PedidoCard extends StatelessWidget {
                   height: 1,
                   color: const Color(0xFFF1F5F9),
                 ),
-                // Bloco B: tags
-                if (mostraCanal || mostraEntrega || editado || _coletaTardia)
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      if (editado)
-                        const Icon(Icons.edit,
-                            size: 16, color: Color(0xFF2563EB)),
-                      if (mostraCanal)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: _canalAzul
-                                ? const Color(0xFF0086FF)
-                                : const Color(0xFFF80032),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(_canalTexto,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold)),
-                        ),
-                      if (mostraEntrega)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF760018),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(_entregaTexto,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold)),
-                        ),
-                      if (_coletaTardia)
-                        GestureDetector(
-                          onTap: () async {
-                            final op =
-                                await MaestroDialogs.analisarColeta(context);
-                            if (op != null) {
-                              await onAnalisarColeta?.call(op);
-                            }
-                          },
-                          child: Container(
+                // Bloco B: badges (canal, entrega e status na mesma linha)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (editado) ...[
+                          const Icon(Icons.edit,
+                              size: 16, color: Color(0xFF2563EB)),
+                          const SizedBox(width: 6),
+                        ],
+                        if (mostraCanal) ...[
+                          Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.black,
+                              color: _canalAzul
+                                  ? const Color(0xFF0086FF)
+                                  : const Color(0xFFF80032),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Text('Analisar',
-                                style: TextStyle(
+                            child: Text(_canalTexto,
+                                style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold)),
                           ),
+                          const SizedBox(width: 6),
+                        ],
+                        if (mostraEntrega) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF760018),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(_entregaTexto,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: badge.cor,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(badge.texto,
+                              style: TextStyle(
+                                  color: badge.cor == Colors.transparent
+                                      ? const Color(0xFF1A1A1A)
+                                      : Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold)),
                         ),
-                    ],
+                        if (_coletaTardia) ...[
+                          const SizedBox(width: 6),
+                          GestureDetector(
+                            onTap: () async {
+                              final op = await MaestroDialogs.analisarColeta(
+                                  context);
+                              if (op != null) {
+                                await onAnalisarColeta?.call(op);
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.black,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Text('Analisar',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                if (mostraCanal || mostraEntrega || editado || _coletaTardia)
-                  const SizedBox(height: 8),
+                ),
                 // Bloco D: data + valor
                 Row(
                   children: [
@@ -280,8 +299,8 @@ class PedidoCard extends StatelessWidget {
                     Text(
                         'R\$ ${CurrencyFormatter.formatarMoeda(pedido.valorTotal)}',
                         style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
                             color: Color(0xFF16A34A))),
                   ],
                 ),
@@ -434,10 +453,10 @@ class _DuracaoSeparacaoState extends State<_DuracaoSeparacao> {
                 fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF555555))),
         const SizedBox(height: 4),
         Container(
-          height: 8,
+          height: 6,
           decoration: BoxDecoration(
             color: const Color(0xFFE5E7EB),
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(3),
           ),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
@@ -445,7 +464,7 @@ class _DuracaoSeparacaoState extends State<_DuracaoSeparacao> {
             child: Container(
               decoration: BoxDecoration(
                 color: cor,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(3),
               ),
             ),
           ),
