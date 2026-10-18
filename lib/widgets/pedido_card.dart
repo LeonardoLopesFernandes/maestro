@@ -234,7 +234,7 @@ class PedidoCard extends StatelessWidget {
                                 horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                               color: const Color(0xFF760018),
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(_entregaTexto,
                                 style: const TextStyle(
@@ -246,7 +246,7 @@ class PedidoCard extends StatelessWidget {
                         ],
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 3),
+                              horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
                             color: badge.cor,
                             borderRadius: BorderRadius.circular(20),
