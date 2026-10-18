@@ -60,7 +60,7 @@ jobs:
           echo "code=$RUN_NUMBER" >> "$GITHUB_OUTPUT"
 
       - name: Build release APK (split arm64-v8a)
-        run: flutter build apk --split-per-abi --target-platform android-arm64 --build-number=${{ steps.version.outputs.code }} --build-name="${{ steps.version.outputs.name }}"
+        run: flutter build apk --split-per-abi --target-platform android-arm64 --obfuscate --split-debug-info=build/symbols --build-number=${{ steps.version.outputs.code }} --build-name="${{ steps.version.outputs.name }}"
 
       - name: Renomear APK
         run: cp build/app/outputs/flutter-apk/*arm64-v8a*.apk build/app/outputs/flutter-apk/maestro-release.apk && ls -la build/app/outputs/flutter-apk/maestro-release.apk
