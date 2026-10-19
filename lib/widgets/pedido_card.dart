@@ -68,17 +68,33 @@ class PedidoCard extends StatelessWidget {
       _statusNormalizado.contains('NOVO') ||
       _statusNormalizado.contains('SEPARACAO');
 
-  // Cor do outline do card conforme a situação do pedido (cor da aba).
-  Color get _corOutline {
+  // Data/hora em que o pedido saiu para entrega (timeline), com fallback
+  // para dataAlteracao. Pedidos antigos presos nesse status (bug da API)
+  // não devem ser tratados como rota atual.
+  DateTime? get _saidaEntregaEm {
+    DateTime? saida;
+    for (final t in pedido.timelines) {
+      final n = (t.nome ?? '').toUpperCase();
+      if (!n.contains('ENTREGA') || n.contains('ENTREGUE')) continue;
+      final d = DateTime.tryParse(t.data ?? '');
+      if (d == null) continue;
+      final local = d.toLocal();
+      if (saida == null || local.isAfter(saida)) saida = local;
+    }
+    if (saida == null) {
+      final alt = DateTime.tryParse(pedido.dataAlteracao ?? '');
+      if (alt != null) saida = alt.toLocal();
+    }
+    return saida;
+  }
+
+  bool get _emRotaHoje {
     final s = _statusNormalizado;
-    if (s.contains('NOVO')) return const Color(0xFF12CD0C);
-    if (s.contains('SEPARACAO') || s.contains('EDITADO')) {
-      return const Color(0xFF00CBFE);
-    }
-    if (s.contains('SAIU_PARA_ENTREGA') || s.contains('ROTA')) {
-      return const Color(0xFFCE00FF);
-    }
-    return const Color(0xFF475569);
+    if (!s.contains('SAIU_PARA_ENTREGA') && !s.contains('ROTA')) return false;
+    final d = _saidaEntregaEm;
+    if (d == null) return false;
+    final now = DateTime.now();
+    return d.year == now.year && d.month == now.month && d.day == now.day;
   }
 
   bool get _separadoComAtraso {
@@ -86,6 +102,18 @@ class PedidoCard extends StatelessWidget {
     final tc = pedido.tempoConfirmacao;
     if (tc == null || tc <= 0) return false;
     return tc > 35 * 60 * 1000;
+  }
+
+  // Cor do outline do card conforme a situação do pedido (cor da aba).
+  Color get _corOutline {
+    final s = _statusNormalizado;
+    if (s.contains('NOVO')) return const Color(0xFF12CD0C);
+    if (s.contains('SEPARACAO') || s.contains('EDITADO')) {
+      return const Color(0xFF00CBFE);
+    }
+    if (_emRotaHoje) return const Color(0xFFCE00FF);
+    if (_separadoComAtraso) return const Color(0xFFDC3545);
+    return const Color(0xFF475569);
   }
 
   // Ícone no card quando o pedido está parado (PRONTO) há mais de 3 dias.
