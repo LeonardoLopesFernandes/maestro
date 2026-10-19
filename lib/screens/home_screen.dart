@@ -80,6 +80,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+    });
     _carregarCounts();
     // Polling em tempo real: atualiza os counts E recarrega a lista da aba
     // visível, para os pedidos aparecerem sem pull-to-refresh.

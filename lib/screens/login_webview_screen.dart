@@ -60,6 +60,9 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
             _garantirSelectAccount(url);
           },
           onPageFinished: (url) async {
+            // Evita que o teclado suba sozinho quando a página (ex.: login
+            // Microsoft) foca um campo automaticamente.
+            SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
             if (!_loginConcluido) {
               final token = await _capturarToken();
               if (token != null) _salvarToken(token);
@@ -353,6 +356,8 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
     }
     // Navega para a home.
     if (mounted) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
       Navigator.of(context).pushReplacementNamed('/home');
     }
   }

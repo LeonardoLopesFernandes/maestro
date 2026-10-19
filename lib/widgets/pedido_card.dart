@@ -32,7 +32,7 @@ class PedidoCard extends StatelessWidget {
     switch (_statusNormalizado) {
       case 'NOVO_PEDIDO':
       case 'NOVO':
-        return (texto: 'NOVO', cor: const Color(0xFF12CD0C));
+        return (texto: 'Novo pedido', cor: const Color(0xFF12CD0C));
       case 'EM_SEPARACAO':
       case 'SEPARACAO':
         return (texto: 'Separação', cor: const Color(0xFFFFAA02));
@@ -67,6 +67,19 @@ class PedidoCard extends StatelessWidget {
   bool get _mostraDuracao =>
       _statusNormalizado.contains('NOVO') ||
       _statusNormalizado.contains('SEPARACAO');
+
+  // Cor do outline do card conforme a situação do pedido (cor da aba).
+  Color get _corOutline {
+    final s = _statusNormalizado;
+    if (s.contains('NOVO')) return const Color(0xFF12CD0C);
+    if (s.contains('SEPARACAO') || s.contains('EDITADO')) {
+      return const Color(0xFF00CBFE);
+    }
+    if (s.contains('SAIU_PARA_ENTREGA') || s.contains('ROTA')) {
+      return const Color(0xFFCE00FF);
+    }
+    return const Color(0xFF475569);
+  }
 
   bool get _separadoComAtraso {
     if (!_statusNormalizado.contains('PRONTO')) return false;
@@ -139,7 +152,7 @@ class PedidoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF475569), width: 1),
+        border: Border.all(color: _corOutline, width: 1),
         boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 3, offset: Offset(0, 1)),
         ],
