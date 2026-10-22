@@ -952,7 +952,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           children: [
             Expanded(
               child: _badgeAcao(
-                  'RETIRAR PEDIDO', const Color(0xFFFFAA02), _acaoRetirar),
+                  'RETIRAR PEDIDO', const Color(0xFFFFAA02), _acaoRetirar,
+                  inicio: const Icon(Icons.arrow_forward,
+                      color: Colors.white, size: 18),
+                  fim: appIcon('assets/icons/retirar_pedido.svg',
+                      width: 20, height: 20, color: Colors.white)),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -964,14 +968,20 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         ));
       } else {
         badges.add(_badgeAcao(
-            'RETIRAR PEDIDO', const Color(0xFFFFAA02), _acaoRetirar));
+            'RETIRAR PEDIDO', const Color(0xFFFFAA02), _acaoRetirar,
+            inicio: const Icon(Icons.arrow_forward,
+                color: Colors.white, size: 18),
+            fim: appIcon('assets/icons/retirar_pedido.svg',
+                width: 20, height: 20, color: Colors.white)));
       }
     } else if (s.contains('ENTREGA')) {
       badges.add(_badgeAcao(
           'ENTREGADOR VOLTOU', const Color(0xFFF80032), _acaoEntregadorVoltou));
     } else if (s.contains('RETORNAR')) {
-      badges.add(_badgeAcao('RETORNAR AO ESTOQUE', const Color(0xFFF80032),
-          _acaoDevolverEstoque));
+      badges.add(_badgeAcao('DEVOLVER PARA ESTOQUE', const Color(0xFFF80032),
+          _acaoDevolverEstoque,
+          fim: appIcon('assets/icons/devolver_estoque.svg',
+              width: 20, height: 20, color: Colors.white)));
     } else if (s.contains('FINALIZADO')) {
       badges.add(_badgeAcao(
           'DEVOLVIDO', const Color(0xFFF80032), _acaoCancelarHistorico,
@@ -1131,7 +1141,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       );
 
   Widget _badgeAcao(String texto, Color cor, VoidCallback onTap,
-          {double raio = 8}) =>
+          {double raio = 8, Widget? inicio, Widget? fim}) =>
       Container(
         width: double.infinity,
         height: 48,
@@ -1143,11 +1153,30 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             borderRadius: BorderRadius.circular(raio),
             onTap: onTap,
             child: Center(
-              child: Text(texto,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (inicio != null) ...[
+                        inicio,
+                        const SizedBox(width: 8),
+                      ],
+                      Text(texto,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold)),
+                      if (fim != null) ...[
+                        const SizedBox(width: 8),
+                        fim,
+                      ],
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ),
