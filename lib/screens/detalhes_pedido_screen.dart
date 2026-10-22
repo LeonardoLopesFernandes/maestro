@@ -955,8 +955,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                   'RETIRAR PEDIDO', const Color(0xFFFFAA02), _acaoRetirar,
                   inicio: const Icon(Icons.arrow_forward,
                       color: Colors.white, size: 18),
-                  fim: appIcon('assets/icons/retirar_pedido.svg',
-                      width: 20, height: 20, color: Colors.white)),
+                  fim: appIcon('assets/icons/retirar.png',
+                      width: 22, height: 22, color: Colors.white)),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -971,8 +971,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             'RETIRAR PEDIDO', const Color(0xFFFFAA02), _acaoRetirar,
             inicio: const Icon(Icons.arrow_forward,
                 color: Colors.white, size: 18),
-            fim: appIcon('assets/icons/retirar_pedido.svg',
-                width: 20, height: 20, color: Colors.white)));
+            fim: appIcon('assets/icons/retirar.png',
+                width: 22, height: 22, color: Colors.white)));
       }
     } else if (s.contains('ENTREGA')) {
       badges.add(_badgeAcao(
@@ -980,8 +980,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     } else if (s.contains('RETORNAR')) {
       badges.add(_badgeAcao('DEVOLVER PARA ESTOQUE', const Color(0xFFF80032),
           _acaoDevolverEstoque,
-          fim: appIcon('assets/icons/devolver_estoque.svg',
-              width: 20, height: 20, color: Colors.white)));
+          fim: appIcon('assets/icons/devolver.png',
+              width: 22, height: 22, color: Colors.white)));
     } else if (s.contains('FINALIZADO')) {
       badges.add(_badgeAcao(
           'DEVOLVIDO', const Color(0xFFF80032), _acaoCancelarHistorico,
