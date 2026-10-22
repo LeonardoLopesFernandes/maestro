@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
@@ -1852,12 +1853,23 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           .toList();
     }
 
+    void _copiarEan(String? ean) {
+      final valor = (ean ?? '').trim();
+      if (valor.isEmpty) return;
+      Clipboard.setData(ClipboardData(text: valor));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('EAN copiado: $valor'),
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    }
+
     @override
     Widget build(BuildContext context) {
       final i = widget.item;
       final alterado = i.foiAlterado;
-      final recusado = i.foiRecusado;
-      final corItem = recusado
+      final recusado = i.foiRecusado;      final corItem = recusado
           ? const Color(0xFFDC2626)
           : alterado
               ? const Color(0xFFDC2626)
@@ -1893,9 +1905,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                               fontWeight: FontWeight.bold,
                               color: corItem)),
                       InkWell(
-                        onTap: _secundarios.isNotEmpty
-                            ? () => setState(() => _expanded = !_expanded)
-                            : null,
+                        onTap: () => _copiarEan(i.codigoEAN),
                         child: Row(
                           children: [
                             Expanded(
@@ -1903,15 +1913,22 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                                   style: TextStyle(
                                       fontSize: 11, color: corSecundaria)),
                             ),
-                            if (_secundarios.isNotEmpty)
+                            if ((i.codigoEAN ?? '').isNotEmpty)
+                              const Icon(Icons.copy,
+                                  size: 13, color: Color(0xFF9CA3AF)),
+                            if (_secundarios.isNotEmpty) ...[
                               const SizedBox(width: 6),
-                            if (_secundarios.isNotEmpty)
-                              Icon(
-                                  _expanded
-                                      ? Icons.keyboard_arrow_up
-                                      : Icons.keyboard_arrow_down,
-                                  size: 16,
-                                  color: const Color(0xFF6B7280)),
+                              GestureDetector(
+                                onTap: () =>
+                                    setState(() => _expanded = !_expanded),
+                                child: Icon(
+                                    _expanded
+                                        ? Icons.keyboard_arrow_up
+                                        : Icons.keyboard_arrow_down,
+                                    size: 16,
+                                    color: const Color(0xFF6B7280)),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -1921,10 +1938,13 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: _secundarios
-                                .map((e) => Text('EAN: $e',
-                                    style: TextStyle(
-                                        fontSize: 11,
-                                        color: corSecundaria)))
+                                .map((e) => InkWell(
+                                      onTap: () => _copiarEan(e),
+                                      child: Text('EAN: $e',
+                                          style: TextStyle(
+                                              fontSize: 11,
+                                              color: corSecundaria)),
+                                    ))
                                 .toList(),
                           ),
                         ),
