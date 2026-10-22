@@ -995,16 +995,19 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
 
     // Histórico: entregues/devolvidos (e finalizados/cancelados) podem ter as
     // duas NFs — a nota fiscal e a nota fiscal de devolução.
-    final ehHistorico = s.contains('FINALIZADO') ||
-        s.contains('ENTREGUE') ||
-        s.contains('DEVOLV') ||
-        s.contains('CANCEL') ||
-        s.contains('RETORNAR');
+    // Na aba Retornar para Estoque fica somente o badge DEVOLVER PARA ESTOQUE.
+    final ehRetornar = s.contains('RETORNAR');
+    final ehHistorico = !ehRetornar &&
+        (s.contains('FINALIZADO') ||
+            s.contains('ENTREGUE') ||
+            s.contains('DEVOLV') ||
+            s.contains('CANCEL'));
     // NOTA FISCAL (nfe.png): somente no histórico
     final temNota =
         (_pedido.notaFiscalChave ?? '').isNotEmpty && ehHistorico;
     // NOTA FISCAL DE DEVOLUÇÃO (nfe_dev.png): quando houver NF de devolução
-    final temNotaDev = (_pedido.notaFiscalDevolucaoChave ?? '').isNotEmpty;
+    final temNotaDev = (_pedido.notaFiscalDevolucaoChave ?? '').isNotEmpty &&
+        !ehRetornar;
 
     final notas = <Widget>[
       if (temNota) _badgeAcaoNotaFiscal(),
