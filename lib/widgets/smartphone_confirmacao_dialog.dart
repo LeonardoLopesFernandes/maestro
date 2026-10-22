@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/pedido.dart';
 import '../screens/scanner_imei_screen.dart';
 
+/// Diálogo de confirmação de pedido (smartphones) com o layout de referência:
+/// cabeçalho vermelho, cards de produto, controle de quantidade e campo IMEI
+/// com leitor de câmera.
 class SmartphoneConfirmacaoDialog extends StatefulWidget {
   final Pedido pedido;
-  final void Function(Map<String, int> quantidades, Map<String, List<String>> imeis)
-      onConfirm;
+  final void Function(
+      Map<String, int> quantidades, Map<String, List<String>> imeis) onConfirm;
   final VoidCallback onCancel;
 
   const SmartphoneConfirmacaoDialog({
@@ -22,9 +26,12 @@ class SmartphoneConfirmacaoDialog extends StatefulWidget {
 
 class _SmartphoneConfirmacaoDialogState
     extends State<SmartphoneConfirmacaoDialog> {
-  int _screen = 1;
+  static const Color red700 = Color(0xFFC62828);
+  static const Color red600 = Color(0xFFD32F2F);
+  static const Color red50 = Color(0xFFFFEBEE);
+  static const Color red100 = Color(0xFFFFCDD2);
+
   final Map<String, int> _qtd = {};
-  final Map<String, TextEditingController> _qtyCtrls = {};
   final Map<String, List<TextEditingController>> _imeiCtrls = {};
 
   List<Item> get _itens =>
@@ -38,17 +45,16 @@ class _SmartphoneConfirmacaoDialogState
     for (final it in _itens) {
       final k = _key(it);
       _qtd[k] = it.quantidade;
-      _qtyCtrls[k] =
-          TextEditingController(text: it.quantidade.toString());
       _ensureImeiCtrls(k, it, it.quantidade);
     }
   }
 
   @override
   void dispose() {
-    for (final c in _qtyCtrls.values) c.dispose();
     for (final l in _imeiCtrls.values) {
-      for (final c in l) c.dispose();
+      for (final c in l) {
+        c.dispose();
+      }
     }
     super.dispose();
   }
@@ -56,7 +62,13 @@ class _SmartphoneConfirmacaoDialogState
   void _ensureImeiCtrls(String k, Item it, int qtd) {
     final count = qtd * it.quantidadeImeis;
     final list = _imeiCtrls.putIfAbsent(k, () => []);
-    while (list.length < count) list.add(TextEditingController());
+    while (list.length < count) {
+      final c = TextEditingController();
+      c.addListener(() {
+        if (mounted) setState(() {});
+      });
+      list.add(c);
+    }
     while (list.length > count) {
       list.last.dispose();
       list.removeLast();
@@ -66,23 +78,25 @@ class _SmartphoneConfirmacaoDialogState
   List<String> _imeisOf(String k) =>
       _imeiCtrls[k]?.map((c) => c.text.trim()).toList() ?? [];
 
-  Future<void> _scan() async {
+  void _alterarQtd(String k, Item it, int nova) {
+    final clamped = nova < 1 ? 1 : (nova > it.quantidade ? it.quantidade : nova);
+    _qtd[k] = clamped;
+    _ensureImeiCtrls(k, it, clamped);
+    setState(() {});
+  }
+
+  Future<void> _scanInto(String k, int index) async {
     final imei = await Navigator.of(context)
         .push<String>(MaterialPageRoute(builder: (_) => const ScannerImeiScreen()));
     if (imei == null || imei.isEmpty) return;
-    for (final k in _imeiCtrls.keys) {
-      for (final c in _imeiCtrls[k]!) {
-        if (c.text.trim().isEmpty) {
-          c.text = imei;
-          setState(() {});
-          return;
-        }
-      }
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Não há campos de IMEI livres')),
-    );
+    final list = _imeiCtrls[k];
+    if (list == null || index >= list.length) return;
+    list[index].text = imei;
+    setState(() {});
   }
+
+  void _snack(String m) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
 
   bool _validar() {
     for (final it in _itens) {
@@ -106,9 +120,6 @@ class _SmartphoneConfirmacaoDialogState
     return true;
   }
 
-  void _snack(String m) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
-
   void _confirmar() {
     if (!_validar()) return;
     final imeis = <String, List<String>>{};
@@ -119,141 +130,143 @@ class _SmartphoneConfirmacaoDialogState
     widget.onConfirm(Map.from(_qtd), imeis);
   }
 
-  void _onQtdChanged(String k, Item it, String text) {
-    final nova = int.tryParse(text) ?? 0;
-    final clamped = nova > it.quantidade ? it.quantidade : nova;
-    if (nova != clamped) {
-      final c = _qtyCtrls[k];
-      if (c != null) {
-        c.text = clamped.toString();
-        c.selection = TextSelection.collapsed(offset: c.text.length);
-      }
-    }
-    _qtd[k] = clamped;
-    _ensureImeiCtrls(k, it, clamped);
-    setState(() {});
+  void _cancelar() {
+    Navigator.of(context).pop();
+    widget.onCancel();
   }
 
   @override
   Widget build(BuildContext context) {
+    final numero = widget.pedido.codigoExterno.isNotEmpty
+        ? widget.pedido.codigoExterno
+        : widget.pedido.numero;
+
     return Dialog(
-      insetPadding:
-          const EdgeInsets.symmetric(horizontal: 4, vertical: 24),
-      backgroundColor: Colors.transparent,
-      child: _screen == 1 ? _buildScreen1() : _buildScreen2(),
-    );
-  }
-
-  Widget _buildScreen1() {
-    return Stack(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-              color: Colors.white, borderRadius: BorderRadius.circular(12)),
-          constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.85),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE31837),
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(12)),
-                ),
-                width: double.infinity,
-                child: Text(
-                  'Confirmação de Pedido - ${widget.pedido.codigoExterno}',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: 380,
+          maxHeight: MediaQuery.of(context).size.height * 0.88,
+        ),
+        color: Colors.white,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Cabeçalho
+            Container(
+              color: red700,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Confirmação de Pedido',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Nº $numero',
+                        style: TextStyle(
+                          color: Colors.red.shade100.withOpacity(0.9),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close,
+                        color: Colors.white, size: 20),
+                    onPressed: _cancelar,
+                    splashRadius: 20,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+            ),
+            // Conteúdo
+            Flexible(
+              child: Container(
+                color: const Color(0xFFFAFAFA),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: _itens.map(_buildItem).toList(),
+                  ),
                 ),
               ),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(12),
-                  children: _itens.map(_buildItem).toList(),
-                ),
+            ),
+            // Rodapé
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: Colors.grey.shade200)),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Row(
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        widget.onCancel();
-                      },
-                      child: const Text('FECHAR',
-                          style: TextStyle(color: Colors.grey)),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _cancelar,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        foregroundColor: const Color(0xFF374151),
+                      ),
+                      child: const Text(
+                        'CANCELAR',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
                     ),
-                    const Spacer(),
-                    ElevatedButton(
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _confirmar,
                       style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF12CD0C)),
-                      onPressed: () {
-                        if (_validar()) setState(() => _screen = 2);
-                      },
-                      child: const Text('CONFIRMAR',
-                          style: TextStyle(color: Colors.white)),
+                        backgroundColor: red600,
+                        foregroundColor: Colors.white,
+                        elevation: 2,
+                        shadowColor: red600.withOpacity(0.4),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'CONFIRMAR',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        Positioned(
-          right: 12,
-          bottom: 70,
-          child: FloatingActionButton(
-            backgroundColor: const Color(0xFFE31837),
-            onPressed: _scan,
-            child: const Icon(Icons.barcode_reader, color: Colors.white),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildScreen2() {
-    var total = 0;
-    for (final v in _qtd.values) total += v;
-    return Container(
-      decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(12)),
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('Confirmação',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          const Text('Total de itens confirmados:'),
-          const SizedBox(height: 8),
-          Text('$total',
-              style: const TextStyle(
-                  fontSize: 32, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              TextButton(
-                onPressed: () => setState(() => _screen = 1),
-                child: const Text('FECHAR',
-                    style: TextStyle(color: Colors.grey)),
-              ),
-              const Spacer(),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF12CD0C)),
-                onPressed: _confirmar,
-                child: const Text('SIM',
-                    style: TextStyle(color: Colors.white)),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
@@ -269,131 +282,275 @@ class _SmartphoneConfirmacaoDialogState
     var codigoStr = '';
     if (ean.isNotEmpty) codigoStr += 'EAN: $ean';
     if (sap.isNotEmpty) {
-      if (codigoStr.isNotEmpty) codigoStr += ' / ';
+      if (codigoStr.isNotEmpty) codigoStr += '  |  ';
       codigoStr += 'SAP: $sap';
     }
 
-    return Card(
-      color: alterado ? const Color(0xFFFFF1F1) : Colors.white,
-      shape: RoundedRectangleBorder(
-          side: BorderSide(
-              color: alterado ? const Color(0xFFE61937) : Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(8)),
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Checkbox(
-                  value: true,
-                  onChanged: null,
-                  activeColor: alterado
-                      ? const Color(0xFFE61937)
-                      : const Color(0xFF2E7D32),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Card do produto
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: alterado ? red600 : red100),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
-                Text('${qtdMax}x',
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(width: 8),
-                Expanded(
-                    child: Text(it.descricao ?? 'Sem descrição',
-                        style: const TextStyle(fontWeight: FontWeight.w600))),
               ],
             ),
-            if (codigoStr.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(left: 36, bottom: 4),
-                child: Text(codigoStr,
-                    style: const TextStyle(
-                        color: Colors.grey, fontSize: 12)),
-              ),
-            if (it.estoque != null)
-              Padding(
-                padding: const EdgeInsets.only(left: 36, bottom: 4),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(10)),
-                  child: Text('Estoque: ${it.estoque}',
-                      style: const TextStyle(fontSize: 11)),
-                ),
-              ),
-            Row(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  onPressed: qtdAtual > 1
-                      ? () {
-                          final nova = qtdAtual - 1;
-                          _qtyCtrls[k]?.text = nova.toString();
-                          _qtd[k] = nova;
-                          _ensureImeiCtrls(k, it, nova);
-                          setState(() {});
-                        }
-                      : null,
-                  icon: const Icon(Icons.remove_circle_outline),
+                const Padding(
+                  padding: EdgeInsets.only(top: 2),
+                  child: Icon(Icons.check_box_rounded,
+                      color: red600, size: 22),
                 ),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: TextField(
-                    controller: _qtyCtrls[k],
-                    keyboardType: TextInputType.number,
-                    textAlign: TextAlign.center,
-                    decoration:
-                        const InputDecoration(isDense: true),
-                    onChanged: (t) => _onQtdChanged(k, it, t),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        it.descricao ?? 'Sem descrição',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF111827),
+                          height: 1.2,
+                        ),
+                      ),
+                      if (codigoStr.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          codigoStr,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                      if (it.estoque != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: red50,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: red100),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.inventory_2_outlined,
+                                  size: 14, color: Color(0xFFB71C1C)),
+                              const SizedBox(width: 6),
+                              RichText(
+                                text: TextSpan(
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFFB71C1C),
+                                  ),
+                                  children: [
+                                    const TextSpan(text: 'Estoque: '),
+                                    TextSpan(
+                                      text: '${it.estoque}',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],
             ),
-            if (it.quantidadeImeis > 0) ...[
-              const Divider(),
-              Text(
-                it.quantidadeImeis == 1
-                    ? 'IMEI do aparelho'
-                    : 'IMEIs dos aparelhos',
-                style: const TextStyle(
-                    fontWeight: FontWeight.w600, fontSize: 13),
-              ),
-              const SizedBox(height: 6),
-              ...List.generate(imeiCount, (i) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+          ),
+          const SizedBox(height: 20),
+          // Quantidade
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Quantidade',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF374151),
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
                   child: Row(
                     children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove, size: 16),
+                        color: Colors.grey.shade700,
+                        constraints: const BoxConstraints(
+                            minWidth: 36, minHeight: 36),
+                        padding: EdgeInsets.zero,
+                        onPressed: qtdAtual > 1
+                            ? () => _alterarQtd(k, it, qtdAtual - 1)
+                            : null,
+                      ),
                       SizedBox(
                         width: 36,
-                        child: Text('${i + 1}',
-                            style: const TextStyle(
-                                color: Colors.grey, fontSize: 12),
-                            textAlign: TextAlign.end),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextField(
-                          controller: _imeiCtrls[k]![i],
-                          keyboardType: TextInputType.number,
-                          maxLength: 15,
-                          decoration: InputDecoration(
-                            isDense: true,
-                            hintText: 'IMEI ${i + 1}',
-                            border: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: alterado
-                                        ? const Color(0xFFE61937)
-                                        : Colors.grey)),
+                        child: Text(
+                          '$qtdAtual',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1F2937),
                           ),
                         ),
                       ),
+                      IconButton(
+                        icon: const Icon(Icons.add, size: 16),
+                        color: Colors.grey.shade700,
+                        constraints: const BoxConstraints(
+                            minWidth: 36, minHeight: 36),
+                        padding: EdgeInsets.zero,
+                        onPressed: qtdAtual < qtdMax
+                            ? () => _alterarQtd(k, it, qtdAtual + 1)
+                            : null,
+                      ),
                     ],
                   ),
-                );
-              }),
-            ],
-          ],
-        ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          // IMEI(s)
+          Text(
+            it.quantidadeImeis == 1 && imeiCount == 1
+                ? 'IMEI do aparelho'
+                : 'IMEIs dos aparelhos',
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF374151),
+            ),
+          ),
+          const SizedBox(height: 6),
+          ...List.generate(imeiCount, (i) {
+            final ctrl = _imeiCtrls[k]![i];
+            return Padding(
+              padding: EdgeInsets.only(bottom: i == imeiCount - 1 ? 0 : 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (imeiCount > 1) ...[
+                    Text(
+                      'IMEI ${i + 1}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+                  TextField(
+                    controller: ctrl,
+                    keyboardType: TextInputType.number,
+                    maxLength: 15,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    style: const TextStyle(fontSize: 14),
+                    buildCounter: (context,
+                            {required currentLength,
+                            required isFocused,
+                            maxLength}) =>
+                        null,
+                    decoration: InputDecoration(
+                      hintText: 'Digite ou escaneie o IMEI',
+                      hintStyle: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 14,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                      prefixIcon: Icon(
+                        Icons.qr_code_2_rounded,
+                        color: Colors.grey.shade400,
+                        size: 20,
+                      ),
+                      suffixIcon: Container(
+                        margin: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: red50,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.camera_alt_outlined,
+                              size: 16, color: red600),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                              minWidth: 32, minHeight: 32),
+                          onPressed: () => _scanInto(k, i),
+                        ),
+                      ),
+                      fillColor: Colors.white,
+                      filled: true,
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: red600, width: 2),
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '${ctrl.text.length}/15',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
