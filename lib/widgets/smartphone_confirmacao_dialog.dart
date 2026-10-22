@@ -122,6 +122,13 @@ class _SmartphoneConfirmacaoDialogState
   void _onQtdChanged(String k, Item it, String text) {
     final nova = int.tryParse(text) ?? 0;
     final clamped = nova > it.quantidade ? it.quantidade : nova;
+    if (nova != clamped) {
+      final c = _qtyCtrls[k];
+      if (c != null) {
+        c.text = clamped.toString();
+        c.selection = TextSelection.collapsed(offset: c.text.length);
+      }
+    }
     _qtd[k] = clamped;
     _ensureImeiCtrls(k, it, clamped);
     setState(() {});
