@@ -32,15 +32,38 @@ class _ScannerImeiScreenState extends State<ScannerImeiScreen> {
     super.dispose();
   }
 
+  String? _imeiFromRaw(String raw) {
+    var digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.length == 16 && digits.startsWith('0')) {
+      digits = digits.substring(1);
+    }
+    if (digits.length > 15) digits = digits.substring(0, 15);
+    if (digits.length == 14) digits += _luhn(digits);
+    return digits.length == 15 ? digits : null;
+  }
+
+  String _luhn(String d14) {
+    var soma = 0;
+    for (var i = 0; i < d14.length; i++) {
+      var n = int.parse(d14[d14.length - 1 - i]);
+      if (i.isEven) {
+        n *= 2;
+        if (n > 9) n -= 9;
+      }
+      soma += n;
+    }
+    return ((10 - (soma % 10)) % 10).toString();
+  }
+
   void _onDetect(BarcodeCapture capture) {
     if (_popped) return;
     for (final barcode in capture.barcodes) {
       final raw = barcode.rawValue;
       if (raw == null || raw.isEmpty) continue;
-      final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
-      if (digits.length >= 15) {
+      final imei = _imeiFromRaw(raw);
+      if (imei != null) {
         _popped = true;
-        Navigator.pop(context, digits.substring(0, 15));
+        Navigator.pop(context, imei);
         return;
       }
     }
