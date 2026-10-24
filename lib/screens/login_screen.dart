@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
     Future.delayed(const Duration(seconds: 1), () {
       if (!mounted) return;
-      _abrirWebView(autoLogin: true);
+      _abrirWebView(autoLogin: false);
     });
   }
 
@@ -163,20 +163,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             width: 320,
                             child: Column(
                               children: [
-                                _campo(
-                                  controller: _emailController,
-                                  hint: 'E-mail institucional',
-                                  keyboardType:
-                                      TextInputType.emailAddress,
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'americanas.io',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                                const SizedBox(height: 15),
-                                _campo(
-                                  controller: _senhaController,
-                                  hint: 'Senha',
-                                  obscure: !_senhaVisivel,
-                                  mostrarOlho: true,
-                                ),
-                                const SizedBox(height: 40),
+                                const SizedBox(height: 16),
                                 SizedBox(
                                   width: double.infinity,
                                   height: 60,
