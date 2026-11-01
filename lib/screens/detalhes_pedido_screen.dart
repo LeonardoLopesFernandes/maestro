@@ -1914,22 +1914,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                         ),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Text(i.descricao ?? '',
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: corItem)),
-                              ),
-                              const SizedBox(width: 6),
-                              Icon(Icons.image_outlined,
-                                  size: 15,
-                                  color: corItem.withValues(alpha: 0.55)),
-                            ],
-                          ),
+                          child: Text(i.descricao ?? '',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: corItem)),
                         ),
                       ),
                       InkWell(

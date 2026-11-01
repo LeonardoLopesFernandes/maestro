@@ -59,8 +59,8 @@ class _ProdutoImagemDialogState extends State<_ProdutoImagemDialog> {
     String? url;
     String? fonte;
 
+    // 1) API da Americanas (BFF) — imagem oficial.
     if (widget.ean.isNotEmpty) {
-      // 1) API da Americanas (BFF) — imagem oficial.
       try {
         final produto =
             await AmericanasBff.getProduct(widget.ean, store: widget.loja);
@@ -70,31 +70,36 @@ class _ProdutoImagemDialogState extends State<_ProdutoImagemDialog> {
           fonte = 'Americanas';
         }
       } catch (_) {}
+    }
 
-      // 2) API de busca de imagem (Bluesoft + Google Images).
-      if (url == null) {
+    // 2) API de busca de imagem: Bluesoft + Google Images.
+    if (url == null && widget.ean.isNotEmpty) {
+      try {
+        final u = await SerpApiImageSearch.searchImageByEan(
+            widget.ean, widget.descricao);
+        if (u != null && u.isNotEmpty) {
+          url = u;
+          fonte = 'Bluesoft / Google Imagens';
+        }
+      } catch (_) {}
+    }
+
+    // 3) ImageSearchApi (Google Shopping) — descrição ou EAN.
+    if (url == null) {
+      final query =
+          widget.descricao.isNotEmpty ? widget.descricao : widget.ean;
+      if (query.isNotEmpty) {
         try {
-          final u = await SerpApiImageSearch.searchImageByEan(
-              widget.ean, widget.descricao);
-          if (u != null && u.isNotEmpty) {
-            url = u;
-            fonte = 'Busca de imagem';
+          final resultados = await ImageSearchApi.searchByText(query);
+          for (final r in resultados) {
+            if (r.imageUrl.trim().isNotEmpty) {
+              url = r.imageUrl.trim();
+              fonte = 'ImageSearchApi';
+              break;
+            }
           }
         } catch (_) {}
       }
-    } else if (widget.descricao.isNotEmpty) {
-      // Sem EAN: busca por descrição no Google Shopping.
-      try {
-        final resultados =
-            await ImageSearchApi.searchByText(widget.descricao);
-        for (final r in resultados) {
-          if (r.imageUrl.trim().isNotEmpty) {
-            url = r.imageUrl.trim();
-            fonte = 'Busca por descrição';
-            break;
-          }
-        }
-      } catch (_) {}
     }
 
     if (!mounted) return;
