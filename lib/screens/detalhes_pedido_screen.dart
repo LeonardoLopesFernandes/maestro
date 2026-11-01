@@ -13,6 +13,7 @@ import '../widgets/maestro_dialogs.dart';
 import '../widgets/app_icon.dart';
 import 'visualizar_danfe_screen.dart';
 import '../widgets/smartphone_confirmacao_dialog.dart';
+import '../widgets/produto_imagem_dialog.dart';
 
 const int _cinzaBorda = 0xFF475569;
 const int _bgTela = 0xFFF5F5F5;
@@ -780,7 +781,10 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         ),
       );
 
-  Widget _itemRow(Item i) => _ItemRowDetalhe(item: i);
+  Widget _itemRow(Item i) => _ItemRowDetalhe(
+        item: i,
+        loja: widget.session.getUserStore() ?? 'L291',
+      );
 
   Future<void> _ligar(String numero) async {
     final limpo = numero.replaceAll(RegExp(r'[^0-9+]'), '');
@@ -1835,7 +1839,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
 
   class _ItemRowDetalhe extends StatefulWidget {
     final Item item;
-    const _ItemRowDetalhe({required this.item});
+    final String loja;
+    const _ItemRowDetalhe({required this.item, required this.loja});
     @override
     State<_ItemRowDetalhe> createState() => _ItemRowDetalheState();
   }
@@ -1899,11 +1904,34 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(i.descricao ?? '',
-                          style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: corItem)),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(6),
+                        onTap: () => mostrarImagemProduto(
+                          context,
+                          ean: i.codigoEAN ?? '',
+                          descricao: i.descricao ?? '',
+                          loja: widget.loja,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(i.descricao ?? '',
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: corItem)),
+                              ),
+                              const SizedBox(width: 6),
+                              Icon(Icons.image_outlined,
+                                  size: 15,
+                                  color: corItem.withValues(alpha: 0.55)),
+                            ],
+                          ),
+                        ),
+                      ),
                       InkWell(
                         onTap: () => _copiarEan(i.codigoEAN),
                         child: Row(

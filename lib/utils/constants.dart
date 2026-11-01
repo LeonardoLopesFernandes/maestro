@@ -52,3 +52,12 @@ class Constants {
   static const int MEDIUM_TEXT = 0xFF374151;
   static const int WHITE = 0xFFFFFFFF;
 }
+
+/// Chaves das APIs de imagem (mesmas do consultor de preço).
+class ApiKeys {
+  static const String serpApiKey =
+      'f6b852abd4c78277772ea524da2574e68f0623e1179937cbcd76f1117bc942a9';
+  static const String serpApiKeyTextSearch =
+      '67902270082286b2ab5ed9467bf3a255afa627572ff5acc1110beeb766802c7d';
+  static const String bluesoftApiKey = 'LFHnNIwZnn7atj61QgyzBA';
+}
