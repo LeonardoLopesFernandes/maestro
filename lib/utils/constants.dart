@@ -60,4 +60,6 @@ class ApiKeys {
   static const String serpApiKeyTextSearch =
       '67902270082286b2ab5ed9467bf3a255afa627572ff5acc1110beeb766802c7d';
   static const String bluesoftApiKey = 'LFHnNIwZnn7atj61QgyzBA';
+  static const String si5Token =
+      '367|yrBhfTTRoFVIXtXkekXzeIxAgyfsY6FKZ8H0ft6Y7b4ca508';
 }

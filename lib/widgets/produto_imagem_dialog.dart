@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../services/americanas_bff.dart';
 import '../services/image_search_api.dart';
 import '../services/serp_api_image_search.dart';
+import '../services/si5_image_search.dart';
 import '../utils/constants.dart';
 
 /// Abre o diálogo grande com a imagem do produto do pedido.
@@ -72,7 +73,18 @@ class _ProdutoImagemDialogState extends State<_ProdutoImagemDialog> {
       } catch (_) {}
     }
 
-    // 2) API de busca de imagem: Bluesoft + Google Images.
+    // 2) SI5 Global (secundária) — imagem por EAN.
+    if (url == null && widget.ean.isNotEmpty) {
+      try {
+        final u = await Si5ImageSearch.searchByEan(widget.ean);
+        if (u != null && u.isNotEmpty) {
+          url = u;
+          fonte = 'SI5 Global';
+        }
+      } catch (_) {}
+    }
+
+    // 3) API de busca de imagem: Bluesoft + Google Images.
     if (url == null && widget.ean.isNotEmpty) {
       try {
         final u = await SerpApiImageSearch.searchImageByEan(
@@ -84,7 +96,7 @@ class _ProdutoImagemDialogState extends State<_ProdutoImagemDialog> {
       } catch (_) {}
     }
 
-    // 3) ImageSearchApi (Google Shopping) — descrição ou EAN.
+    // 4) ImageSearchApi (Google Shopping) — descrição ou EAN.
     if (url == null) {
       final query =
           widget.descricao.isNotEmpty ? widget.descricao : widget.ean;
