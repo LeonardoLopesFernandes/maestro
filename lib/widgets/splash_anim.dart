@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
-/// Splash animado do maestro (Lottie) com o texto "maestro" surgindo embaixo.
+/// Loading de marca do maestro, usado enquanto o app/webview inicializa.
 class MaestroSplashAnim extends StatefulWidget {
-  const MaestroSplashAnim({super.key});
+  final String mensagem;
+
+  const MaestroSplashAnim({
+    super.key,
+    this.mensagem = 'Sincronizando pedidos...',
+  });
 
   @override
   State<MaestroSplashAnim> createState() => _MaestroSplashAnimState();
@@ -11,6 +16,8 @@ class MaestroSplashAnim extends StatefulWidget {
 
 class _MaestroSplashAnimState extends State<MaestroSplashAnim>
     with SingleTickerProviderStateMixin {
+  static const Color _vermelho = Color(0xFFE60000);
+
   late final AnimationController _controller;
   late final Animation<double> _opacity;
   late final Animation<Offset> _slide;
@@ -24,8 +31,9 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
     )..forward();
     final curved = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
     _opacity = curved;
-    _slide = Tween<Offset>(begin: const Offset(0, 0.45), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+    _slide = Tween<Offset>(begin: const Offset(0, 0.35), end: Offset.zero)
+        .animate(
+            CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
   }
 
   @override
@@ -36,46 +44,112 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: const Color(0xFFE60000),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    return Semantics(
+      label: 'Carregando Maestro',
+      child: ColoredBox(
+        color: _vermelho,
+        child: Stack(
           children: [
-            Lottie.asset(
-              'assets/lottie/splash.json',
-              width: 300,
-              height: 200,
-              fit: BoxFit.contain,
-              repeat: true,
-              errorBuilder: (_, error, __) => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.two_wheeler, color: Colors.white, size: 80),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: LayoutBuilder(
+                  builder: (context, constraints) => Align(
+                    alignment: const Alignment(0.95, 0.05),
                     child: Text(
-                      'Lottie: $error',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white, fontSize: 9),
+                      'a',
+                      style: TextStyle(
+                        fontSize: constraints.maxHeight * 1.8,
+                        height: 1,
+                        color: Colors.black12,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
-                ],
+                ),
               ),
             ),
-            const SizedBox(height: 12),
-            FadeTransition(
-              opacity: _opacity,
-              child: SlideTransition(
-                position: _slide,
-                child: const Text(
-                  'maestro',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 48,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2,
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 360),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/ic_maestro_logo.webp',
+                          width: 84,
+                          height: 84,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(height: 6),
+                        FadeTransition(
+                          opacity: _opacity,
+                          child: SlideTransition(
+                            position: _slide,
+                            child: const Text(
+                              'maestro',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 42,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        SizedBox(
+                          width: 250,
+                          height: 167,
+                          child: Lottie.asset(
+                            'assets/lottie/splash.json',
+                            fit: BoxFit.contain,
+                            repeat: true,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.two_wheeler,
+                              color: Colors.white,
+                              size: 72,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 22),
+                        Text(
+                          widget.mensagem,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: 180,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: const LinearProgressIndicator(
+                              minHeight: 3,
+                              backgroundColor: Colors.white24,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'americanas.io',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
