@@ -1,7 +1,7 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+
+import 'maestro_m.dart';
 
 /// Loading de marca do maestro, usado enquanto o app/webview inicializa.
 class MaestroSplashAnim extends StatefulWidget {
@@ -91,10 +91,9 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
                       children: [
                         AnimatedBuilder(
                           animation: _controller,
-                          builder: (_, __) => CustomPaint(
-                            size: const Size(120, 100),
-                            painter:
-                                _MaestroMPainter(_mProgress.value),
+                          builder: (_, __) => MaestroMDraw(
+                            progress: _mProgress.value,
+                            color: Colors.white,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -174,66 +173,3 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
   }
 }
 
-class _MaestroMPainter extends CustomPainter {
-  final double progress;
-
-  _MaestroMPainter(this.progress);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (progress <= 0) return;
-    final path = Path()
-      ..moveTo(18, 84)
-      ..lineTo(18, 44)
-      ..cubicTo(18, 14, 52, 14, 52, 44)
-      ..lineTo(52, 84)
-      ..moveTo(52, 44)
-      ..cubicTo(52, 14, 86, 14, 86, 44)
-      ..lineTo(86, 84);
-
-    final metrics = path.computeMetrics().toList();
-    final total = metrics.fold<double>(0, (s, m) => s + m.length);
-    var restante = total * progress;
-
-    final glow = Paint()
-      ..color = Colors.white.withValues(alpha: 0.18)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 27
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round
-      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 10);
-    final stroke = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 13
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    ui.Offset? ponta;
-    for (final metric in metrics) {
-      if (restante <= 0) break;
-      final desenhar =
-          restante < metric.length ? restante : metric.length;
-      final trecho = metric.extractPath(0, desenhar);
-      canvas.drawPath(trecho, glow);
-      canvas.drawPath(trecho, stroke);
-      ponta = metric.getTangentForOffset(desenhar)?.position;
-      restante -= desenhar;
-    }
-
-    if (ponta != null && progress < 1) {
-      canvas.drawCircle(
-        ponta,
-        8,
-        Paint()
-          ..color = Colors.white.withValues(alpha: 0.35)
-          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 6),
-      );
-      canvas.drawCircle(ponta, 4, Paint()..color = Colors.white);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _MaestroMPainter oldDelegate) =>
-      oldDelegate.progress != progress;
-}

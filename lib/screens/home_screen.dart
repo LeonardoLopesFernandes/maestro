@@ -13,6 +13,7 @@ import '../utils/log_helper.dart';
 import 'historico_screen.dart';
 import '../widgets/pedido_card.dart';
 import '../widgets/app_icon.dart';
+import '../widgets/maestro_refresh.dart';
 import '../widgets/tab_loading.dart';
 import 'detalhes_pedido_screen.dart';
 
@@ -729,8 +730,8 @@ class _PedidoListTabState extends State<_PedidoListTab> {
         ),
       );
     }
-    return RefreshIndicator(
-      color: const Color(_red),
+    return MaestroRefresh(
+      cor: const Color(_red),
       onRefresh: () => _carregar(reset: true),
       child: ListView.builder(
         padding: const EdgeInsets.all(8),

@@ -4,6 +4,7 @@ import '../network/api_service.dart';
 import '../network/session_manager.dart';
 import '../utils/constants.dart';
 import '../utils/log_helper.dart';
+import '../widgets/maestro_refresh.dart';
 import '../widgets/pedido_card.dart';
 import '../widgets/tab_loading.dart';
 import 'detalhes_pedido_screen.dart';
@@ -443,7 +444,8 @@ class HistoricoScreenState extends State<HistoricoScreen> {
         ),
       );
     }
-    return RefreshIndicator(
+    return MaestroRefresh(
+      cor: const Color(0xFF7F8C8D),
       onRefresh: () => _carregar(reset: true),
       child: ListView.builder(
         padding: const EdgeInsets.all(8),
