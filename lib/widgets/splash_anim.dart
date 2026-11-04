@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
@@ -19,6 +21,7 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
   static const Color _vermelho = Color(0xFFE60000);
 
   late final AnimationController _controller;
+  late final Animation<double> _mProgress;
   late final Animation<double> _opacity;
   late final Animation<Offset> _slide;
 
@@ -27,13 +30,21 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 1600),
     )..forward();
-    final curved = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-    _opacity = curved;
+    _mProgress = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.72, curve: Curves.easeInOut),
+    );
+    _opacity = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+    );
     _slide = Tween<Offset>(begin: const Offset(0, 0.35), end: Offset.zero)
-        .animate(
-            CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+        .animate(CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.5, 1.0, curve: Curves.easeOutCubic),
+    ));
   }
 
   @override
@@ -78,13 +89,15 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Image.asset(
-                          'assets/ic_maestro_logo.webp',
-                          width: 84,
-                          height: 84,
-                          fit: BoxFit.contain,
+                        AnimatedBuilder(
+                          animation: _controller,
+                          builder: (_, __) => CustomPaint(
+                            size: const Size(120, 100),
+                            painter:
+                                _MaestroMPainter(_mProgress.value),
+                          ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 4),
                         FadeTransition(
                           opacity: _opacity,
                           child: SlideTransition(
@@ -159,4 +172,68 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
       ),
     );
   }
+}
+
+class _MaestroMPainter extends CustomPainter {
+  final double progress;
+
+  _MaestroMPainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0) return;
+    final path = Path()
+      ..moveTo(18, 84)
+      ..lineTo(18, 44)
+      ..cubicTo(18, 14, 52, 14, 52, 44)
+      ..lineTo(52, 84)
+      ..moveTo(52, 44)
+      ..cubicTo(52, 14, 86, 14, 86, 44)
+      ..lineTo(86, 84);
+
+    final metrics = path.computeMetrics().toList();
+    final total = metrics.fold<double>(0, (s, m) => s + m.length);
+    var restante = total * progress;
+
+    final glow = Paint()
+      ..color = Colors.white.withValues(alpha: 0.18)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 27
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 10);
+    final stroke = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 13
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    ui.Offset? ponta;
+    for (final metric in metrics) {
+      if (restante <= 0) break;
+      final desenhar =
+          restante < metric.length ? restante : metric.length;
+      final trecho = metric.extractPath(0, desenhar);
+      canvas.drawPath(trecho, glow);
+      canvas.drawPath(trecho, stroke);
+      ponta = metric.getTangentForOffset(desenhar)?.position;
+      restante -= desenhar;
+    }
+
+    if (ponta != null && progress < 1) {
+      canvas.drawCircle(
+        ponta,
+        8,
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.35)
+          ..maskFilter = const ui.MaskFilter.blur(ui.BlurStyle.normal, 6),
+      );
+      canvas.drawCircle(ponta, 4, Paint()..color = Colors.white);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MaestroMPainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }

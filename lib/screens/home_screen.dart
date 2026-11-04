@@ -13,6 +13,7 @@ import '../utils/log_helper.dart';
 import 'historico_screen.dart';
 import '../widgets/pedido_card.dart';
 import '../widgets/app_icon.dart';
+import '../widgets/tab_loading.dart';
 import 'detalhes_pedido_screen.dart';
 
 // Cores da marca Maestro (vermelho) — não copiamos o azul do Kotlin.
@@ -501,6 +502,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       minDias: _minDias,
       ordemDataInclusao: _ordemDataInclusao,
       tabIcon: _tabIconAssets[aba.index],
+      tabTitle: aba.titulo,
+      tabColor: Color(_tabColors[aba.index]),
       onVoltarDetalhes: _recarregarTodasAbas,
     );
   }
@@ -522,6 +525,8 @@ class _PedidoListTab extends StatefulWidget {
   final int minDias;
   final bool ordemDataInclusao;
   final String tabIcon;
+  final String tabTitle;
+  final Color tabColor;
   final VoidCallback? onVoltarDetalhes;
 
   const _PedidoListTab({
@@ -533,6 +538,8 @@ class _PedidoListTab extends StatefulWidget {
     required this.minDias,
     required this.ordemDataInclusao,
     required this.tabIcon,
+    required this.tabTitle,
+    required this.tabColor,
     this.onVoltarDetalhes,
   });
 
@@ -695,8 +702,11 @@ class _PedidoListTabState extends State<_PedidoListTab> {
 
   Widget _buildConteudo() {
     if (_carregando && _pedidos.isEmpty) {
-      return const Center(
-          child: CircularProgressIndicator(color: Color(_red)));
+      return MaestroTabLoading(
+        iconAsset: widget.tabIcon,
+        cor: widget.tabColor,
+        titulo: widget.tabTitle,
+      );
     }
     if (_pedidos.isEmpty) {
       return Center(
