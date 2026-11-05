@@ -110,7 +110,7 @@ class _MaestroRefreshState extends State<MaestroRefresh>
                     child: Container(
                       width: 64,
                       height: 64,
-                      padding: const EdgeInsets.all(10),
+                      alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
@@ -125,8 +125,8 @@ class _MaestroRefreshState extends State<MaestroRefresh>
                       child: MaestroMDraw(
                         progress: p,
                         color: widget.cor,
-                        width: 44,
-                        height: 37,
+                        width: 42,
+                        height: 30,
                       ),
                     ),
                   ),
