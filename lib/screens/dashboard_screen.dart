@@ -566,25 +566,31 @@ class DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            tabela.title,
-            style: const TextStyle(
-              color: _texto,
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: cor,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline,
+                    color: Colors.white, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    tabela.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          if (tabela.infoText.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              tabela.infoText,
-              style: const TextStyle(
-                color: _suave,
-                fontSize: 11,
-                height: 1.3,
-              ),
-            ),
-          ],
           const SizedBox(height: 10),
           _linhasTabela(tabela, cor),
         ],
@@ -648,13 +654,17 @@ class DashboardScreenState extends State<DashboardScreen> {
                       child: Row(
                         children: [
                           Flexible(
-                            child: Text(
-                              valores[i],
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: _texto,
-                                fontSize: 11,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                valores[i],
+                                maxLines: 1,
+                                softWrap: false,
+                                style: const TextStyle(
+                                  color: _texto,
+                                  fontSize: 11,
+                                ),
                               ),
                             ),
                           ),
