@@ -239,44 +239,56 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       backgroundColor: const Color(_bgTela),
       body: _carregando
           ? _skeleton()
-          : Column(
+          : Stack(
               children: [
-                _toolbar(status),
-                Expanded(
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: (n) {
-                      if (n is ScrollUpdateNotification ||
-                          n is ScrollEndNotification) {
-                        final pos = n.metrics;
-                        final atEnd =
-                            pos.pixels >= (pos.maxScrollExtent - 4);
-                        if (atEnd != _mostrarAcao && mounted) {
-                          setState(() => _mostrarAcao = atEnd);
-                        }
-                      }
-                      return false;
-                    },
-                    child: ListView(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        _headerStatus(),
-                        const SizedBox(height: 12),
-                        _cardCliente(),
-                        const SizedBox(height: 10),
-                        _cardRecebedor(),
-                        const SizedBox(height: 10),
-                        _cardMotivo(),
-                        const SizedBox(height: 10),
-                        _cardItens(),
-                        const SizedBox(height: 10),
-                        _cardTokens(),
-                        const SizedBox(height: 90),
-                      ],
+                Column(
+                  children: [
+                    _toolbar(status),
+                    Expanded(
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: (n) {
+                          if (n is ScrollUpdateNotification ||
+                              n is ScrollEndNotification) {
+                            final pos = n.metrics;
+                            final atEnd =
+                                pos.pixels >= (pos.maxScrollExtent - 4);
+                            if (atEnd != _mostrarAcao && mounted) {
+                              setState(() => _mostrarAcao = atEnd);
+                            }
+                          }
+                          return false;
+                        },
+                        child: ListView(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.all(16),
+                          children: [
+                            _headerStatus(),
+                            const SizedBox(height: 12),
+                            _cardCliente(),
+                            const SizedBox(height: 10),
+                            _cardRecebedor(),
+                            const SizedBox(height: 10),
+                            _cardMotivo(),
+                            const SizedBox(height: 10),
+                            _cardItens(),
+                            const SizedBox(height: 10),
+                            _cardTokens(),
+                            const SizedBox(height: 150),
+                          ],
+                        ),
+                      ),
                     ),
+                  ],
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: SafeArea(
+                    top: false,
+                    child: _barraAcao(status),
                   ),
                 ),
-                _barraAcao(status),
               ],
             ),
       floatingActionButton: null,
@@ -1062,7 +1074,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         ignoring: !_mostrarAcao,
         child: Container(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-          color: const Color(_bgTela),
           child: Column(children: children),
         ),
       ),
