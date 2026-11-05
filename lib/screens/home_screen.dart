@@ -25,7 +25,7 @@ const int _bgLight = 0xFFF0F0F0;
 // Cores próprias de cada aba (como no Kotlin). O azul original da aba
 // Cores exatas das abas conforme activity_main.xml do Kotlin.
 const List<int> _tabColors = [
-  0xFF0EA5E9, // Dashboard - azul
+  0xFFE60000, // Dashboard - vermelho
   0xFF12CD0C, // Novos - verde
   0xFF00CBFE, // Separação - ciano
   0xFFFFAA02, // Retirada - laranja
@@ -242,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (idx >= 0) _onNavTap(idx);
   }
 
-  Color get _corAba => const Color(_red);
+  Color get _corAba => Color(_tabColors[_currentIndex]);
 
   void _abrirPerfil() {
     showDialog(
@@ -457,9 +457,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             final aba = e.value;
             final ativo = _currentIndex == i;
             final count = _contagemPara(i);
-            final corIcone =
-                ativo ? const Color(_red) : const Color(0xFF9AA0A6);
-            final corBadge = Color(_tabColors[i]);
+            final cor = Color(_tabColors[i]);
             return Expanded(
               child: InkWell(
                 onTap: () => _onNavTap(i),
@@ -473,7 +471,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             _tabIconAssets[i],
                             width: 28,
                             height: 28,
-                            color: corIcone),
+                            color: ativo ? cor : const Color(0xFF9AA0A6)),
                         if (count > 0)
                           Positioned(
                             top: -8,
@@ -485,7 +483,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 3),
                               decoration: BoxDecoration(
-                                color: corBadge,
+                                color: cor,
                                 shape: BoxShape.circle,
                               ),
                               child: Text(
@@ -502,7 +500,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     const SizedBox(height: 4),
                     Text(aba.titulo,
                         style: TextStyle(
-                            color: corIcone,
+                            color: ativo ? cor : const Color(0xFF9AA0A6),
                             fontSize: 9,
                             fontWeight:
                                 ativo ? FontWeight.bold : FontWeight.w600)),

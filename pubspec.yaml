@@ -1,7 +1,7 @@
 name: maestro
 description: "App de gestão de pedidos Maestro (fiel ao app Android Kotlin)."
 publish_to: 'none'
-version: 2.1.38+2138
+version: 2.1.39+2139
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
