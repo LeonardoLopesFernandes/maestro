@@ -273,7 +273,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                             _cardItens(),
                             const SizedBox(height: 10),
                             _cardTokens(),
-                            const SizedBox(height: 150),
+                            const SizedBox(height: 96),
                           ],
                         ),
                       ),
