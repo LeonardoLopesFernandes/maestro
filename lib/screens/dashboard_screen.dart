@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/dashboard.dart';
 import '../network/api_service.dart';
@@ -614,39 +615,104 @@ class DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           const SizedBox(height: 6),
-          for (final row in tabela.rows)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                children: [
-                  for (final valor in _valoresLinha(row))
-                    SizedBox(
-                      width: 130,
-                      child: Text(
-                        valor,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: _texto,
-                          fontSize: 11,
-                        ),
+          for (final row in tabela.rows) _linhaTabela(tabela, row),
+        ],
+      ),
+    );
+  }
+
+  Widget _linhaTabela(DashboardTable tabela, dynamic row) {
+    final valores = _valoresLinha(tabela, row);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          for (var i = 0; i < valores.length; i++)
+            SizedBox(
+              width: 130,
+              child: i == 0
+                  ? InkWell(
+                      onTap: () async {
+                        await Clipboard.setData(
+                            ClipboardData(text: valores[i]));
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Pedido copiado: ${valores[i]}'),
+                              duration: const Duration(seconds: 1),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      },
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              valores[i],
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: _texto,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.copy, size: 13, color: _suave),
+                        ],
+                      ),
+                    )
+                  : Text(
+                      valores[i],
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: _texto,
+                        fontSize: 11,
                       ),
                     ),
-                ],
-              ),
             ),
         ],
       ),
     );
   }
 
-  List<String> _valoresLinha(dynamic row) {
+  List<String> _valoresLinha(DashboardTable tabela, dynamic row) {
     if (row is List) return row.map((e) => e.toString()).toList();
     if (row is Map) {
       if (row['cells'] is List) {
         return (row['cells'] as List).map((e) => e.toString()).toList();
       }
-      return row.values.map((e) => e.toString()).toList();
+      String pick(List<String> keys) {
+        for (final k in keys) {
+          final v = row[k];
+          if (v != null && v.toString().trim().isNotEmpty) {
+            return v.toString();
+          }
+        }
+        return '';
+      }
+
+      return tabela.columns.map((col) {
+        final c = col.toLowerCase();
+        if (c.contains('pedido') || c.contains('nº') || c.contains('n°')) {
+          return pick(['externalCode', 'external_code', 'numero', 'id']);
+        }
+        if (c.contains('vence') || c.contains('aguardando')) {
+          return pick(['waiting', 'tempo', 'aguardando']);
+        }
+        if (c.contains('cliente')) {
+          return pick(['client', 'cliente', 'customer']);
+        }
+        if (c.contains('canal')) {
+          return pick(['channel', 'salesChannel', 'canal']);
+        }
+        if (c.contains('entrega')) {
+          return pick(['delivery', 'entrega']);
+        }
+        return pick([col]);
+      }).toList();
     }
     return [row?.toString() ?? ''];
   }
