@@ -15,7 +15,6 @@ import 'historico_screen.dart';
 import '../widgets/pedido_card.dart';
 import '../widgets/app_icon.dart';
 import '../widgets/maestro_refresh.dart';
-import '../widgets/tab_loading.dart';
 import 'detalhes_pedido_screen.dart';
 
 // Cores da marca Maestro (vermelho) — não copiamos o azul do Kotlin.
@@ -243,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (idx >= 0) _onNavTap(idx);
   }
 
-  Color get _corAba => Color(_tabColors[_currentIndex]);
+  Color get _corAba => const Color(_red);
 
   void _abrirPerfil() {
     showDialog(
@@ -458,7 +457,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             final aba = e.value;
             final ativo = _currentIndex == i;
             final count = _contagemPara(i);
-            final cor = Color(_tabColors[i]);
+            final corIcone =
+                ativo ? const Color(_red) : const Color(0xFF9AA0A6);
+            final corBadge = Color(_tabColors[i]);
             return Expanded(
               child: InkWell(
                 onTap: () => _onNavTap(i),
@@ -472,7 +473,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                             _tabIconAssets[i],
                             width: 28,
                             height: 28,
-                            color: ativo ? cor : const Color(0xFF9AA0A6)),
+                            color: corIcone),
                         if (count > 0)
                           Positioned(
                             top: -8,
@@ -484,7 +485,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 3),
                               decoration: BoxDecoration(
-                                color: cor,
+                                color: corBadge,
                                 shape: BoxShape.circle,
                               ),
                               child: Text(
@@ -501,7 +502,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     const SizedBox(height: 4),
                     Text(aba.titulo,
                         style: TextStyle(
-                            color: ativo ? cor : const Color(0xFF9AA0A6),
+                            color: corIcone,
                             fontSize: 9,
                             fontWeight:
                                 ativo ? FontWeight.bold : FontWeight.w600)),
@@ -540,8 +541,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       minDias: _minDias,
       ordemDataInclusao: _ordemDataInclusao,
       tabIcon: _tabIconAssets[aba.index],
-      tabTitle: aba.titulo,
-      tabColor: Color(_tabColors[aba.index]),
       onVoltarDetalhes: _recarregarTodasAbas,
     );
   }
@@ -563,8 +562,6 @@ class _PedidoListTab extends StatefulWidget {
   final int minDias;
   final bool ordemDataInclusao;
   final String tabIcon;
-  final String tabTitle;
-  final Color tabColor;
   final VoidCallback? onVoltarDetalhes;
 
   const _PedidoListTab({
@@ -576,8 +573,6 @@ class _PedidoListTab extends StatefulWidget {
     required this.minDias,
     required this.ordemDataInclusao,
     required this.tabIcon,
-    required this.tabTitle,
-    required this.tabColor,
     this.onVoltarDetalhes,
   });
 
@@ -618,7 +613,6 @@ class _PedidoListTabState extends State<_PedidoListTab> {
     final ger = ++_geracao;
     if (reset) {
       _skip = 0;
-      _pedidos = [];
       _temMais = true;
     }
     if (!_temMais) return;
@@ -636,7 +630,11 @@ class _PedidoListTabState extends State<_PedidoListTab> {
       );
       if (mounted && ger == _geracao) {
         setState(() {
-          _pedidos.addAll(resp.pedidos);
+          if (reset) {
+            _pedidos = List<Pedido>.from(resp.pedidos);
+          } else {
+            _pedidos.addAll(resp.pedidos);
+          }
           _skip += resp.pedidos.length;
           _temMais = resp.pedidos.length >= _limit;
           if (resp.counts.isNotEmpty) _abaCounts = resp.counts;
@@ -740,11 +738,7 @@ class _PedidoListTabState extends State<_PedidoListTab> {
 
   Widget _buildConteudo() {
     if (_carregando && _pedidos.isEmpty) {
-      return MaestroTabLoading(
-        iconAsset: widget.tabIcon,
-        cor: widget.tabColor,
-        titulo: widget.tabTitle,
-      );
+      return const SizedBox.shrink();
     }
     if (_pedidos.isEmpty) {
       return Center(

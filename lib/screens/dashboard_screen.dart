@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../models/dashboard.dart';
 import '../network/api_service.dart';
+import '../widgets/app_icon.dart';
 import '../widgets/maestro_refresh.dart';
-import '../widgets/tab_loading.dart';
 
 class DashboardScreen extends StatefulWidget {
   final ApiService apiService;
@@ -70,16 +70,7 @@ class DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     if (_carregando) {
-      return const ColoredBox(
-        color: _fundo,
-        child: Center(
-          child: MaestroTabLoading(
-            iconAsset: 'assets/icons/analise.svg',
-            cor: _azul,
-            titulo: 'Dashboard',
-          ),
-        ),
-      );
+      return const ColoredBox(color: _fundo, child: SizedBox.shrink());
     }
     if (_erro != null || _dados == null) {
       return ColoredBox(
@@ -135,8 +126,6 @@ class DashboardScreenState extends State<DashboardScreen> {
             _tabela(dados.tables.expiring),
             const SizedBox(height: 10),
             _tabela(dados.tables.overdue),
-            const SizedBox(height: 10),
-            _tabela(dados.tables.withdrawal),
           ],
         ),
       ),
@@ -248,6 +237,7 @@ class DashboardScreenState extends State<DashboardScreen> {
     };
     return Container(
       width: 220,
+      height: 180,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -301,7 +291,7 @@ class DashboardScreenState extends State<DashboardScreen> {
               height: 1.3,
             ),
           ),
-          const SizedBox(height: 12),
+          const Spacer(),
           Text(
             card.goal.toUpperCase(),
             style: const TextStyle(
@@ -443,13 +433,19 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _cardStatus(DashboardStatusCard card) {
-    final cor = card.status == 'error'
-        ? const Color(0xFFDC2626)
-        : const Color(0xFF0EA5E9);
-    final icone = switch (card.code) {
-      'EM_SEPARACAO' => Icons.sync,
-      'RETORNAR_PARA_ESTOQUE' => Icons.inventory_2_outlined,
-      _ => Icons.chevron_right,
+    final cor = card.code == 'RETORNAR_PARA_ESTOQUE'
+        ? const Color(0xFFB62F2C)
+        : const Color(0xFF00CBFE);
+    final Widget icone = switch (card.code) {
+      'EM_SEPARACAO' =>
+        appIcon('assets/icons/ic_sync.svg', width: 22, height: 22, color: cor),
+      'RETORNAR_PARA_ESTOQUE' => appIcon(
+          'assets/icons/ic_estoque.svg',
+          width: 22,
+          height: 22,
+          color: cor,
+        ),
+      _ => const Icon(Icons.chevron_right, color: _suave, size: 22),
     };
     final clicavel = widget.onAbrirStatus != null;
     return Material(
@@ -490,7 +486,7 @@ class DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 14),
               Row(
                 children: [
-                  Icon(icone, color: cor, size: 22),
+                  icone,
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -525,9 +521,9 @@ class DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.sentiment_neutral_outlined,
-              color: Color(0xFF9CA3AF),
+            Icon(
+              _iconeVazio(tabela),
+              color: const Color(0xFF9CA3AF),
               size: 46,
             ),
             const SizedBox(height: 14),
@@ -677,6 +673,13 @@ class DashboardScreenState extends State<DashboardScreen> {
       default:
         return _azul;
     }
+  }
+
+  IconData _iconeVazio(DashboardTable tabela) {
+    if (tabela.variant.toLowerCase() == 'red') {
+      return Icons.sentiment_satisfied_alt_outlined;
+    }
+    return Icons.sentiment_neutral_outlined;
   }
 
   Color _corVariante(String variante) {

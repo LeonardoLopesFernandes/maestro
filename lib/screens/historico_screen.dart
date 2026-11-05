@@ -6,7 +6,6 @@ import '../utils/constants.dart';
 import '../utils/log_helper.dart';
 import '../widgets/maestro_refresh.dart';
 import '../widgets/pedido_card.dart';
-import '../widgets/tab_loading.dart';
 import 'detalhes_pedido_screen.dart';
 
 class HistoricoScreen extends StatefulWidget {
@@ -124,8 +123,6 @@ class HistoricoScreenState extends State<HistoricoScreen> {
     final ger = ++_geracao;
     if (reset) {
       _skip = 0;
-      _todos = [];
-      _pedidos = [];
       _temMais = true;
     }
     if (!_temMais) return;
@@ -142,7 +139,11 @@ class HistoricoScreenState extends State<HistoricoScreen> {
       );
       if (mounted && ger == _geracao) {
         setState(() {
-          _todos.addAll(resp.pedidos);
+          if (reset) {
+            _todos = List<Pedido>.from(resp.pedidos);
+          } else {
+            _todos.addAll(resp.pedidos);
+          }
           _skip += resp.pedidos.length;
           _temMais = resp.pedidos.length >= _limit;
           _pedidos = _filtrar(_todos);
@@ -425,11 +426,7 @@ class HistoricoScreenState extends State<HistoricoScreen> {
 
   Widget _conteudo() {
     if (_carregando && _pedidos.isEmpty) {
-      return const MaestroTabLoading(
-        iconAsset: 'assets/icons/ic_historico.svg',
-        cor: Color(0xFF7F8C8D),
-        titulo: 'Histórico',
-      );
+      return const SizedBox.shrink();
     }
     if (_pedidos.isEmpty) {
       return const Center(
