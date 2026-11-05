@@ -90,7 +90,10 @@ class ApiClient {
 
   // ---------- Modo Demonstração ----------
   dynamic _demoGet(String path, Map<String, String>? query) {
-    if (path.contains('/pedido/count')) return MockData.count();
+    if (path.contains('/pedido/count')) {
+      if (query?['dashboard'] == 'true') return MockData.dashboard();
+      return MockData.count();
+    }
     if (path.contains('/pedido/skip/')) {
       return {
         'data': MockData.pedidos(),

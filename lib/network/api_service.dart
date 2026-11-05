@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import '../models/dashboard.dart';
 import '../models/pedido.dart';
 import 'api_client.dart';
 
@@ -12,6 +13,14 @@ class ApiService {
     final json = await client.get('v2/backend/pedido/count')
         as Map<String, dynamic>;
     return CountResponse.fromJson(json);
+  }
+
+  Future<DashboardResponse> getDashboard() async {
+    final json = await client.get(
+      'v2/backend/pedido/count',
+      query: {'dashboard': 'true'},
+    ) as Map<String, dynamic>;
+    return DashboardResponse.fromJson(json);
   }
 
   Future<Pedido> getPedidoById(String id) async {

@@ -12,6 +12,149 @@ class MockData {
         'FINALIZADO': 18,
       };
 
+  static Map<String, dynamic> dashboard() => {
+        'status': 200,
+        'data': [
+          {'_id': 'FINALIZADO', 'count': 827},
+          {'_id': 'PRONTO_PARA_SAIR', 'count': 2},
+          {'_id': 'DEVOLVIDO', 'count': 97},
+          {'_id': 'CANCELADO', 'count': 79},
+        ],
+        'dashboard': {
+          'header': {
+            'date': 'Quarta-feira, 4 de novembro',
+            'updatedAt': '22:20',
+            'searchPlaceholder': 'Busque por pedido',
+          },
+          'summaryCards': [
+            {
+              'id': 'onTime',
+              'value': '95,1%',
+              'description': 'dos pedidos confirmados no prazo.',
+              'goal': 'META 90%',
+              'status': 'success',
+              'color': '#65AF84',
+            },
+            {
+              'id': 'confirmationTime',
+              'value': '0h 38min e 37seg',
+              'description': 'é o tempo médio de confirmação dos pedidos.',
+              'goal': 'META 1 HORA',
+              'status': 'success',
+              'color': '#65AF84',
+            },
+            {
+              'id': 'refusalRate',
+              'value': '0,60%',
+              'description': 'é a taxa de recusa por item.',
+              'goal': 'META 3,5%',
+              'status': 'success',
+              'color': '#65AF84',
+            },
+          ],
+          'ordersInProgress': {
+            'title': 'Pedidos em andamento',
+            'total': 2,
+            'items': [
+              {
+                'label': 'Novos pedidos',
+                'value': 0,
+                'color': 'green',
+                'percentage': '0,00%',
+              },
+              {
+                'label': 'Em separação',
+                'value': 0,
+                'color': 'cyan',
+                'percentage': '0,00%',
+              },
+              {
+                'label': 'Pronto para retirada',
+                'value': 2,
+                'color': 'yellow',
+                'percentage': '100,00%',
+              },
+              {
+                'label': 'Saiu para entrega',
+                'value': 0,
+                'color': 'magenta',
+                'percentage': '0,00%',
+              },
+              {
+                'label': 'Retornar para estoque',
+                'value': 0,
+                'color': 'red',
+                'percentage': '0,00%',
+              },
+            ],
+          },
+          'statusCards': [
+            {
+              'title': 'Em separação',
+              'value': '0,00%',
+              'status': 'info',
+              'code': 'EM_SEPARACAO',
+            },
+            {
+              'title': 'Retornar p/ estoque',
+              'value': '0,00%',
+              'status': 'error',
+              'code': 'RETORNAR_PARA_ESTOQUE',
+            },
+          ],
+          'tables': {
+            'expiring': _tabelaDashboard(
+              '0 pedidos perto do vencimento. Confirme antes do prazo final.',
+              'blue',
+              'Pedidos que estão próximos de vencer precisam ser confirmados a tempo.',
+              'Todos os pedidos estão dentro do vencimento',
+              'Nenhum pedido aguardando confirmação.',
+              ['N° Pedido', 'Vence em', 'Cliente', 'Entrega'],
+            ),
+            'overdue': _tabelaDashboard(
+              '0 pedidos fora do prazo de confirmação.',
+              'red',
+              'Pedidos que passaram do prazo de confirmação precisam de atenção.',
+              'Todas as confirmações estão dentro do prazo',
+              'Nenhum pedido aguardando confirmação.',
+              ['N° Pedido', 'Aguardando', 'Cliente', 'Entrega'],
+            ),
+            'withdrawal': _tabelaDashboard(
+              '0 pedidos sem retirada aguardando análise.',
+              'yellow',
+              'Pedidos a mais de 3 dias sem retirada, aguardando confirmação de coleta ou cancelamento.',
+              'Todas as retiradas estão dentro do prazo',
+              'Nenhum pedido aguardando coleta ou cancelamento por ausência de retirada.',
+              [
+                'N° Pedido',
+                'Aguardando',
+                'Cliente',
+                'Canal de venda',
+                'Entrega',
+              ],
+            ),
+          },
+        },
+      };
+
+  static Map<String, dynamic> _tabelaDashboard(
+    String title,
+    String variant,
+    String infoText,
+    String emptyTitle,
+    String emptyDescription,
+    List<String> columns,
+  ) =>
+      {
+        'title': title,
+        'variant': variant,
+        'infoText': infoText,
+        'emptyTitle': emptyTitle,
+        'emptyDescription': emptyDescription,
+        'columns': columns,
+        'rows': [],
+      };
+
   static List<Map<String, dynamic>> pedidos() {
     final statuses = [
       'NOVO_PEDIDO',

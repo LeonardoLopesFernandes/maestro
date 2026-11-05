@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'maestro_m.dart';
+import 'maestro_dots.dart';
 
 /// Pull-to-refresh do maestro: enquanto puxa, o "m" é desenhado.
 class MaestroRefresh extends StatefulWidget {
@@ -122,11 +122,10 @@ class _MaestroRefreshState extends State<MaestroRefresh>
                           ),
                         ],
                       ),
-                      child: MaestroMDraw(
-                        progress: p,
+                      child: MaestroDotsLoading(
+                        width: 44,
+                        height: 14,
                         color: widget.cor,
-                        width: 42,
-                        height: 30,
                       ),
                     ),
                   ),
