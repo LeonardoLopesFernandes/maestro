@@ -35,7 +35,7 @@ const List<int> _tabColors = [
 ];
 
 const List<String> _tabIconAssets = [
-  'assets/icons/analise.svg',
+  'assets/icons/dashboard.svg',
   'assets/icons/ic_clipboard.svg',
   'assets/icons/ic_sync.svg',
   'assets/icons/ic_bag.svg',
