@@ -185,6 +185,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                       backgroundColor:
                                           const Color(0xFF1A1A1A),
                                       foregroundColor: Colors.white,
+                                      disabledBackgroundColor:
+                                          const Color(0xFF1A1A1A),
+                                      disabledForegroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(
                                         borderRadius:
                                             BorderRadius.circular(8),
@@ -192,12 +195,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                       elevation: 0,
                                     ),
                                     child: _carregando
-                                        ? const SizedBox(
-                                            width: 22,
-                                            height: 22,
-                                            child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: Colors.white),
+                                        ? const Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              _MicrosoftLogoAnimado(size: 26),
+                                              SizedBox(width: 12),
+                                              Text(
+                                                'Entrando...',
+                                                style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
                                           )
                                         : const Row(
                                             mainAxisAlignment:
@@ -358,6 +369,100 @@ class _MicrosoftLogo extends StatelessWidget {
             SizedBox(width: c, height: c, child: tiles[3]),
           ]),
         ],
+      ),
+    );
+  }
+}
+
+/// Microsoft animado no clique: os 4 blocos coloridos "respiram" em sequência.
+class _MicrosoftLogoAnimado extends StatefulWidget {
+  final double size;
+  const _MicrosoftLogoAnimado({this.size = 24});
+
+  @override
+  State<_MicrosoftLogoAnimado> createState() =>
+      _MicrosoftLogoAnimadoState();
+}
+
+class _MicrosoftLogoAnimadoState extends State<_MicrosoftLogoAnimado>
+    with SingleTickerProviderStateMixin {
+  static const _cores = [
+    Color(0xFFF25022),
+    Color(0xFF7FBA00),
+    Color(0xFF00A4EF),
+    Color(0xFFFFBA08),
+  ];
+
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  double _progresso(int indice, double tempoMs) {
+    final local = (tempoMs - indice * 150) / 600;
+    if (local <= 0 || local >= 1) return 0;
+    final curva = local < 0.2 ? local / 0.2 : 1 - (local - 0.2) / 0.8;
+    return Curves.easeInOut.transform(curva.clamp(0.0, 1.0));
+  }
+
+  Widget _bloco(int indice, double lado, double tempoMs) {
+    final escala = 1 + 0.18 * _progresso(indice, tempoMs);
+    return Transform.scale(
+      scale: escala,
+      child: Container(
+        width: lado,
+        height: lado,
+        decoration: BoxDecoration(
+          color: _cores[indice],
+          borderRadius: BorderRadius.circular(widget.size * 0.12),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final gap = widget.size * 0.1;
+    final lado = (widget.size - gap) / 2;
+    return SizedBox(
+      width: widget.size,
+      height: widget.size,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (_, __) {
+          final t = _controller.value * 1200;
+          return Column(
+            children: [
+              Row(
+                children: [
+                  _bloco(0, lado, t),
+                  SizedBox(width: gap),
+                  _bloco(1, lado, t),
+                ],
+              ),
+              SizedBox(height: gap),
+              Row(
+                children: [
+                  _bloco(2, lado, t),
+                  SizedBox(width: gap),
+                  _bloco(3, lado, t),
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
