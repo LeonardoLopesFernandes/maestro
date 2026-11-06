@@ -5,6 +5,7 @@ import 'network/session_manager.dart';
 import 'network/api_client.dart';
 import 'network/api_service.dart';
 import 'screens/login_screen.dart';
+import 'screens/splash_screen.dart';
 import 'screens/login_webview_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/price_tags_screen.dart';
@@ -103,7 +104,7 @@ class MaestroApp extends StatelessWidget {
               .copyWith(primary: const Color(Constants.RED_600)),
           useMaterial3: true,
         ),
-        initialRoute: _initialRoute(session),
+        initialRoute: '/splash',
         onGenerateRoute: (settings) {
           if (settings.name == '/auto-login') {
             final email = session.getUserEmail() ?? '';
@@ -119,6 +120,7 @@ class MaestroApp extends StatelessWidget {
           return null;
         },
         routes: {
+          '/splash': (_) => SplashScreen(session: session),
           '/login': (_) => const LoginScreen(),
           '/webview': (_) => LoginWebViewScreen(args: {}),
           '/home': (_) => HomeScreen(session: session, apiService: apiService),
@@ -129,10 +131,5 @@ class MaestroApp extends StatelessWidget {
     );
   }
 
-  String _initialRoute(SessionManager session) {
-    if (session.isLoggedIn()) return '/home';
-    if (session.hasSavedCredentials()) return '/auto-login';
-    return '/login';
-  }
 }
 
