@@ -26,7 +26,6 @@ dependencies:
 
   # Ícones vetoriais convertidos de VectorDrawable
   flutter_svg: ^2.0.9
-  path_drawing: ^1.0.1
 
   # Imagens de rede
 
