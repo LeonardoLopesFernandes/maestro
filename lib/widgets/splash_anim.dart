@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'colorful_spinner.dart';
+import 'package:lottie/lottie.dart';
+
 import 'maestro_m.dart';
 
 /// Loading de marca do maestro, usado enquanto o app/webview inicializa.
@@ -112,7 +113,20 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
                           ),
                         ),
                         const SizedBox(height: 14),
-                        const MaestroColorfulSpinner(size: 84),
+                        SizedBox(
+                          width: 250,
+                          height: 167,
+                          child: Lottie.asset(
+                            'assets/lottie/splash.json',
+                            fit: BoxFit.contain,
+                            repeat: true,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.two_wheeler,
+                              color: Colors.white,
+                              size: 72,
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 22),
                         Text(
                           widget.mensagem,
@@ -158,3 +172,4 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
     );
   }
 }
+

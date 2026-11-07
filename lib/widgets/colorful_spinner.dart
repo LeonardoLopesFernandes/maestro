@@ -6,11 +6,13 @@ import 'package:flutter/material.dart';
 class MaestroColorfulSpinner extends StatefulWidget {
   final double size;
   final double strokeWidth;
+  final Color trackColor;
 
   const MaestroColorfulSpinner({
     super.key,
     this.size = 84,
     this.strokeWidth = 6,
+    this.trackColor = const Color(0x33FFFFFF),
   });
 
   @override
@@ -49,6 +51,7 @@ class _MaestroColorfulSpinnerState extends State<MaestroColorfulSpinner>
             painter: _ColorfulSpinnerPainter(
               progresso: _controller.value,
               strokeWidth: widget.strokeWidth,
+              trackColor: widget.trackColor,
             ),
           ),
         ),
@@ -60,10 +63,12 @@ class _MaestroColorfulSpinnerState extends State<MaestroColorfulSpinner>
 class _ColorfulSpinnerPainter extends CustomPainter {
   final double progresso;
   final double strokeWidth;
+  final Color trackColor;
 
   _ColorfulSpinnerPainter({
     required this.progresso,
     required this.strokeWidth,
+    required this.trackColor,
   });
 
   @override
@@ -78,7 +83,7 @@ class _ColorfulSpinnerPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
-        ..color = Colors.white.withValues(alpha: 0.22),
+        ..color = trackColor,
     );
 
     final cores = List<Color>.generate(7, (i) {
@@ -107,5 +112,6 @@ class _ColorfulSpinnerPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _ColorfulSpinnerPainter oldDelegate) =>
       oldDelegate.progresso != progresso ||
-      oldDelegate.strokeWidth != strokeWidth;
+      oldDelegate.strokeWidth != strokeWidth ||
+      oldDelegate.trackColor != trackColor;
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'maestro_dots.dart';
+import 'colorful_spinner.dart';
 
 /// Pull-to-refresh do maestro: enquanto puxa, o "m" é desenhado.
 class MaestroRefresh extends StatefulWidget {
@@ -122,10 +122,10 @@ class _MaestroRefreshState extends State<MaestroRefresh>
                           ),
                         ],
                       ),
-                      child: MaestroDotsLoading(
-                        width: 44,
-                        height: 14,
-                        color: widget.cor,
+                      child: MaestroColorfulSpinner(
+                        size: 42,
+                        strokeWidth: 4,
+                        trackColor: const Color(0xFFE6E6E6),
                       ),
                     ),
                   ),
