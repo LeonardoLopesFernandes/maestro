@@ -130,12 +130,22 @@ class ApiService {
         if (motivo != null) 'motivo': motivo,
       });
 
-  Future<void> devolverPedido(String origem, String codigoExterno,
-          {String? recaptchaToken, String? observacao}) =>
-      _putStatus('api/pedidos/$origem/$codigoExterno/devolvido', {
-        if (recaptchaToken != null) 'recaptchaToken': recaptchaToken,
-        if (observacao != null) 'observacao': observacao,
-      });
+  Future<void> devolverPedido(String loja, String codigoExterno,
+      {String? recaptchaToken, String? motivo, String? observacao}) async {
+    final body = <String, dynamic>{
+      'motivo': motivo ?? '',
+      'observacao': observacao ?? '',
+      'editado': null,
+      'recusado': null,
+      'retry': false,
+      if (recaptchaToken != null && recaptchaToken.isNotEmpty)
+        'recaptchaToken': recaptchaToken,
+    };
+    await client.post(
+      'v2/backend/api/pedidos/$loja/$codigoExterno/devolution',
+      body: body,
+    );
+  }
 
   Future<Map<String, dynamic>> confirmarDevolucao(
           Map<String, dynamic> body) async =>

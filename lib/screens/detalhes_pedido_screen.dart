@@ -1799,10 +1799,14 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     final res = await MaestroDialogs.entregadorVoltou(context, motivos);
     if (res == null) return;
     try {
+      final lojaPedido = _pedido.loja.isNotEmpty
+          ? _pedido.loja
+          : (widget.session.getUserStore() ?? 'L291');
       await widget.apiService.devolverPedido(
-          _normOrigem(_pedido.origem),
+          lojaPedido,
           _pedido.codigoExterno,
           recaptchaToken: res.$3,
+          motivo: res.$1,
           observacao: res.$2);
     } catch (e) {
       _erroMsg(e);
