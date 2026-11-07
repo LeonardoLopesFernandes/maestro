@@ -1073,7 +1073,8 @@ class MaestroDialogs {
 
   // Entregador voltou (insucesso) — retorna (motivo, observacao, tokenRecaptcha)
   static Future<(String, String, String)?> entregadorVoltou(
-      BuildContext context, List<String> motivos) {
+      BuildContext context, List<String> motivos,
+      {String tokenInsucesso = ''}) {
     String? motivo;
     String? token;
     final obs = TextEditingController();
@@ -1092,6 +1093,67 @@ class MaestroDialogs {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  secondary: Image.asset('assets/icons/ic_recaptcha_logo.webp',
+                      height: 28),
+                  title: const Text('Não sou um robô',
+                      style: TextStyle(fontSize: 14)),
+                  value: recaptcha,
+                  onChanged: (v) async {
+                    if (v == true) {
+                      final t = await RecaptchaDialog.show(ctx);
+                      set(() => recaptcha = t != null);
+                      if (t != null) token = t;
+                    } else {
+                      set(() => recaptcha = false);
+                      token = null;
+                    }
+                  },
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Token de insucesso',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF6B7280),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      SelectableText(
+                        tokenInsucesso.isEmpty ? '---' : tokenInsucesso,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                          color: Color(0xFF111827),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Entregue este token ao entregador.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF6B7280),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Container(
                   height: 44,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1120,26 +1182,6 @@ class MaestroDialogs {
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4)),
                   ),
-                ),
-                const SizedBox(height: 12),
-                CheckboxListTile(
-                  contentPadding: EdgeInsets.zero,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  secondary: Image.asset('assets/icons/ic_recaptcha_logo.webp',
-                      height: 28),
-                  title: const Text('Não sou um robô',
-                      style: TextStyle(fontSize: 14)),
-                  value: recaptcha,
-                  onChanged: (v) async {
-                    if (v == true) {
-                      final t = await RecaptchaDialog.show(ctx);
-                      set(() => recaptcha = t != null);
-                      if (t != null) token = t;
-                    } else {
-                      set(() => recaptcha = false);
-                      token = null;
-                    }
-                  },
                 ),
               ],
             ),

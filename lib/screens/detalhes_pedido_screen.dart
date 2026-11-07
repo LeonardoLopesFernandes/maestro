@@ -1796,7 +1796,20 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     } catch (_) {
       motivos = ['Cliente ausente', 'Endereço incorreto', 'Recusou receber'];
     }
-    final res = await MaestroDialogs.entregadorVoltou(context, motivos);
+    String tokenInsucesso = _pedido.deliveryToken?.tokenInsucesso ?? '';
+    if (tokenInsucesso.isEmpty) {
+      try {
+        final tokens =
+            await widget.apiService.getDeliveryTokens(_pedido.numero);
+        tokenInsucesso = tokens['tokenInsucesso']?.toString() ?? '';
+      } catch (_) {}
+    }
+    if (!mounted) return;
+    final res = await MaestroDialogs.entregadorVoltou(
+      context,
+      motivos,
+      tokenInsucesso: tokenInsucesso,
+    );
     if (res == null) return;
     try {
       final lojaPedido = _pedido.loja.isNotEmpty
