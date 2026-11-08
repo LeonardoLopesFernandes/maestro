@@ -959,7 +959,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     final badges = <Widget>[];
     if (s.contains('NOVO')) {
       badges.add(_badgeAcao(
-          'POR EM SEPARAÇÃO', const Color(0xFF12CD0C), _acaoSeparar));
+          'EM SEPARAÇÃO', const Color(0xFF12CD0C), _acaoSeparar));
     } else if (s.contains('SEPARACAO')) {
       badges.add(_badgeAcao('CONFIRMAR', const Color(0xFF00CBFE), _acaoConfirmar));
     } else if (s.contains('PRONTO')) {
