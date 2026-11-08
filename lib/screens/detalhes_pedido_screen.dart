@@ -997,7 +997,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     } else if (s.contains('RETORNAR')) {
       badges.add(_badgeAcao('DEVOLVER PARA ESTOQUE', const Color(0xFFF80032),
           _acaoDevolverEstoque,
-          fim: appIcon('assets/icons/devolver.png',
+          inicio: appIcon('assets/icons/devolver.png',
               width: 22, height: 22, color: Colors.white)));
     } else if (s.contains('FINALIZADO')) {
       badges.add(_badgeAcao(
