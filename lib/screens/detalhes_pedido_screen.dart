@@ -264,6 +264,14 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                           children: [
                             _headerStatus(),
                             const SizedBox(height: 12),
+                            if (_ehDelivery) ...[
+                              _cardAvisoFormulario(),
+                              const SizedBox(height: 12),
+                            ],
+                            if (_coletaTardia) ...[
+                              _cardAnalisarColeta(),
+                              const SizedBox(height: 12),
+                            ],
                             _cardCliente(),
                             const SizedBox(height: 10),
                             _cardRecebedor(),
@@ -384,6 +392,15 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       );
 
   bool get _mostrarStatusHeader => true;
+
+  bool get _ehDelivery {
+    final tipo = (_pedido.tipoEntrega ?? '').toUpperCase();
+    final origem = (_pedido.origem ?? '').toUpperCase();
+    return tipo.contains('EXTERNA') || origem == 'SHIP_FROM_STORE';
+  }
+
+  bool get _coletaTardia =>
+      (_pedido.aba ?? '').toUpperCase() == 'COLETA_TARDIA';
 
   double _larguraTexto(String texto, double tamanho, FontWeight peso) {
     final tp = TextPainter(
@@ -674,6 +691,104 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       return false;
     }
   }
+
+  Widget _cardAvisoFormulario() => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEDF5FB),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFD6E6F2)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.info, color: Color(0xFF3B4CC0), size: 26),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Confira se o formulário do pedido foi colocado junto ao pacote.',
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                        height: 1.35),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Para que o cliente possa consultar a nota fiscal é necessário imprimir o formulário do pedido com o QR Code e grampeá-lo junto ao pacote.',
+                    style: TextStyle(
+                        fontSize: 12.5,
+                        color: Color(0xFF1F2937),
+                        height: 1.35),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _cardAnalisarColeta() => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF9E6),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFF0E2B6)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded,
+                color: Color(0xFFF5A623), size: 30),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Recebemos o status de entrega para esse pedido, mas a coleta não foi confirmada.',
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
+                        height: 1.35),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Analise a retirada do pedido e, caso não tenha sido coletado, entre em contato com o SAL.',
+                    style: TextStyle(
+                        fontSize: 12.5,
+                        color: Color(0xFF1F2937),
+                        height: 1.35),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            SizedBox(
+              height: 48,
+              child: ElevatedButton(
+                onPressed: _acaoAnalisarColeta,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1E293B),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text('ANALISAR',
+                    style: TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      );
 
   Widget _cardCliente() => _card(
         titulo: 'Dados do cliente',
@@ -1320,6 +1435,26 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     navigator.pop();
   }
 
+  Future<void> _acaoAnalisarColeta() async {
+    if (!mounted) return;
+    final opcao = await MaestroDialogs.analisarColeta(context);
+    if (opcao == null || !mounted) return;
+    if (opcao == 'nao_coletado') {
+      try {
+        await widget.apiService.marcarNaoColetado(
+            _normOrigem(_pedido.origem), _pedido.codigoExterno);
+        if (!mounted) return;
+        _aviso(
+            'Registrado: pedido não coletado (aguardando análise do SAL).');
+        await _carregar(silencioso: true);
+      } catch (e) {
+        _erroMsg(e);
+      }
+    } else {
+      _aviso('Coleta do pedido confirmada!');
+    }
+  }
+
   Future<void> _acaoSeparar() async {
     try {
       await widget.apiService.separarPedido(
@@ -1847,7 +1982,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoCancelarHistorico() async {
-    final res = await MaestroDialogs.devolverHistorico(context);
+    final res = await MaestroDialogs.devolverHistorico(context,
+        numero: _pedido.codigoExterno);
     if (res == null) return;
     try {
       await widget.apiService.cancelarPedido(

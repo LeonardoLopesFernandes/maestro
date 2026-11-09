@@ -11,6 +11,67 @@ const _vermelhoDark = 0xFFD50000;
 const _ifoodRed = 0xFFEA1D2C;
 
 class MaestroDialogs {
+  static Widget _recaptchaBox({
+    required bool autorizado,
+    required Future<void> Function() onTap,
+    bool compact = false,
+  }) {
+    final checkSize = compact ? 32.0 : 38.0;
+    return InkWell(
+      onTap: autorizado ? null : onTap,
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+            horizontal: compact ? 12 : 16, vertical: compact ? 10 : 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF9F9F9),
+          border: Border.all(color: const Color(0xFFD5D5D5)),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          children: [
+            if (autorizado)
+              Icon(Icons.check, color: const Color(0xFF0F9D58), size: checkSize)
+            else
+              Container(
+                width: compact ? 24 : 28,
+                height: compact ? 24 : 28,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: const Color(0xFFBDBDBD), width: 2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            SizedBox(width: compact ? 10 : 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Não sou um robô',
+                      style: TextStyle(
+                          fontSize: compact ? 14 : 16,
+                          color: const Color(0xFF1A1A1A))),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'Os Termos de Serviço do reCAPTCHA estão mudando. Acesse.',
+                    style: TextStyle(
+                        fontSize: 9.5,
+                        color: Color(0xFF555555),
+                        height: 1.2),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: compact ? 8 : 12),
+            Image.asset('assets/icons/ic_recaptcha_logo.webp',
+                height: compact ? 34 : 42),
+          ],
+        ),
+      ),
+    );
+  }
+
   // Confirmação simples (usado em vários fluxos)
   static Future<bool?> confirmar(
     BuildContext context, {
@@ -1077,135 +1138,232 @@ class MaestroDialogs {
       {String tokenInsucesso = ''}) {
     String? motivo;
     String? token;
+    String autoAnterior = '';
     final obs = TextEditingController();
     bool recaptcha = false;
+    final digitos = tokenInsucesso.replaceAll(RegExp(r'\s+'), '');
     return showDialog<(String, String, String)>(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, set) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          contentPadding: const EdgeInsets.all(20),
-          title: const Text('Selecione o motivo de Retorno:',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-          content: SizedBox(
-            width: double.infinity,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CheckboxListTile(
-                  contentPadding: EdgeInsets.zero,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  secondary: Image.asset('assets/icons/ic_recaptcha_logo.webp',
-                      height: 28),
-                  title: const Text('Não sou um robô',
-                      style: TextStyle(fontSize: 14)),
-                  value: recaptcha,
-                  onChanged: (v) async {
-                    if (v == true) {
-                      final t = await RecaptchaDialog.show(ctx);
-                      set(() => recaptcha = t != null);
-                      if (t != null) token = t;
-                    } else {
-                      set(() => recaptcha = false);
-                      token = null;
-                    }
-                  },
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF3F4F6),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFE5E7EB)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Token de insucesso',
+        builder: (ctx, set) {
+          final podeConfirmar = motivo != null && recaptcha;
+          return Dialog(
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4)),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: 520,
+                maxHeight: MediaQuery.of(ctx).size.height * 0.9,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(24, 20, 24, 16),
+                    child: Text('Selecione o motivo de Retorno:',
                         style: TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF6B7280),
-                          fontWeight: FontWeight.w600,
-                        ),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF666666))),
+                  ),
+                  const Divider(height: 1, color: Color(0xFFE0E0E0)),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 58,
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF2F2F2),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                  color: const Color(0xFFC8102E), width: 1.5),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: motivo,
+                                hint: const Text('Selecione um motivo...',
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        color: Color(0xFF1A1A1A))),
+                                icon: const Icon(Icons.arrow_drop_down,
+                                    color: Color(0xFF555555), size: 30),
+                                style: const TextStyle(
+                                    fontSize: 16, color: Color(0xFF1A1A1A)),
+                                items: motivos
+                                    .map((m) => DropdownMenuItem(
+                                        value: m,
+                                        child: Text(m,
+                                            overflow: TextOverflow.ellipsis)))
+                                    .toList(),
+                                onChanged: (v) {
+                                  set(() {
+                                    motivo = v;
+                                    if (v != null) {
+                                      final partes = v.split('|');
+                                      final auto = partes.length > 1
+                                          ? partes
+                                              .sublist(1)
+                                              .join('|')
+                                              .trim()
+                                          : v.trim();
+                                      if (obs.text.isEmpty ||
+                                          obs.text == autoAnterior) {
+                                        obs.text = auto;
+                                      }
+                                      autoAnterior = auto;
+                                    }
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          TextField(
+                            controller: obs,
+                            maxLines: 4,
+                            style: const TextStyle(fontSize: 15),
+                            decoration: InputDecoration(
+                              hintText: 'Digite aqui a observação',
+                              contentPadding: const EdgeInsets.all(14),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(2)),
+                              enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(2),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFF555555))),
+                              focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(2),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFF1A1A1A), width: 1.5)),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          const Text('Código de Devolução para Entregador:',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF666666))),
+                          const SizedBox(height: 12),
+                          const Divider(height: 1, color: Color(0xFFE0E0E0)),
+                          const SizedBox(height: 18),
+                          if (digitos.isEmpty)
+                            const Center(
+                              child: Text('---',
+                                  style: TextStyle(
+                                      fontSize: 42,
+                                      color: Color(0xFFC8102E))),
+                            )
+                          else
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: 22,
+                              runSpacing: 10,
+                              children: digitos.split('').map((c) {
+                                return Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(c,
+                                        style: const TextStyle(
+                                            fontSize: 44,
+                                            fontWeight: FontWeight.w500,
+                                            color: Color(0xFFC8102E))),
+                                    Container(
+                                      width: 42,
+                                      height: 2,
+                                      color: const Color(0xFFBDBDBD),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          const SizedBox(height: 24),
+                          Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 340),
+                              child: _recaptchaBox(
+                                autorizado: recaptcha,
+                                onTap: () async {
+                                  final t = await RecaptchaDialog.show(ctx);
+                                  if (t != null) {
+                                    set(() {
+                                      recaptcha = true;
+                                      token = t;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      SelectableText(
-                        tokenInsucesso.isEmpty ? '---' : tokenInsucesso,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                          color: Color(0xFF111827),
+                    ),
+                  ),
+                  const Divider(height: 1, color: Color(0xFFE0E0E0)),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 52,
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.of(ctx).pop(),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFFC8102E),
+                                side: const BorderSide(
+                                    color: Color(0xFFC8102E), width: 1.3),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4)),
+                              ),
+                              child: const Text('CANCELAR',
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        'Entregue este token ao entregador.',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF6B7280),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: SizedBox(
+                            height: 52,
+                            child: ElevatedButton(
+                              onPressed: podeConfirmar
+                                  ? () => Navigator.of(ctx)
+                                      .pop((motivo!, obs.text, token!))
+                                  : null,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFC8102E),
+                                disabledBackgroundColor:
+                                    const Color(0xFFE0E0E0),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4)),
+                              ),
+                              child: const Text('CONFIRMAR',
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white)),
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  height: 44,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Color(0xFFD1D5DB)),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: DropdownButton<String>(
-                    isExpanded: true,
-                    hint: const Text('Selecione um motivo...'),
-                    value: motivo,
-                    underline: const SizedBox(),
-                    items: motivos
-                        .map((m) => DropdownMenuItem(
-                            value: m, child: Text(m, style: const TextStyle(fontSize: 14))))
-                        .toList(),
-                    onChanged: (v) => set(() => motivo = v),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: obs,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    hintText: 'Digite aqui a observação',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4)),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('CANCELAR',
-                  style: TextStyle(color: Color(0xFF6B7280))),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: recaptcha
-                      ? const Color(0xFF16A34A)
-                      : const Color(0xFFD1D5DB)),
-              onPressed: (motivo != null && recaptcha)
-                  ? () => Navigator.of(ctx)
-                      .pop((motivo!, obs.text, token!))
-                  : null,
-              child: const Text('CONFIRMAR',
-                  style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -1299,94 +1457,170 @@ class MaestroDialogs {
   }
 
   // Devolver no histórico (cancelar finalizado) — retorna (motivo, tokenRecaptcha)
-  static Future<(String, String)?> devolverHistorico(BuildContext context) {
-    final m = TextEditingController();
+  static Future<(String, String)?> devolverHistorico(BuildContext context,
+      {String numero = ''}) {
+    final m = TextEditingController(text: 'Cliente quis devolver');
     String? token;
     bool recaptcha = false;
     return showDialog<(String, String)>(
       context: context,
-        builder: (ctx) => StatefulBuilder(
-        builder: (ctx, set) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          contentPadding: const EdgeInsets.all(20),
-          title: const Row(
-            children: [
-              Text('⚠️ ', style: TextStyle(fontSize: 18)),
-              Text('ATENÇÃO',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          content: SizedBox(
-            width: double.infinity,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Cliente está com o produto na loja para devolução?',
-                    style: TextStyle(fontSize: 14)),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: m,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    hintText: 'Motivo do cancelamento',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4)),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) {
+          final podeConfirmar = m.text.trim().isNotEmpty && recaptcha;
+          return Dialog(
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4)),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: 560,
+                maxHeight: MediaQuery.of(ctx).size.height * 0.9,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(24, 18, 24, 14),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.warning_amber_rounded,
+                            color: Color(0xFFF5A623), size: 34),
+                        SizedBox(width: 10),
+                        Text('ATENÇÃO',
+                            style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1A1A1A))),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                CheckboxListTile(
-                  contentPadding: EdgeInsets.zero,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  secondary: Image.asset('assets/icons/ic_recaptcha_logo.webp',
-                      height: 28),
-                  title: const Text('Não sou um robô',
-                      style: TextStyle(fontSize: 14)),
-                  value: recaptcha,
-                  onChanged: (v) async {
-                    if (v == true) {
-                      final t = await RecaptchaDialog.show(ctx);
-                      set(() => recaptcha = t != null);
-                      if (t != null) token = t;
-                    } else {
-                      set(() => recaptcha = false);
-                      token = null;
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(_vermelho),
-                    disabledBackgroundColor: const Color(0xFFE0E0E0)),
-                onPressed: (m.text.isNotEmpty && recaptcha)
-                    ? () => Navigator.of(ctx).pop((m.text, token!))
-                    : null,
-                child: const Text('CANCELAR PEDIDO',
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
+                  const Divider(height: 1, color: Color(0xFFE0E0E0)),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Cliente está com o produto e seus respectivos componentes na loja para fazer devolução?',
+                            style: TextStyle(
+                                fontSize: 16,
+                                color: Color(0xFF666666),
+                                height: 1.35),
+                          ),
+                          const SizedBox(height: 18),
+                          if (numero.isNotEmpty)
+                            Text('Nº do Pedido: $numero',
+                                style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF666666))),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: m,
+                            maxLines: 4,
+                            onChanged: (_) => set(() {}),
+                            style: const TextStyle(fontSize: 16),
+                            decoration: InputDecoration(
+                              contentPadding: const EdgeInsets.all(14),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(2)),
+                              enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(2),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFF1A1A1A), width: 1.2)),
+                              focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(2),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFF1A1A1A), width: 1.5)),
+                            ),
+                          ),
+                          const SizedBox(height: 18),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 340),
+                              child: _recaptchaBox(
+                                autorizado: recaptcha,
+                                compact: true,
+                                onTap: () async {
+                                  final t = await RecaptchaDialog.show(ctx);
+                                  if (t != null) {
+                                    set(() {
+                                      recaptcha = true;
+                                      token = t;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const Divider(height: 1, color: Color(0xFFE0E0E0)),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 14, 24, 18),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 150,
+                          height: 52,
+                          child: ElevatedButton.icon(
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            icon: const Icon(Icons.close, size: 22),
+                            label: const Text('NÃO',
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFE30613),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        SizedBox(
+                          width: 150,
+                          height: 52,
+                          child: ElevatedButton.icon(
+                            onPressed: podeConfirmar
+                                ? () => Navigator.of(ctx)
+                                    .pop((m.text.trim(), token!))
+                                : null,
+                            icon: const Icon(Icons.check, size: 22),
+                            label: const Text('SIM',
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4CAF50),
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor:
+                                  const Color(0xFFE0E0E0),
+                              disabledForegroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF9CA3AF),
-                    foregroundColor: Colors.white),
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('NÃO',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
