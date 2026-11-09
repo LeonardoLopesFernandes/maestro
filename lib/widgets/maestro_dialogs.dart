@@ -1263,27 +1263,30 @@ class MaestroDialogs {
                                       color: Color(0xFFC8102E))),
                             )
                           else
-                            Wrap(
-                              alignment: WrapAlignment.center,
-                              spacing: 22,
-                              runSpacing: 10,
-                              children: digitos.split('').map((c) {
-                                return Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(c,
-                                        style: const TextStyle(
-                                            fontSize: 44,
-                                            fontWeight: FontWeight.w500,
-                                            color: Color(0xFFC8102E))),
-                                    Container(
-                                      width: 42,
-                                      height: 2,
-                                      color: const Color(0xFFBDBDBD),
-                                    ),
-                                  ],
-                                );
-                              }).toList(),
+                            SizedBox(
+                              width: double.infinity,
+                              child: Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 22,
+                                runSpacing: 10,
+                                children: digitos.split('').map((c) {
+                                  return Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(c,
+                                          style: const TextStyle(
+                                              fontSize: 44,
+                                              fontWeight: FontWeight.w500,
+                                              color: Color(0xFFC8102E))),
+                                      Container(
+                                        width: 42,
+                                        height: 2,
+                                        color: const Color(0xFFBDBDBD),
+                                      ),
+                                    ],
+                                  );
+                                }).toList(),
+                              ),
                             ),
                           const SizedBox(height: 24),
                           Center(
@@ -1566,50 +1569,51 @@ class MaestroDialogs {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 14, 24, 18),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(
-                          width: 150,
-                          height: 52,
-                          child: ElevatedButton.icon(
-                            onPressed: () => Navigator.of(ctx).pop(),
-                            icon: const Icon(Icons.close, size: 22),
-                            label: const Text('NÃO',
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFE30613),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4)),
+                        Expanded(
+                          child: SizedBox(
+                            height: 52,
+                            child: ElevatedButton.icon(
+                              onPressed: () => Navigator.of(ctx).pop(),
+                              icon: const Icon(Icons.close, size: 22),
+                              label: const Text('NÃO',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFE30613),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4)),
+                              ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 24),
-                        SizedBox(
-                          width: 150,
-                          height: 52,
-                          child: ElevatedButton.icon(
-                            onPressed: podeConfirmar
-                                ? () => Navigator.of(ctx)
-                                    .pop((m.text.trim(), token!))
-                                : null,
-                            icon: const Icon(Icons.check, size: 22),
-                            label: const Text('SIM',
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4CAF50),
-                              foregroundColor: Colors.white,
-                              disabledBackgroundColor:
-                                  const Color(0xFFE0E0E0),
-                              disabledForegroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4)),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: SizedBox(
+                            height: 52,
+                            child: ElevatedButton.icon(
+                              onPressed: podeConfirmar
+                                  ? () => Navigator.of(ctx)
+                                      .pop((m.text.trim(), token!))
+                                  : null,
+                              icon: const Icon(Icons.check, size: 22),
+                              label: const Text('SIM',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF4CAF50),
+                                foregroundColor: Colors.white,
+                                disabledBackgroundColor:
+                                    const Color(0xFFE0E0E0),
+                                disabledForegroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4)),
+                              ),
                             ),
                           ),
                         ),
