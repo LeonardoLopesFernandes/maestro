@@ -238,7 +238,7 @@ class DashboardScreenState extends State<DashboardScreen> {
     };
     return Container(
       width: 220,
-      height: 180,
+      height: 156,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -292,7 +292,7 @@ class DashboardScreenState extends State<DashboardScreen> {
               height: 1.3,
             ),
           ),
-          const Spacer(),
+          const SizedBox(height: 8),
           Text(
             card.goal.toUpperCase(),
             style: const TextStyle(
@@ -752,7 +752,8 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   IconData _iconeVazio(DashboardTable tabela) {
-    if (tabela.variant.toLowerCase() == 'red') {
+    final texto = '${tabela.title} ${tabela.emptyTitle}'.toLowerCase();
+    if (texto.contains('vencimento') || texto.contains('vencer')) {
       return Icons.sentiment_satisfied_alt_outlined;
     }
     return Icons.sentiment_neutral_outlined;
