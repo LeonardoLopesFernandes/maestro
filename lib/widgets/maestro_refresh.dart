@@ -1,5 +1,6 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'colorful_spinner.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// Pull-to-refresh do maestro: enquanto puxa, o "m" é desenhado.
 class MaestroRefresh extends StatefulWidget {
@@ -19,8 +20,9 @@ class MaestroRefresh extends StatefulWidget {
 }
 
 class _MaestroRefreshState extends State<MaestroRefresh>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _controller;
+  late final AnimationController _giro;
   double _acumulado = 0;
   bool _atualizando = false;
 
@@ -31,11 +33,16 @@ class _MaestroRefreshState extends State<MaestroRefresh>
       vsync: this,
       duration: const Duration(milliseconds: 250),
     );
+    _giro = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _giro.dispose();
     super.dispose();
   }
 
@@ -66,6 +73,7 @@ class _MaestroRefreshState extends State<MaestroRefresh>
   Future<void> _atualizar() async {
     _atualizando = true;
     _acumulado = 0;
+    _giro.repeat();
     await _controller.animateTo(
       1,
       duration: const Duration(milliseconds: 220),
@@ -80,6 +88,8 @@ class _MaestroRefreshState extends State<MaestroRefresh>
         duration: const Duration(milliseconds: 260),
         curve: Curves.easeIn,
       );
+      _giro.stop();
+      _giro.value = 0;
     }
   }
 
@@ -100,10 +110,12 @@ class _MaestroRefreshState extends State<MaestroRefresh>
           right: 0,
           child: IgnorePointer(
             child: AnimatedBuilder(
-              animation: _controller,
+              animation: Listenable.merge([_controller, _giro]),
               builder: (_, __) {
                 final p = _controller.value;
                 if (p < 0.01) return const SizedBox.shrink();
+                final angulo =
+                    (_atualizando ? _giro.value : p) * 2 * math.pi;
                 return Opacity(
                   opacity: p.clamp(0.0, 1.0),
                   child: Center(
@@ -122,10 +134,17 @@ class _MaestroRefreshState extends State<MaestroRefresh>
                           ),
                         ],
                       ),
-                      child: MaestroColorfulSpinner(
-                        size: 42,
-                        strokeWidth: 4,
-                        trackColor: const Color(0xFFE6E6E6),
+                      child: Transform.rotate(
+                        angle: angulo,
+                        child: SvgPicture.asset(
+                          'assets/icons/pull_refresh.svg',
+                          width: 36,
+                          height: 36,
+                          colorFilter: ColorFilter.mode(
+                            widget.cor,
+                            BlendMode.srcIn,
+                          ),
+                        ),
                       ),
                     ),
                   ),
