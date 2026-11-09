@@ -402,6 +402,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   bool get _coletaTardia =>
       (_pedido.aba ?? '').toUpperCase() == 'COLETA_TARDIA';
 
+  int get _quantidadeItens => _pedido.itens
+      .fold<int>(0, (total, item) => total + item.quantidadeEfetiva);
+
   double _larguraTexto(String texto, double tamanho, FontWeight peso) {
     final tp = TextPainter(
       text: TextSpan(
@@ -881,7 +884,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Widget _cardItens() => _card(
-        titulo: 'Itens do pedido',
+        titulo: 'Itens do pedido ($_quantidadeItens)',
         child: Column(
           children: [
             ..._pedido.itens.map(_itemRow).toList(),
