@@ -598,6 +598,12 @@ class DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  double _larguraColuna(int index, String coluna) {
+    if (index == 0) return 170;
+    if (coluna.toLowerCase().contains('cliente')) return 200;
+    return 130;
+  }
+
   Widget _linhasTabela(DashboardTable tabela, Color cor) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -606,11 +612,11 @@ class DashboardScreenState extends State<DashboardScreen> {
         children: [
           Row(
             children: [
-              for (final coluna in tabela.columns)
+              for (var i = 0; i < tabela.columns.length; i++)
                 SizedBox(
-                  width: 130,
+                  width: _larguraColuna(i, tabela.columns[i]),
                   child: Text(
-                    coluna,
+                    tabela.columns[i],
                     style: TextStyle(
                       color: cor,
                       fontSize: 10,
@@ -635,7 +641,8 @@ class DashboardScreenState extends State<DashboardScreen> {
         children: [
           for (var i = 0; i < valores.length; i++)
             SizedBox(
-              width: 130,
+              width: _larguraColuna(
+                  i, tabela.columns.length > i ? tabela.columns[i] : ''),
               child: i == 0
                   ? InkWell(
                       onTap: () async {
@@ -673,15 +680,33 @@ class DashboardScreenState extends State<DashboardScreen> {
                         ],
                       ),
                     )
-                  : Text(
-                      valores[i],
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: _texto,
-                        fontSize: 11,
-                      ),
-                    ),
+                  : tabela.columns.length > i &&
+                          tabela.columns[i].toLowerCase().contains('cliente')
+                      ? Align(
+                          alignment: Alignment.centerLeft,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              valores[i],
+                              maxLines: 1,
+                              softWrap: false,
+                              style: const TextStyle(
+                                color: _texto,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Text(
+                          valores[i],
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: _texto,
+                            fontSize: 11,
+                          ),
+                        ),
             ),
         ],
       ),

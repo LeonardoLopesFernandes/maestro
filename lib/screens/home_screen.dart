@@ -72,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   // Filtros
   int _minDias = 7;
   bool _ordemDataInclusao = true;
+  int _buscaGeracao = 0;
 
   final List<_Aba> _abas = const [
     _Aba('Dashboard', 'DASHBOARD', 0),
@@ -235,11 +236,44 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (idx >= 0) _onNavTap(idx);
   }
 
-  void _buscarNoDashboard(String texto) {
+  Future<void> _buscarNoDashboard(String texto) async {
     _searchController.text = texto;
-    final idx = _abas.indexWhere(
-        (a) => a.status == Constants.statusNovoPedido);
-    if (idx >= 0) _onNavTap(idx);
+    FocusManager.instance.primaryFocus?.unfocus();
+    final termo = texto.trim();
+    if (termo.isEmpty) return;
+    final geracao = ++_buscaGeracao;
+    final alvos = <({int idx, String status, int minDias})>[
+      (idx: 1, status: Constants.statusNovoPedido, minDias: _minDias),
+      (idx: 2, status: Constants.statusEmSeparacao, minDias: _minDias),
+      (idx: 3, status: Constants.statusProntoParaSair, minDias: _minDias),
+      (idx: 4, status: Constants.statusSaiuParaEntrega, minDias: _minDias),
+      (idx: 5, status: Constants.statusRetornarEstoque, minDias: _minDias),
+      (idx: 6, status: Constants.statusFinalizado, minDias: 0),
+    ];
+    final encontrados = await Future.wait(alvos.map((alvo) async {
+      try {
+        final resp = await widget.apiService.getPedidosPaged(
+          skip: 0,
+          limit: 1,
+          status: alvo.status,
+          minDias: alvo.minDias,
+          ordemDataInclusao: _ordemDataInclusao,
+          find: termo,
+        );
+        return resp.pedidos.isNotEmpty;
+      } catch (_) {
+        return false;
+      }
+    }));
+    if (!mounted || geracao != _buscaGeracao) return;
+    final pos = encontrados.indexOf(true);
+    if (pos < 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pedido não encontrado.')),
+      );
+      return;
+    }
+    _onNavTap(alvos[pos].idx);
   }
 
   Color get _corAba => Color(_tabColors[_currentIndex]);

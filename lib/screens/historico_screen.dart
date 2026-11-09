@@ -56,6 +56,14 @@ class HistoricoScreenState extends State<HistoricoScreen> {
     _carregar(reset: true);
   }
 
+  @override
+  void didUpdateWidget(covariant HistoricoScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.search != widget.search) {
+      _busca.text = widget.search;
+    }
+  }
+
   // Status enviado à API (o filtro por origem/canal é feito client-side,
   // espelhando o HistoricoActivity do Kotlin).
   String get _statusParam {
