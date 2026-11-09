@@ -73,6 +73,7 @@ class _MaestroRefreshState extends State<MaestroRefresh>
   Future<void> _atualizar() async {
     _atualizando = true;
     _acumulado = 0;
+    _giro.value = _controller.value;
     _giro.repeat();
     await _controller.animateTo(
       1,
@@ -114,14 +115,21 @@ class _MaestroRefreshState extends State<MaestroRefresh>
               builder: (_, __) {
                 final p = _controller.value;
                 if (p < 0.01) return const SizedBox.shrink();
-                final angulo =
-                    (_atualizando ? _giro.value : p) * 2 * math.pi;
+                final progresso = _atualizando ? _giro.value : p;
+                final angulo = progresso * 2 * math.pi;
+                final base = HSVColor.fromColor(widget.cor);
+                final cor = HSVColor.fromAHSV(
+                  1,
+                  (base.hue + progresso * 360) % 360,
+                  math.max(base.saturation, 0.8),
+                  math.max(base.value, 0.9),
+                ).toColor();
                 return Opacity(
                   opacity: p.clamp(0.0, 1.0),
                   child: Center(
                     child: Container(
-                      width: 64,
-                      height: 64,
+                      width: 56,
+                      height: 56,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -129,8 +137,8 @@ class _MaestroRefreshState extends State<MaestroRefresh>
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.14),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
@@ -138,10 +146,10 @@ class _MaestroRefreshState extends State<MaestroRefresh>
                         angle: angulo,
                         child: SvgPicture.asset(
                           'assets/icons/pull_refresh.svg',
-                          width: 36,
-                          height: 36,
+                          width: 28,
+                          height: 28,
                           colorFilter: ColorFilter.mode(
-                            widget.cor,
+                            cor,
                             BlendMode.srcIn,
                           ),
                         ),
