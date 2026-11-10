@@ -55,6 +55,7 @@ dependencies:
 
   # Geração de PDF
   printing: ^5.11.1
+  pdf: ^3.10.8
 
   # Câmera / galeria (telas de fotos)
   image_picker: ^1.0.7

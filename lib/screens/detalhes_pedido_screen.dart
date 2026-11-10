@@ -11,6 +11,7 @@ import '../network/session_manager.dart';
 import '../utils/currency_formatter.dart';
 import '../widgets/maestro_dialogs.dart';
 import '../widgets/app_icon.dart';
+import 'imprimir_pedido_screen.dart';
 import 'visualizar_danfe_screen.dart';
 import '../widgets/smartphone_confirmacao_dialog.dart';
 import '../widgets/produto_imagem_dialog.dart';
@@ -401,6 +402,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
 
   bool get _coletaTardia =>
       (_pedido.aba ?? '').toUpperCase() == 'COLETA_TARDIA';
+
+  bool get _podeImprimirPedido => _ehDelivery;
 
   int get _quantidadeItens => _pedido.itens
       .fold<int>(0, (total, item) => total + item.quantidadeEfetiva);
@@ -795,6 +798,19 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
 
   Widget _cardCliente() => _card(
         titulo: 'Dados do cliente',
+        headerTrailing: _podeImprimirPedido
+            ? SizedBox(
+                width: 30,
+                height: 30,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  tooltip: 'Imprimir informações do pedido',
+                  icon: const Icon(Icons.print,
+                      color: Colors.white, size: 20),
+                  onPressed: _abrirImpressaoPedido,
+                ),
+              )
+            : null,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -915,6 +931,14 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         item: i,
         loja: widget.session.getUserStore() ?? 'L291',
       );
+
+  void _abrirImpressaoPedido() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ImprimirPedidoScreen(pedido: _pedido),
+      ),
+    );
+  }
 
   Future<void> _ligar(String numero) async {
     final limpo = numero.replaceAll(RegExp(r'[^0-9+]'), '');
