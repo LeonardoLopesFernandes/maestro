@@ -403,6 +403,7 @@ class _DuracaoSeparacao extends StatefulWidget {
 
 class _DuracaoSeparacaoState extends State<_DuracaoSeparacao> {
   static const int _limiteMin = 35;
+  late final DateTime? _inicio;
   late final int _baseMs;
   late final int _momento;
   Timer? _timer;
@@ -411,23 +412,9 @@ class _DuracaoSeparacaoState extends State<_DuracaoSeparacao> {
   void initState() {
     super.initState();
     _momento = DateTime.now().millisecondsSinceEpoch;
-    final tc = widget.pedido.tempoConfirmacao;
-    if (tc != null) {
-      _baseMs = tc;
-    } else {
-      final di = widget.pedido.dataInclusao;
-      if (di.isNotEmpty) {
-        try {
-          final dt = DateTime.parse(di).toLocal();
-          _baseMs =
-              DateTime.now().millisecondsSinceEpoch - dt.millisecondsSinceEpoch;
-        } catch (_) {
-          _baseMs = 0;
-        }
-      } else {
-        _baseMs = 0;
-      }
-    }
+    _inicio = _parseData(widget.pedido.dataInclusao) ??
+        _parseData(widget.pedido.dataCriacao);
+    _baseMs = _inicio == null ? (widget.pedido.tempoConfirmacao ?? 0) : 0;
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
     });
@@ -439,27 +426,62 @@ class _DuracaoSeparacaoState extends State<_DuracaoSeparacao> {
     super.dispose();
   }
 
+  DateTime? _parseData(String? valor) {
+    if (valor == null || valor.isEmpty) return null;
+    try {
+      return DateTime.parse(valor).toLocal();
+    } catch (_) {
+      return null;
+    }
+  }
+
   int get _totalMin {
+    final agora = DateTime.now();
+    if (_inicio != null) {
+      return _tempoAberto(_inicio, agora).inMinutes;
+    }
     final decorrido =
-        _baseMs + (DateTime.now().millisecondsSinceEpoch - _momento);
+        _baseMs + (agora.millisecondsSinceEpoch - _momento);
     return (decorrido / 60000).toInt();
+  }
+
+  // Conta apenas o tempo dentro do horário da loja:
+  // segunda a sábado das 10h às 20h e domingo das 14h às 19h.
+  Duration _tempoAberto(DateTime inicio, DateTime fim) {
+    if (!fim.isAfter(inicio)) return Duration.zero;
+    var total = Duration.zero;
+    var dia = DateTime(inicio.year, inicio.month, inicio.day);
+    final ultimoDia = DateTime(fim.year, fim.month, fim.day);
+    for (var i = 0; !dia.isAfter(ultimoDia) && i < 370; i++) {
+      final abre = DateTime(dia.year, dia.month, dia.day,
+          dia.weekday == DateTime.sunday ? 14 : 10);
+      final fecha = DateTime(dia.year, dia.month, dia.day,
+          dia.weekday == DateTime.sunday ? 19 : 20);
+      final inicioDia = inicio.isAfter(abre) ? inicio : abre;
+      final fimDia = fim.isBefore(fecha) ? fim : fecha;
+      if (fimDia.isAfter(inicioDia)) {
+        total += fimDia.difference(inicioDia);
+      }
+      dia = DateTime(dia.year, dia.month, dia.day + 1);
+    }
+    return total;
   }
 
   bool _dentroHorario() {
     final now = DateTime.now();
     final wd = now.weekday; // 1=seg .. 7=dom
-    final horaAbre = wd == 7 ? 14 : 10;
-    final horaFecha = wd == 7 ? 19 : 22;
+    final horaAbre = wd == DateTime.sunday ? 14 : 10;
+    final horaFecha = wd == DateTime.sunday ? 19 : 20;
     return now.hour >= horaAbre && now.hour < horaFecha;
   }
 
   @override
   Widget build(BuildContext context) {
-    // Fallback (sem tempoConfirmacao) só conta dentro do horário da loja.
-    if (widget.pedido.tempoConfirmacao == null && !_dentroHorario()) {
+    final totalMin = _totalMin;
+    // Fora do horário e sem tempo acumulado, não exibe a contagem.
+    if (totalMin == 0 && !_dentroHorario()) {
       return const SizedBox.shrink();
     }
-    final totalMin = _totalMin;
     late final String texto;
     if (totalMin < 60) {
       texto = '$totalMin ${totalMin == 1 ? 'minuto' : 'minutos'}';
