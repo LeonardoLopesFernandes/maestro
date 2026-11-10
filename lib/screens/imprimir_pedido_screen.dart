@@ -1,6 +1,5 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -33,12 +32,15 @@ class ImprimirPedidoScreen extends StatelessWidget {
   Future<Uint8List> _gerarPdf(PdfPageFormat format) async {
     final doc = pw.Document();
     final qrData = _qrData();
+    final logoBytes = await rootBundle
+        .load('assets/icons/americanas_logo.jpg')
+        .then((bd) => bd.buffer.asUint8List());
     doc.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(36),
         build: (context) => [
-          _cabecalho(),
+          _cabecalho(logoBytes),
           pw.SizedBox(height: 22),
           pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -66,18 +68,15 @@ class ImprimirPedidoScreen extends StatelessWidget {
     return doc.save();
   }
 
-  pw.Widget _cabecalho() {
+  pw.Widget _cabecalho(Uint8List logoBytes) {
     return pw.Row(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
-        pw.Text(
-          'americanas',
-          style: pw.TextStyle(
-            fontSize: 26,
-            fontWeight: pw.FontWeight.bold,
-            fontStyle: pw.FontStyle.italic,
-          ),
+        pw.Image(
+          pw.MemoryImage(logoBytes),
+          height: 46,
+          fit: pw.BoxFit.contain,
         ),
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.end,
