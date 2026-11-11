@@ -453,11 +453,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                     colorFilter: const ColorFilter.mode(
                         Color(0xFF64748B), BlendMode.srcIn),
                   ),
-                  const Text('Linha do Tempo',
-                      style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1F2937))),
+                  const Tooltip(
+                    message: 'Linha do Tempo',
+                    child: Icon(Icons.timeline_outlined,
+                        size: 22, color: Color(0xFF1F2937)),
+                  ),
                   const Spacer(),
                   _badgeTempoTotal(),
                 ],
@@ -818,8 +818,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 _pedido.cliente?.nome ?? 'Cliente não informado',
                 negrito: true, size: 16),
             if (_pedido.cliente?.cpf != null)
-              _linhaDado(
-                  Icons.badge, 'CPF: ${_formatarCpf(_pedido.cliente!.cpf)}'),
+              _linhaDadoImagem(
+                  Image.asset('assets/icons/cpf.png', fit: BoxFit.contain),
+                  'CPF: ${_formatarCpf(_pedido.cliente!.cpf)}'),
             if (_pedido.cliente?.email != null)
               _linhaDado(Icons.email, _limparEmail(_pedido.cliente!.email!)),
             if (_pedido.cliente?.telefone != null)
@@ -839,7 +840,13 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 ],
               ),
             if (_pedido.cliente?.endereco != null)
-              _linhaDado(Icons.location_on, _enderecoCompleto()),
+              _linhaDadoImagem(
+                  SvgPicture.asset(
+                    'assets/icons/endereco.svg',
+                    colorFilter: const ColorFilter.mode(
+                        Color(0xFF9CA3AF), BlendMode.srcIn),
+                  ),
+                  _enderecoCompleto()),
           ],
         ),
       );
@@ -902,7 +909,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 _pedido.recebedor?.nome ?? 'Não informado',
                 negrito: true, size: 16),
             if ((_pedido.recebedor?.documento ?? '').trim().isNotEmpty)
-              _linhaDado(Icons.badge,
+              _linhaDadoImagem(
+                  Image.asset('assets/icons/cpf.png', fit: BoxFit.contain),
                   'CPF: ${_formatarCpf(_pedido.recebedor!.documento)}'),
           ],
         ),
@@ -1110,6 +1118,31 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(icon, size: 18, color: const Color(0xFF9CA3AF)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(texto,
+                  style: TextStyle(
+                      fontSize: size,
+                      color: const Color(0xFF1A1A1A),
+                      fontWeight:
+                          negrito ? FontWeight.bold : FontWeight.normal)),
+            ),
+          ],
+        ),
+      );
+
+  Widget _linhaDadoImagem(Widget icone, String texto,
+          {bool negrito = false, double size = 13}) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: icone,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(texto,
