@@ -178,37 +178,43 @@ class MaestroDialogs {
                 onChanged: (v) => set(() => habilitado = v.trim().isNotEmpty),
               ),
               const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(_verdeEscuro),
-                      disabledBackgroundColor: const Color(0xFF9E9E9E)),
-                  onPressed: habilitado
-                      ? () => Navigator.of(ctx).pop(c.text.trim())
-                      : null,
-                  child: const Text('CONFIRMAR',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15)),
-                ),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(_vermelhoDark)),
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('CANCELAR',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15)),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(_vermelhoDark)),
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        child: const Text('CANCELAR',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(_verdeEscuro),
+                            disabledBackgroundColor: const Color(0xFF9E9E9E)),
+                        onPressed: habilitado
+                            ? () => Navigator.of(ctx).pop(c.text.trim())
+                            : null,
+                        child: const Text('CONFIRMAR',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15)),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
