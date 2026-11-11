@@ -818,16 +818,18 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 _pedido.cliente?.nome ?? 'Cliente não informado',
                 negrito: true, size: 16),
             if (_pedido.cliente?.cpf != null)
-              _linhaDado(Icons.badge, 'CPF: ${_pedido.cliente!.cpf!}'),
+              _linhaDado(
+                  Icons.badge, 'CPF: ${_formatarCpf(_pedido.cliente!.cpf)}'),
             if (_pedido.cliente?.email != null)
-              _linhaDado(Icons.email, _pedido.cliente!.email!),
+              _linhaDado(Icons.email, _limparEmail(_pedido.cliente!.email!)),
             if (_pedido.cliente?.telefone != null)
               Row(
                 children: [
                   const Icon(Icons.phone, size: 18, color: Color(0xFF9CA3AF)),
                   const SizedBox(width: 8),
                   Expanded(
-                      child: Text(_pedido.cliente!.telefone!,
+                      child: Text(
+                          _formatarTelefone(_pedido.cliente!.telefone),
                           style: const TextStyle(
                               fontSize: 13, color: Color(0xFF6B7280)))),
                   IconButton(
@@ -841,6 +843,39 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           ],
         ),
       );
+
+  String _somenteDigitos(String? valor) =>
+      (valor ?? '').replaceAll(RegExp(r'\D'), '');
+
+  String _formatarCpf(String? valor) {
+    final d = _somenteDigitos(valor);
+    if (d.length == 11) {
+      return '${d.substring(0, 3)}.${d.substring(3, 6)}.'
+          '${d.substring(6, 9)}-${d.substring(9)}';
+    }
+    return valor?.trim() ?? '';
+  }
+
+  String _formatarTelefone(String? valor) {
+    var d = _somenteDigitos(valor);
+    if (d.startsWith('55') && d.length > 11) d = d.substring(2);
+    if (d.length == 11) {
+      return '(${d.substring(0, 2)}) ${d[2]} '
+          '${d.substring(3, 7)}-${d.substring(7)}';
+    }
+    if (d.length == 10) {
+      return '(${d.substring(0, 2)}) ${d.substring(2, 6)}-${d.substring(6)}';
+    }
+    return valor?.trim() ?? '';
+  }
+
+  String _limparEmail(String valor) {
+    final v = valor.trim();
+    return v.replaceFirst(
+        RegExp(r'\s*-[A-Za-z0-9._-]*\.ct\.vtex\.com\.br.*$',
+            caseSensitive: false),
+        '');
+  }
 
   String _enderecoCompleto() {
     final c = _pedido.cliente;
@@ -860,9 +895,17 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
 
   Widget _cardRecebedor() => _card(
         titulo: 'Recebedor',
-        child: _linhaDado(Icons.person_outline,
-            _pedido.recebedor?.nome ?? 'Não informado',
-            negrito: true, size: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _linhaDado(Icons.person_outline,
+                _pedido.recebedor?.nome ?? 'Não informado',
+                negrito: true, size: 16),
+            if ((_pedido.recebedor?.documento ?? '').trim().isNotEmpty)
+              _linhaDado(Icons.badge,
+                  'CPF: ${_formatarCpf(_pedido.recebedor!.documento)}'),
+          ],
+        ),
       );
 
   Widget _cardMotivo() {
@@ -918,7 +961,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 Text(
                     'R\$ ${CurrencyFormatter.formatarMoeda(_pedido.valorTotal)}',
                     style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF4CD137))),
               ],
