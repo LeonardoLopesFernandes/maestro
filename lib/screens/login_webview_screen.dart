@@ -371,30 +371,36 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: !_loginConcluido,
-      child: Scaffold(
-        backgroundColor: const Color(0xFFE60000),
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.white,
-          elevation: 0,
-          toolbarHeight: 18,
-          systemOverlayStyle: const SystemUiOverlayStyle(
-            statusBarColor: Colors.white,
-            statusBarIconBrightness: Brightness.dark,
-            statusBarBrightness: Brightness.light,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Color(0xFFE60000),
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: PopScope(
+        canPop: !_loginConcluido,
+        child: Scaffold(
+          backgroundColor: const Color(0xFFE60000),
+          body: SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                // Toolbar fina branca, mantendo a status bar vermelha.
+                Container(height: 18, color: Colors.white),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      if (_pronto)
+                        WebViewWidget(controller: _controller)
+                      else
+                        const SizedBox.shrink(),
+                      if (_carregando) const _CarregamentoWidget(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        body: Stack(
-          children: [
-            if (_pronto)
-              WebViewWidget(controller: _controller)
-            else
-              const SizedBox.shrink(),
-            if (_carregando) const _CarregamentoWidget(),
-          ],
         ),
       ),
     );

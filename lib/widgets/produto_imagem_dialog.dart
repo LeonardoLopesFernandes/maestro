@@ -51,12 +51,24 @@ class _ProdutoImagemDialogState extends State<_ProdutoImagemDialog> {
     super.initState();
     final direta = (widget.item.urlImagem ?? '').trim();
     if (direta.isNotEmpty) {
-      _url = direta;
+      _url = _urlAltaResolucao(direta);
       _carregando = false;
       _tentouFallback = true;
     } else {
       _buscarNasApis();
     }
+  }
+
+  /// A resposta do pedido traz a imagem em miniatura (`-88-88`). Troca para
+  /// uma versão grande da mesma imagem no VTEX para não pixelar na tela.
+  String _urlAltaResolucao(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null || !uri.host.contains('vteximg.com.br')) return url;
+    final path = uri.path.replaceFirst(
+      RegExp(r'-\d+-\d+(?=/)'),
+      '-1000-1000',
+    );
+    return uri.replace(path: path).toString();
   }
 
   Future<void> _buscarNasApis() async {
@@ -107,7 +119,7 @@ class _ProdutoImagemDialogState extends State<_ProdutoImagemDialog> {
 
     if (!mounted) return;
     setState(() {
-      _url = url;
+      _url = url == null ? null : _urlAltaResolucao(url);
       _carregando = false;
     });
   }
@@ -283,6 +295,7 @@ class _ProdutoImagemDialogState extends State<_ProdutoImagemDialog> {
     return Image.network(
       _url!,
       fit: BoxFit.contain,
+      filterQuality: FilterQuality.high,
       loadingBuilder: (context, child, progress) {
         if (progress == null) return child;
         return const Center(child: CircularProgressIndicator());
