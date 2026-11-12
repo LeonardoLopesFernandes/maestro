@@ -2,44 +2,40 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../models/pedido.dart';
 import '../services/americanas_bff.dart';
 import '../services/image_search_api.dart';
 import '../services/serp_api_image_search.dart';
 import '../services/si5_image_search.dart';
 import '../utils/constants.dart';
 
-/// Abre o diálogo grande com a imagem do produto do pedido.
+/// Abre a imagem do produto do pedido em tela cheia.
 ///
-/// Busca primeiro na API da Americanas (BFF) pelo EAN e, se não houver imagem,
-/// cai na API de busca de imagem (Bluesoft/Google Images) usada no consultor
-/// de preço. Sem EAN, tenta pela descrição.
+/// Usa primeiro a URL (`urlImagem`) devolvida pelo pedido. Quando o pedido não
+/// tem arquivo de imagem, mantém a busca pelas APIs da Americanas/SI5/etc.
 Future<void> mostrarImagemProduto(
   BuildContext context, {
-  required String ean,
-  required String descricao,
+  required Item item,
   required String loja,
 }) {
   return showDialog<void>(
     context: context,
     barrierDismissible: true,
-    builder: (_) => _ProdutoImagemDialog(
-      ean: ean.trim(),
-      descricao: descricao.trim(),
-      loja: loja.trim().isEmpty ? Constants.defaultStore : loja.trim(),
+    builder: (_) => Dialog.fullscreen(
+      backgroundColor: Colors.white,
+      child: _ProdutoImagemDialog(
+        item: item,
+        loja: loja.trim().isEmpty ? Constants.defaultStore : loja.trim(),
+      ),
     ),
   );
 }
 
 class _ProdutoImagemDialog extends StatefulWidget {
-  final String ean;
-  final String descricao;
+  final Item item;
   final String loja;
 
-  const _ProdutoImagemDialog({
-    required this.ean,
-    required this.descricao,
-    required this.loja,
-  });
+  const _ProdutoImagemDialog({required this.item, required this.loja});
 
   @override
   State<_ProdutoImagemDialog> createState() => _ProdutoImagemDialogState();
@@ -47,66 +43,61 @@ class _ProdutoImagemDialog extends StatefulWidget {
 
 class _ProdutoImagemDialogState extends State<_ProdutoImagemDialog> {
   String? _url;
-  String? _fonte;
   bool _carregando = true;
+  bool _tentouFallback = false;
 
   @override
   void initState() {
     super.initState();
-    _carregar();
+    final direta = (widget.item.urlImagem ?? '').trim();
+    if (direta.isNotEmpty) {
+      _url = direta;
+      _carregando = false;
+      _tentouFallback = true;
+    } else {
+      _buscarNasApis();
+    }
   }
 
-  Future<void> _carregar() async {
+  Future<void> _buscarNasApis() async {
+    final ean = (widget.item.codigoEAN ?? '').trim();
+    final descricao = (widget.item.descricao ?? '').trim();
     String? url;
-    String? fonte;
 
     // 1) API da Americanas (BFF) — imagem oficial.
-    if (widget.ean.isNotEmpty) {
+    if (ean.isNotEmpty) {
       try {
-        final produto =
-            await AmericanasBff.getProduct(widget.ean, store: widget.loja);
+        final produto = await AmericanasBff.getProduct(ean, store: widget.loja);
         final u = produto.imageUrl?.trim();
-        if (u != null && u.isNotEmpty) {
-          url = u;
-          fonte = 'Americanas';
-        }
+        if (u != null && u.isNotEmpty) url = u;
       } catch (_) {}
     }
 
     // 2) SI5 Global (secundária) — imagem por EAN.
-    if (url == null && widget.ean.isNotEmpty) {
+    if (url == null && ean.isNotEmpty) {
       try {
-        final u = await Si5ImageSearch.searchByEan(widget.ean);
-        if (u != null && u.isNotEmpty) {
-          url = u;
-          fonte = 'SI5 Global';
-        }
+        final u = await Si5ImageSearch.searchByEan(ean);
+        if (u != null && u.isNotEmpty) url = u;
       } catch (_) {}
     }
 
     // 3) API de busca de imagem: Bluesoft + Google Images.
-    if (url == null && widget.ean.isNotEmpty) {
+    if (url == null && ean.isNotEmpty) {
       try {
-        final u = await SerpApiImageSearch.searchImageByEan(
-            widget.ean, widget.descricao);
-        if (u != null && u.isNotEmpty) {
-          url = u;
-          fonte = 'Bluesoft / Google Imagens';
-        }
+        final u = await SerpApiImageSearch.searchImageByEan(ean, descricao);
+        if (u != null && u.isNotEmpty) url = u;
       } catch (_) {}
     }
 
     // 4) ImageSearchApi (Google Shopping) — descrição ou EAN.
     if (url == null) {
-      final query =
-          widget.descricao.isNotEmpty ? widget.descricao : widget.ean;
+      final query = descricao.isNotEmpty ? descricao : ean;
       if (query.isNotEmpty) {
         try {
           final resultados = await ImageSearchApi.searchByText(query);
           for (final r in resultados) {
             if (r.imageUrl.trim().isNotEmpty) {
               url = r.imageUrl.trim();
-              fonte = 'ImageSearchApi';
               break;
             }
           }
@@ -117,96 +108,146 @@ class _ProdutoImagemDialogState extends State<_ProdutoImagemDialog> {
     if (!mounted) return;
     setState(() {
       _url = url;
-      _fonte = fonte;
       _carregando = false;
+    });
+  }
+
+  void _tentarFallback() {
+    if (_tentouFallback) return;
+    _tentouFallback = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _buscarNasApis();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final alturaImagem = math.min(size.height * 0.52, 440.0);
+    final item = widget.item;
+    final descricao = (item.descricao ?? '').trim();
 
-    return Dialog(
-      backgroundColor: Colors.white,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 36),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: 520,
-          maxHeight: size.height * 0.86,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.image_outlined,
-                      color: Color(Constants.RED_600)),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'Imagem do produto',
+    return Material(
+      color: Colors.white,
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: InkWell(
+                  onTap: () => Navigator.of(context).pop(),
+                  borderRadius: BorderRadius.circular(6),
+                  child: const Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.close,
+                            size: 18, color: Color(0xFF6B7280)),
+                        SizedBox(width: 8),
+                        Text('FECHAR',
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF6B7280),
+                                letterSpacing: 0.5)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (descricao.isNotEmpty)
+                      Text(
+                        descricao,
+                        style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1A1A1A),
+                            height: 1.3),
+                      ),
+                    const SizedBox(height: 16),
+                    _imagem(context),
+                    if (item.estoque != null) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE7F4E8),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          'Estoque estimado: ${item.estoque}',
+                          style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF2E7D32)),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Informações do produto no SAP',
                       style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1A1A)),
                     ),
-                  ),
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              if (widget.descricao.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2, bottom: 2),
-                  child: Text(
-                    widget.descricao,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              if (widget.ean.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Text(
-                    'EAN: ${widget.ean}',
-                    style: const TextStyle(
-                        fontSize: 11, color: Color(Constants.MEDIUM_TEXT)),
-                  ),
-                ),
-              const SizedBox(height: 12),
-              Flexible(
-                child: SizedBox(
-                  height: alturaImagem,
-                  width: double.infinity,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Container(
-                      color: const Color(0xFFF8FAFC),
-                      child: _conteudoImagem(),
+                    const SizedBox(height: 10),
+                    if (descricao.isNotEmpty) ...[
+                      Text(
+                        descricao,
+                        style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF555555),
+                            height: 1.4),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    if ((item.codigoSAP ?? '').trim().isNotEmpty)
+                      _linhaInfo('Código SAP', item.codigoSAP!.trim()),
+                    if ((item.codigoEAN ?? '').trim().isNotEmpty)
+                      _linhaInfo(
+                          'EAN de venda (SAP)', item.codigoEAN!.trim()),
+                    const SizedBox(height: 14),
+                    const Divider(height: 1, color: Color(0xFFE5E7EB)),
+                    const SizedBox(height: 14),
+                    const Text(
+                      'Outros EANs',
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1A1A)),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    ..._outrosEans(item),
+                  ],
                 ),
               ),
-              if (_fonte != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    'Fonte: $_fonte',
-                    style: const TextStyle(
-                        fontSize: 10, color: Color(Constants.GRAY_400)),
-                  ),
-                ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _imagem(BuildContext context) {
+    final largura = MediaQuery.sizeOf(context).width;
+    final altura = math.min(largura * 0.9, 460.0);
+    return Center(
+      child: SizedBox(
+        width: double.infinity,
+        height: altura,
+        child: _conteudoImagem(),
       ),
     );
   }
@@ -246,18 +287,72 @@ class _ProdutoImagemDialogState extends State<_ProdutoImagemDialog> {
         if (progress == null) return child;
         return const Center(child: CircularProgressIndicator());
       },
-      errorBuilder: (_, __, ___) => const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.broken_image_outlined,
-                size: 42, color: Color(0xFF9CA3AF)),
-            SizedBox(height: 10),
-            Text('Não foi possível carregar a imagem',
-                style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
-          ],
-        ),
-      ),
+      errorBuilder: (_, __, ___) {
+        if (!_tentouFallback) {
+          _tentarFallback();
+          return const Center(child: CircularProgressIndicator());
+        }
+        return const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.broken_image_outlined,
+                  size: 42, color: Color(0xFF9CA3AF)),
+              SizedBox(height: 10),
+              Text('Não foi possível carregar a imagem',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+            ],
+          ),
+        );
+      },
     );
   }
+
+  List<Widget> _outrosEans(Item item) {
+    final lista = <EanSecundario>[];
+    if (item.eansSecundarios.isNotEmpty) {
+      lista.addAll(item.eansSecundarios);
+    } else {
+      lista.addAll(item.eans
+          .where((e) => e.trim().isNotEmpty)
+          .map((e) => EanSecundario(numero: e, tipo: '')));
+    }
+    if (lista.isEmpty) {
+      return const [
+        Text('Nenhum EAN informado.',
+            style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+      ];
+    }
+    return lista
+        .where((e) => e.numero.trim().isNotEmpty)
+        .map((e) => _linhaInfo(_labelEan(e.tipo), e.numero.trim()))
+        .toList();
+  }
+
+  String _labelEan(String tipo) {
+    final t = tipo.toUpperCase();
+    if (t.contains('DISTRIB')) return 'EAN unidade de distribuição';
+    if (t.contains('VENDA')) return 'EAN unidade de venda';
+    return 'EAN';
+  }
+
+  Widget _linhaInfo(String label, String valor) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: '$label: ',
+                style: const TextStyle(
+                    fontSize: 13, color: Color(0xFF666666)),
+              ),
+              TextSpan(
+                text: valor,
+                style: const TextStyle(
+                    fontSize: 13, color: Color(0xFF1A1A1A)),
+              ),
+            ],
+          ),
+        ),
+      );
 }

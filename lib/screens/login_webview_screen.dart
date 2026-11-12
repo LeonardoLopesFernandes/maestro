@@ -375,6 +375,18 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
       canPop: !_loginConcluido,
       child: Scaffold(
         backgroundColor: const Color(0xFFE60000),
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+          elevation: 0,
+          toolbarHeight: 18,
+          systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarColor: Colors.white,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
+          ),
+        ),
         body: Stack(
           children: [
             if (_pronto)

@@ -271,11 +271,25 @@ class MotivoCancelamento {
       MotivoCancelamento(texto: json['texto']);
 }
 
+class EanSecundario {
+  final String numero;
+  final String tipo;
+
+  const EanSecundario({required this.numero, required this.tipo});
+
+  factory EanSecundario.fromJson(Map<String, dynamic> json) => EanSecundario(
+        numero: (json['numero'] ?? '').toString(),
+        tipo: (json['tipo'] ?? '').toString(),
+      );
+}
+
 class Item {
   final String? codigoEAN;
   final List<String> eans;
+  final List<EanSecundario> eansSecundarios;
   final String? codigoSAP;
   final String? descricao;
+  final String? urlImagem;
   final int quantidade;
   final int? quantidadeTotal;
   final double valorUnitario;
@@ -288,8 +302,10 @@ class Item {
   Item({
     this.codigoEAN,
     this.eans = const [],
+    this.eansSecundarios = const [],
     this.codigoSAP,
     this.descricao,
+    this.urlImagem,
     this.quantidade = 0,
     this.quantidadeTotal,
     this.valorUnitario = 0.0,
@@ -304,8 +320,15 @@ class Item {
         codigoEAN: json['codigoEAN'],
         eans:
             (json['eans'] as List?)?.map((e) => e.toString()).toList() ?? [],
+        eansSecundarios: (json['eansSecundarios'] as List?)
+                ?.whereType<Map>()
+                .map((e) =>
+                    EanSecundario.fromJson(Map<String, dynamic>.from(e)))
+                .toList() ??
+            const [],
         codigoSAP: json['codigoSAP'],
         descricao: json['descricao'],
+        urlImagem: json['urlImagem'],
         quantidade: json['quantidade'] ?? 0,
         quantidadeTotal: _toIntNullable(json['quantidadeTotal']),
         valorUnitario: _toDouble(json['valorUnitario']),
@@ -333,8 +356,10 @@ class Item {
     return Item(
       codigoEAN: codigoEAN,
       eans: eans,
+      eansSecundarios: eansSecundarios,
       codigoSAP: codigoSAP,
       descricao: descricao,
+      urlImagem: urlImagem,
       quantidade: quantidade,
       quantidadeTotal: quantidadeTotal ?? this.quantidadeTotal,
       valorUnitario: valorUnitario,

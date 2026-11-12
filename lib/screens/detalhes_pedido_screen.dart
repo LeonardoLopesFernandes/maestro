@@ -2177,8 +2177,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                         borderRadius: BorderRadius.circular(6),
                         onTap: () => mostrarImagemProduto(
                           context,
-                          ean: i.codigoEAN ?? '',
-                          descricao: i.descricao ?? '',
+                          item: i,
                           loja: widget.loja,
                         ),
                         child: Padding(

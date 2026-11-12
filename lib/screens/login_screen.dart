@@ -98,13 +98,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 final h = constraints.maxHeight;
                 return Align(
                   alignment: const Alignment(0.95, 0.05),
-                  child: Text(
-                    'a',
-                    style: TextStyle(
-                      fontSize: h * 1.8,
-                      height: 1.0,
-                      color: Colors.black12,
-                      fontWeight: FontWeight.w900,
+                  child: Transform.translate(
+                    offset: Offset(0, -h * 0.35),
+                    child: Text(
+                      'a',
+                      style: TextStyle(
+                        fontSize: h * 1.8,
+                        height: 1.0,
+                        color: Colors.black12,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
                 );
