@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
 import '../models/pedido.dart';
 import '../services/americanas_bff.dart';
@@ -292,33 +294,113 @@ class _ProdutoImagemDialogState extends State<_ProdutoImagemDialog> {
         ),
       );
     }
-    return Image.network(
-      _url!,
-      fit: BoxFit.contain,
-      filterQuality: FilterQuality.high,
-      loadingBuilder: (context, child, progress) {
-        if (progress == null) return child;
-        return const Center(child: CircularProgressIndicator());
-      },
-      errorBuilder: (_, __, ___) {
-        if (!_tentouFallback) {
-          _tentarFallback();
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onLongPress: _salvarImagemComConfirmacao,
+      child: Image.network(
+        _url!,
+        fit: BoxFit.contain,
+        filterQuality: FilterQuality.high,
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
           return const Center(child: CircularProgressIndicator());
-        }
-        return const Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.broken_image_outlined,
-                  size: 42, color: Color(0xFF9CA3AF)),
-              SizedBox(height: 10),
-              Text('Não foi possível carregar a imagem',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
-            ],
-          ),
-        );
-      },
+        },
+        errorBuilder: (_, __, ___) {
+          if (!_tentouFallback) {
+            _tentarFallback();
+            return const Center(child: CircularProgressIndicator());
+          }
+          return const Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.broken_image_outlined,
+                    size: 42, color: Color(0xFF9CA3AF)),
+                SizedBox(height: 10),
+                Text('Não foi possível carregar a imagem',
+                    style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+              ],
+            ),
+          );
+        },
+      ),
     );
+  }
+
+  Future<void> _salvarImagemComConfirmacao() async {
+    final url = _url;
+    if (url == null || url.isEmpty) return;
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Salvar imagem'),
+        content: const Text('Deseja salvar a imagem em Download/Maestro?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('CANCELAR'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE60000),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('SALVAR'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true || !mounted) return;
+    try {
+      final resp = await http.get(Uri.parse(url));
+      if (resp.statusCode < 200 || resp.statusCode >= 300) {
+        throw Exception('HTTP ${resp.statusCode}');
+      }
+      final nome = _nomeArquivoImagem(url);
+      await const MethodChannel('io.maestro/media').invokeMethod(
+        'saveToDownloads',
+        {
+          'fileName': nome,
+          'mimeType': _mimeImagem(url),
+          'bytes': resp.bodyBytes,
+        },
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Imagem salva em Download/Maestro')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao salvar imagem: $e')),
+      );
+    }
+  }
+
+  String _nomeArquivoImagem(String url) {
+    final uri = Uri.tryParse(url);
+    var ext = 'jpg';
+    if (uri != null) {
+      final path = uri.path.toLowerCase();
+      for (final e in const ['jpg', 'jpeg', 'png', 'webp']) {
+        if (path.endsWith('.$e')) {
+          ext = e == 'jpeg' ? 'jpg' : e;
+          break;
+        }
+      }
+    }
+    final ean = (widget.item.codigoEAN ?? '').replaceAll(RegExp(r'\D'), '');
+    final base = ean.isNotEmpty ? ean : 'produto';
+    return 'maestro_${base}_${DateTime.now().millisecondsSinceEpoch}.$ext';
+  }
+
+  String _mimeImagem(String url) {
+    final path = url.toLowerCase();
+    if (path.contains('.png')) return 'image/png';
+    if (path.contains('.webp')) return 'image/webp';
+    return 'image/jpeg';
   }
 
   List<Widget> _outrosEans(Item item) {
