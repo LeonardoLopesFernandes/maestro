@@ -42,6 +42,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   bool _carregando = true;
   Map<String, dynamic>? _tokens;
   bool _timelineAberta = false;
+  bool _clienteAberto = false;
   final ScrollController _scrollController = ScrollController();
   bool _mostrarAcao = false;
   bool _mostrarTokens = false;
@@ -274,8 +275,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                               const SizedBox(height: 12),
                             ],
                             _cardCliente(),
-                            const SizedBox(height: 10),
-                            _cardRecebedor(),
                             const SizedBox(height: 10),
                             _cardMotivo(),
                             const SizedBox(height: 10),
@@ -796,8 +795,10 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         ),
       );
 
-  Widget _cardCliente() => _card(
+  Widget _cardCliente() => _cardExpansivel(
         titulo: 'Dados do cliente',
+        aberto: _clienteAberto,
+        onToggle: () => setState(() => _clienteAberto = !_clienteAberto),
         headerTrailing: _podeImprimirPedido
             ? SizedBox(
                 width: 30,
@@ -847,6 +848,22 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                         Color(0xFF9CA3AF), BlendMode.srcIn),
                   ),
                   _enderecoCompleto()),
+            const SizedBox(height: 8),
+            const Divider(height: 1, color: Color(0xFFE5E7EB)),
+            const SizedBox(height: 8),
+            const Text('Recebedor',
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF6B7280))),
+            const SizedBox(height: 4),
+            _linhaDado(Icons.person_outline,
+                _pedido.recebedor?.nome ?? 'Não informado',
+                negrito: true, size: 14),
+            if ((_pedido.recebedor?.documento ?? '').trim().isNotEmpty)
+              _linhaDadoImagem(
+                  Image.asset('assets/icons/cpf.png', fit: BoxFit.contain),
+                  'CPF: ${_formatarCpf(_pedido.recebedor!.documento)}'),
           ],
         ),
       );
@@ -899,22 +916,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     final s = b.toString().trim();
     return s.isEmpty ? 'Endereço não informado' : s;
   }
-
-  Widget _cardRecebedor() => _card(
-        titulo: 'Recebedor',
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _linhaDado(Icons.person_outline,
-                _pedido.recebedor?.nome ?? 'Não informado',
-                negrito: true, size: 16),
-            if ((_pedido.recebedor?.documento ?? '').trim().isNotEmpty)
-              _linhaDadoImagem(
-                  Image.asset('assets/icons/cpf.png', fit: BoxFit.contain),
-                  'CPF: ${_formatarCpf(_pedido.recebedor!.documento)}'),
-          ],
-        ),
-      );
 
   Widget _cardMotivo() {
     final motivos = _pedido.motivo;
@@ -1105,6 +1106,78 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             Padding(
               padding: const EdgeInsets.all(12),
               child: child,
+            ),
+          ],
+        ),
+      );
+
+  Widget _cardExpansivel({
+    required String titulo,
+    required bool aberto,
+    required VoidCallback onToggle,
+    required Widget child,
+    Widget? headerTrailing,
+  }) =>
+      Card(
+        margin: EdgeInsets.zero,
+        elevation: 0,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Color(_cinzaBorda), width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Material(
+              color: const Color(0xFFEF2E2E),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: onToggle,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 7),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(titulo,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                            Icon(
+                              aberto
+                                  ? Icons.keyboard_arrow_up
+                                  : Icons.keyboard_arrow_down,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (headerTrailing != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: headerTrailing,
+                    ),
+                ],
+              ),
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeInOut,
+              alignment: Alignment.topCenter,
+              child: aberto
+                  ? Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: child,
+                    )
+                  : const SizedBox(width: double.infinity),
             ),
           ],
         ),
