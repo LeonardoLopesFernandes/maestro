@@ -434,40 +434,12 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     );
   }
 
-  Widget _headerStatus() => Container(
-        color: Colors.white,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            InkWell(
-              onTap: () => setState(() => _timelineAberta = !_timelineAberta),
-              child: Row(
-                children: [
-                  SvgPicture.asset(
-                    _timelineAberta
-                        ? 'assets/vectors/ic_arrow_up.svg'
-                        : 'assets/vectors/ic_arrow_down.svg',
-                    width: 20,
-                    height: 20,
-                    colorFilter: const ColorFilter.mode(
-                        Color(0xFF64748B), BlendMode.srcIn),
-                  ),
-                  const Tooltip(
-                    message: 'Linha do Tempo',
-                    child: Icon(Icons.timeline_outlined,
-                        size: 22, color: Color(0xFF1F2937)),
-                  ),
-                  const Spacer(),
-                  _badgeTempoTotal(),
-                ],
-              ),
-            ),
-            if (_timelineAberta) ...[
-              const SizedBox(height: 12),
-              _timeline(),
-            ],
-          ],
-        ),
+  Widget _headerStatus() => _cardExpansivel(
+        titulo: 'Linha do Tempo',
+        aberto: _timelineAberta,
+        onToggle: () => setState(() => _timelineAberta = !_timelineAberta),
+        headerTrailing: _badgeTempoTotal(),
+        child: _timeline(),
       );
 
   ({String label, String icon, Color cor, bool tint}) _timelineInfo(String nome) {
