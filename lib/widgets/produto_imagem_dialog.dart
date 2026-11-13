@@ -369,7 +369,12 @@ class _ProdutoImagemDialogState extends State<_ProdutoImagemDialog> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Imagem salva em Download/Maestro')),
+        const SnackBar(
+          content: Text('Imagem salva em Download/Maestro',
+              style: TextStyle(color: Colors.white)),
+          backgroundColor: Color(0xFF2E7D32),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } catch (e) {
       if (!mounted) return;
