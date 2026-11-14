@@ -71,9 +71,9 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
                       child: Text(
                         'a',
                         style: TextStyle(
-                          fontSize: constraints.maxHeight * 1.8,
+                          fontSize: constraints.maxHeight * 2.0,
                           height: 1,
-                          color: Colors.black12,
+                          color: Color(0x26111111),
                           fontWeight: FontWeight.w900,
                         ),
                       ),
