@@ -1,8 +1,8 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-/// Pull-to-refresh do maestro: enquanto puxa, o "m" é desenhado.
+import 'auth_logo_animado.dart';
+
+/// Pull-to-refresh do maestro: enquanto puxa, o logo do app é desenhado.
 class MaestroRefresh extends StatefulWidget {
   final Future<void> Function() onRefresh;
   final Widget child;
@@ -20,9 +20,8 @@ class MaestroRefresh extends StatefulWidget {
 }
 
 class _MaestroRefreshState extends State<MaestroRefresh>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late final AnimationController _giro;
   double _acumulado = 0;
   bool _atualizando = false;
 
@@ -33,16 +32,11 @@ class _MaestroRefreshState extends State<MaestroRefresh>
       vsync: this,
       duration: const Duration(milliseconds: 250),
     );
-    _giro = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _giro.dispose();
     super.dispose();
   }
 
@@ -73,8 +67,6 @@ class _MaestroRefreshState extends State<MaestroRefresh>
   Future<void> _atualizar() async {
     _atualizando = true;
     _acumulado = 0;
-    _giro.value = _controller.value;
-    _giro.repeat();
     await _controller.animateTo(
       1,
       duration: const Duration(milliseconds: 220),
@@ -89,8 +81,6 @@ class _MaestroRefreshState extends State<MaestroRefresh>
         duration: const Duration(milliseconds: 260),
         curve: Curves.easeIn,
       );
-      _giro.stop();
-      _giro.value = 0;
     }
   }
 
@@ -111,38 +101,19 @@ class _MaestroRefreshState extends State<MaestroRefresh>
           right: 0,
           child: IgnorePointer(
             child: AnimatedBuilder(
-              animation: Listenable.merge([_controller, _giro]),
+              animation: _controller,
               builder: (_, __) {
                 final p = _controller.value;
                 if (p < 0.01) return const SizedBox.shrink();
-                final progresso = _atualizando ? _giro.value : p;
-                final angulo = progresso * 2 * math.pi;
-                final base = HSVColor.fromColor(widget.cor);
-                final cor = HSVColor.fromAHSV(
-                  1,
-                  (base.hue + progresso * 360) % 360,
-                  math.max(base.saturation, 0.8),
-                  math.max(base.value, 0.9),
-                ).toColor();
                 return Opacity(
                   opacity: p.clamp(0.0, 1.0),
                   child: Center(
                     child: SizedBox(
                       width: 40,
                       height: 40,
-                      child: Center(
-                        child: Transform.rotate(
-                          angle: angulo,
-                          child: SvgPicture.asset(
-                            'assets/icons/pull_refresh.svg',
-                            width: 28,
-                            height: 28,
-                            colorFilter: ColorFilter.mode(
-                              cor,
-                              BlendMode.srcIn,
-                            ),
-                          ),
-                        ),
+                      child: AuthLogoAnimado(
+                        size: 40,
+                        color: widget.cor,
                       ),
                     ),
                   ),

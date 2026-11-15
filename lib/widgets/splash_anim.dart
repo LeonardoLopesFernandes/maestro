@@ -64,9 +64,9 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
             Positioned.fill(
               child: IgnorePointer(
                 child: Padding(
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.zero,
                   child: FittedBox(
-                    fit: BoxFit.contain,
+                    fit: BoxFit.fitHeight,
                     alignment: Alignment.centerRight,
                     child: Text(
                       'a',

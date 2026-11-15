@@ -95,9 +95,9 @@ class _LoginScreenState extends State<LoginScreen> {
           Positioned.fill(
             child: IgnorePointer(
               child: Padding(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.zero,
                 child: FittedBox(
-                  fit: BoxFit.contain,
+                  fit: BoxFit.fitHeight,
                   alignment: Alignment.centerRight,
                   child: Text(
                     'a',

@@ -59,6 +59,7 @@ dependencies:
 
   # Câmera / galeria (telas de fotos)
   image_picker: ^1.0.7
+  path_drawing: ^1.0.1
 
 dev_dependencies:
   flutter_test:
