@@ -93,25 +93,23 @@ class _LoginScreenState extends State<LoginScreen> {
           // "a" gigante ao fundo (espelha activity_login.xml: txtFundoGigante).
           // Escala com a altura da tela para cobrir do topo ao rodapé.
           Positioned.fill(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final h = constraints.maxHeight;
-                return Align(
-                  alignment: const Alignment(0.95, 0.05),
-                  child: Transform.translate(
-                    offset: Offset(0, -h * 0.35),
-                    child: Text(
-                      'a',
-                      style: TextStyle(
-                        fontSize: h * 2.0,
-                        height: 1.0,
-                        color: Color(0x26111111),
-                        fontWeight: FontWeight.w900,
-                      ),
+            child: IgnorePointer(
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    'a',
+                    style: const TextStyle(
+                      fontSize: 1000,
+                      height: 1,
+                      color: Color(0x26111111),
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
-                );
-              },
+                ),
+              ),
             ),
           ),
           SafeArea(

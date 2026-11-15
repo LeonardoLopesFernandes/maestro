@@ -63,19 +63,18 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
           children: [
             Positioned.fill(
               child: IgnorePointer(
-                child: LayoutBuilder(
-                  builder: (context, constraints) => Align(
-                    alignment: const Alignment(0.95, 0.05),
-                    child: Transform.translate(
-                      offset: Offset(0, -constraints.maxHeight * 0.35),
-                      child: Text(
-                        'a',
-                        style: TextStyle(
-                          fontSize: constraints.maxHeight * 2.0,
-                          height: 1,
-                          color: Color(0x26111111),
-                          fontWeight: FontWeight.w900,
-                        ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      'a',
+                      style: const TextStyle(
+                        fontSize: 1000,
+                        height: 1,
+                        color: Color(0x26111111),
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),

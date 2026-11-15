@@ -34,6 +34,7 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
   Timer? _pollTimer;
   Timer? _injectTimer;
   bool _promptInjetado = false;
+  Color _statusBarColor = const Color(0xFFE60000);
 
   @override
   void initState() {
@@ -50,6 +51,15 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
     _senha = (args['senha'] ?? '').toString();
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..addJavaScriptChannel(
+        'MaestroStatusBar',
+        onMessageReceived: (message) {
+          final cor = _parseCor(message.message);
+          if (cor != null && mounted) {
+            setState(() => _statusBarColor = cor);
+          }
+        },
+      )
       ..setUserAgent(
           "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 "
           "(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
@@ -71,6 +81,10 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
               setState(() => _carregando = false);
             }
             _verificarUrl(url);
+            _atualizarCorStatusBar();
+            Future.delayed(const Duration(milliseconds: 800), () {
+              if (mounted) _atualizarCorStatusBar();
+            });
             // Auto-login: preenche e submete o formulário Microsoft quando
             // as credenciais salvas estiverem disponíveis.
             if (_autoLogin && url.contains('login.microsoftonline.com')) {
@@ -119,6 +133,45 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
       final token = await _capturarToken();
       if (token != null) _salvarToken(token);
     });
+  }
+
+  Color? _parseCor(String valor) {
+    final hex = valor.trim().replaceFirst('#', '');
+    if (hex.length != 6) return null;
+    final numero = int.tryParse(hex, radix: 16);
+    if (numero == null) return null;
+    return Color(0xFF000000 | numero);
+  }
+
+  Future<void> _atualizarCorStatusBar() async {
+    try {
+      await _controller.runJavaScript('''
+        (function() {
+          function toHex(cor) {
+            var m = cor && cor.match(/\\d+/g);
+            if (!m || m.length < 3) return null;
+            return '#' + m.slice(0, 3).map(function(v) {
+              return Number(v).toString(16).padStart(2, '0');
+            }).join('');
+          }
+          function corDoTopo() {
+            var el = document.elementFromPoint(window.innerWidth / 2, 2);
+            while (el) {
+              var bg = getComputedStyle(el).backgroundColor;
+              if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
+                return bg;
+              }
+              el = el.parentElement;
+            }
+            return getComputedStyle(document.body).backgroundColor;
+          }
+          var cor = toHex(corDoTopo());
+          if (window.MaestroStatusBar && cor) {
+            window.MaestroStatusBar.postMessage(cor);
+          }
+        })();
+      ''');
+    } catch (_) {}
   }
 
   // Força a tela de escolha de conta do Microsoft (ou a de login quando
@@ -371,22 +424,24 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final fundoClaro = _statusBarColor.computeLuminance() > 0.5;
+    final icones =
+        fundoClaro ? Brightness.dark : Brightness.light;
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
-        statusBarColor: Color(0xFFE60000),
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
+      value: SystemUiOverlayStyle(
+        statusBarColor: _statusBarColor,
+        statusBarIconBrightness: icones,
+        statusBarBrightness:
+            fundoClaro ? Brightness.light : Brightness.dark,
       ),
       child: PopScope(
         canPop: !_loginConcluido,
         child: Scaffold(
-          backgroundColor: const Color(0xFFE60000),
+          backgroundColor: _statusBarColor,
           body: SafeArea(
             bottom: false,
             child: Column(
               children: [
-                // Toolbar fina branca, mantendo a status bar vermelha.
-                Container(height: 18, color: Colors.white),
                 Expanded(
                   child: Stack(
                     children: [
