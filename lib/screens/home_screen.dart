@@ -573,6 +573,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       minDias: _minDias,
       ordemDataInclusao: _ordemDataInclusao,
       tabIcon: _tabIconAssets[aba.index],
+      cor: Color(_tabColors[aba.index]),
       onVoltarDetalhes: _recarregarTodasAbas,
     );
   }
@@ -594,6 +595,7 @@ class _PedidoListTab extends StatefulWidget {
   final int minDias;
   final bool ordemDataInclusao;
   final String tabIcon;
+  final Color cor;
   final VoidCallback? onVoltarDetalhes;
 
   const _PedidoListTab({
@@ -605,6 +607,7 @@ class _PedidoListTab extends StatefulWidget {
     required this.minDias,
     required this.ordemDataInclusao,
     required this.tabIcon,
+    required this.cor,
     this.onVoltarDetalhes,
   });
 
@@ -794,7 +797,7 @@ class _PedidoListTabState extends State<_PedidoListTab> {
       );
     }
     return MaestroRefresh(
-      cor: const Color(_red),
+      cor: widget.cor,
       onRefresh: () => _carregar(reset: true),
       child: ListView.builder(
         padding: const EdgeInsets.all(8),
