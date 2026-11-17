@@ -2282,7 +2282,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                           style: TextStyle(
                               fontSize: 11, color: corSecundaria)),
                       if (i.imeis.isNotEmpty)
-                        Text('IMEI: ${i.imeis.expand((e) => e).join(", ")}',
+                        Text(
+                            i.imeis
+                                .expand((e) => e)
+                                .map((e) => 'IMEI: $e')
+                                .join('\n'),
                             style: const TextStyle(
                                 fontSize: 12,
                                 color: Color(0xFFD32F2F),
