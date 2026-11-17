@@ -90,22 +90,20 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Stack(
         clipBehavior: Clip.none,
         children: [
-          // "a" gigante ao fundo (espelha activity_login.xml: txtFundoGigante).
-          // Escala com a altura da tela para cobrir do topo ao rodapé.
+          // Marca dágua "a" no canto superior direito, no mesmo estilo
+          // usado nos apps ML/loja mobile.
           Positioned.fill(
             child: IgnorePointer(
-              child: Padding(
-                padding: EdgeInsets.zero,
-                child: FittedBox(
-                  fit: BoxFit.fitHeight,
-                  alignment: Alignment.centerRight,
-                  child: Text(
+              child: Align(
+                alignment: const Alignment(1.2, -0.7),
+                child: Transform.scale(
+                  scale: 6.0,
+                  child: const Text(
                     'a',
-                    style: const TextStyle(
-                      fontSize: 1000,
-                      height: 1,
+                    style: TextStyle(
+                      fontSize: 320,
                       color: Color(0x26111111),
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
