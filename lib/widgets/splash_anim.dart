@@ -61,26 +61,6 @@ class _MaestroSplashAnimState extends State<MaestroSplashAnim>
         color: _vermelho,
         child: Stack(
           children: [
-            Positioned.fill(
-              child: IgnorePointer(
-                child: Padding(
-                  padding: EdgeInsets.zero,
-                  child: FittedBox(
-                    fit: BoxFit.fitHeight,
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      'a',
-                      style: const TextStyle(
-                        fontSize: 1000,
-                        height: 1,
-                        color: Color(0x26111111),
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
             SafeArea(
               child: Center(
                 child: SingleChildScrollView(
