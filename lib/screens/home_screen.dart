@@ -25,7 +25,7 @@ const int _bgLight = 0xFFF0F0F0;
 // Cores próprias de cada aba (como no Kotlin). O azul original da aba
 // Cores exatas das abas conforme activity_main.xml do Kotlin.
 const List<int> _tabColors = [
-  0xFFE60000, // Dashboard - vermelho
+  0xFF091583, // Previstos - azul escuro
   0xFF12CD0C, // Novos - verde
   0xFF00CBFE, // Separação - ciano
   0xFFFFAA02, // Retirada - laranja
@@ -35,7 +35,7 @@ const List<int> _tabColors = [
 ];
 
 const List<String> _tabIconAssets = [
-  'assets/icons/dashboard.svg',
+  'assets/icons/previsto.svg',
   'assets/icons/ic_clipboard.svg',
   'assets/icons/ic_sync.svg',
   'assets/icons/ic_bag.svg',
@@ -62,8 +62,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final Map<String, GlobalKey<_PedidoListTabState>> _listKeys = {};
   final GlobalKey<HistoricoScreenState> _historicoKey =
       GlobalKey<HistoricoScreenState>();
-  final GlobalKey<DashboardScreenState> _dashboardKey =
-      GlobalKey<DashboardScreenState>();
 
   final AudioPlayer _player = AudioPlayer();
   int _prevNovo = 0;
@@ -75,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _buscaGeracao = 0;
 
   final List<_Aba> _abas = const [
-    _Aba('Dashboard', 'DASHBOARD', 0),
+    _Aba('Previstos', Constants.statusPrevisto, 0),
     _Aba('Novos', Constants.statusNovoPedido, 1),
     _Aba('Separação', Constants.statusEmSeparacao, 2),
     _Aba('Retirada', Constants.statusProntoParaSair, 3),
@@ -126,9 +124,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void _recarregarAbaAtiva() {
     if (!mounted) return;
     final aba = _abas[_currentIndex];
-    if (aba.status == 'DASHBOARD') {
-      _dashboardKey.currentState?.recarregar();
-    } else if (aba.status == 'HISTORICO') {
+    if (aba.status == 'HISTORICO') {
       _historicoKey.currentState?.reload();
     } else {
       _listKeys[aba.status]?.currentState?._carregar(reset: true);
@@ -141,9 +137,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void _recarregarTodasAbas() {
     if (!mounted) return;
     for (final aba in _abas) {
-      if (aba.status == 'DASHBOARD') {
-        _dashboardKey.currentState?.recarregar();
-      } else if (aba.status == 'HISTORICO') {
+      if (aba.status == 'HISTORICO') {
         _historicoKey.currentState?.reload();
       } else {
         _listKeys[aba.status]?.currentState?._carregar(reset: true);
@@ -182,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   int _contagemPara(int index) {
     switch (index) {
       case 0:
-        return 0;
+        return _counts.previsto;
       case 1:
         return _counts.novoPedido;
       case 2:
@@ -204,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final n = _contagemPara(index);
     switch (index) {
       case 0:
-        return 'Visão geral';
+        return '$n ${n == 1 ? 'Previsto' : 'Previstos'}';
       case 1:
         return '$n ${n == 1 ? 'Novo pedido' : 'Novos pedidos'}';
       case 2:
@@ -243,6 +237,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (termo.isEmpty) return;
     final geracao = ++_buscaGeracao;
     final alvos = <({int idx, String status, int minDias})>[
+      (idx: 0, status: Constants.statusPrevisto, minDias: 0),
       (idx: 1, status: Constants.statusNovoPedido, minDias: _minDias),
       (idx: 2, status: Constants.statusEmSeparacao, minDias: _minDias),
       (idx: 3, status: Constants.statusProntoParaSair, minDias: _minDias),
@@ -277,6 +272,32 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Color get _corAba => Color(_tabColors[_currentIndex]);
+
+  Future<void> _abrirDashboard() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: const Color(_bgLight),
+          appBar: AppBar(
+            backgroundColor: const Color(_red),
+            foregroundColor: Colors.white,
+            title: const Text('Dashboard'),
+          ),
+          body: DashboardScreen(
+            apiService: widget.apiService,
+            onAbrirStatus: (codigo) {
+              Navigator.of(context).pop();
+              _abrirStatusDashboard(codigo);
+            },
+            onBuscar: (texto) {
+              Navigator.of(context).pop();
+              _buscarNoDashboard(texto);
+            },
+          ),
+        ),
+      ),
+    );
+  }
 
   void _abrirPerfil() {
     showDialog(
@@ -361,7 +382,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             _header(),
             // No Histórico o contador já está no header, então a barra branca
             // (statusBar) não aparece: a pesquisa sobe no lugar dela.
-            if (_currentIndex != 0 && _currentIndex != 6) _statusBar(),
+            if (_currentIndex != 6) _statusBar(),
             if (widget.session.isDemo())
               Container(
                 width: double.infinity,
@@ -411,8 +432,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
         child: Row(
           children: [
-            Image.asset('assets/icons/ic_logo_header.webp',
-                height: 40, width: 40),
+            InkWell(
+              onTap: _abrirDashboard,
+              borderRadius: BorderRadius.circular(20),
+              child: Image.asset('assets/icons/ic_logo_header.webp',
+                  height: 40, width: 40),
+            ),
             // No Histórico o contador fica no header, ao lado do ícone, e a
             // barra de pesquisa sobe para o lugar dele.
             if (_currentIndex == 6) ...[
@@ -547,14 +572,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       );
 
   Widget _conteudo(_Aba aba) {
-    if (aba.status == 'DASHBOARD') {
-      return DashboardScreen(
-        key: _dashboardKey,
-        apiService: widget.apiService,
-        onAbrirStatus: _abrirStatusDashboard,
-        onBuscar: _buscarNoDashboard,
-      );
-    }
     if (aba.status == 'HISTORICO') {
       return HistoricoScreen(
         key: _historicoKey,
@@ -570,7 +587,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       session: widget.session,
       status: aba.status,
       search: _searchController.text,
-      minDias: _minDias,
+      minDias: aba.index == 0 ? 0 : _minDias,
       ordemDataInclusao: _ordemDataInclusao,
       tabIcon: _tabIconAssets[aba.index],
       cor: Color(_tabColors[aba.index]),
