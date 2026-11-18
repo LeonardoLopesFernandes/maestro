@@ -528,7 +528,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       children: [
                         appIcon(
                             _tabIconAssets[i],
-                            width: 28,
+                            width: i == 0 ? 33.5 : 28,
                             height: 28,
                             color: ativo ? cor : const Color(0xFF9AA0A6)),
                         if (count > 0)
