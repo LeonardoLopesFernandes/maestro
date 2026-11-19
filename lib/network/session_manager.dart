@@ -5,6 +5,7 @@ class SessionManager {
   static const String _keyTokenExpiry = "TOKEN_EXPIRY";
   static const String _keyUserEmail = "USER_EMAIL";
   static const String _keyUserName = "USER_NAME";
+  static const String _keyUserNickname = "USER_NICKNAME";
   static const String _keyUserStore = "USER_STORE";
   static const String _keyRememberLogin = "REMEMBER_LOGIN";
   static const String _keyMsPassword = "MS_PASSWORD";
@@ -71,6 +72,20 @@ class SessionManager {
 
   String? getUserEmail() => _prefs.getString(_keyUserEmail);
   String? getUserName() => _prefs.getString(_keyUserName);
+
+  String? getUserNickname() {
+    final value = _prefs.getString(_keyUserNickname);
+    return (value == null || value.trim().isEmpty) ? null : value.trim();
+  }
+
+  void saveUserNickname(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      _prefs.remove(_keyUserNickname);
+    } else {
+      _prefs.setString(_keyUserNickname, trimmed);
+    }
+  }
   String? getUserStore() => _prefs.getString(_keyUserStore) ?? "L291";
 
   void saveProfilePhoto(String path) => _prefs.setString(_keyProfilePhoto, path);

@@ -302,7 +302,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void _abrirPerfil() {
     showDialog(
       context: context,
-      builder: (_) => _PerfilDialog(session: widget.session),
+      builder: (_) => _PerfilDialog(
+        session: widget.session,
+        cor: _corAba,
+      ),
     );
   }
 
@@ -878,7 +881,8 @@ class _PedidoListTabState extends State<_PedidoListTab> {
 
 class _PerfilDialog extends StatefulWidget {
   final SessionManager session;
-  const _PerfilDialog({required this.session});
+  final Color cor;
+  const _PerfilDialog({required this.session, required this.cor});
 
   @override
   State<_PerfilDialog> createState() => _PerfilDialogState();
@@ -915,95 +919,172 @@ class _PerfilDialogState extends State<_PerfilDialog> {
     }
   }
 
+  Future<void> _editarApelido() async {
+    final controller = TextEditingController(
+      text: widget.session.getUserNickname() ?? '',
+    );
+    final novo = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Alterar apelido'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 30,
+          decoration: const InputDecoration(
+            labelText: 'Como você quer ser chamado?',
+            hintText: 'Ex.: Léo',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text),
+            child: Text(
+              'Salvar',
+              style: TextStyle(
+                color: widget.cor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (novo == null || !mounted) return;
+    widget.session.saveUserNickname(novo);
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    final nome = widget.session.getUserName() ??
+    final apelido = widget.session.getUserNickname();
+    final nomeConta = widget.session.getUserName() ??
         widget.session.getUserEmail() ??
         'Usuário';
+    final nome = apelido ?? nomeConta;
     final email = widget.session.getUserEmail() ?? '-';
     final loja = widget.session.getUserStore() ?? Constants.defaultStore;
+    final cor = widget.cor;
     return Dialog(
       insetPadding: EdgeInsets.zero,
       backgroundColor: Colors.white,
       child: SizedBox(
         width: double.infinity,
         height: double.infinity,
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: IconButton(
-                  icon: const Icon(Icons.close,
-                      color: Color(_redDark), size: 30),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ),
-            ),
-            const Spacer(),
-            GestureDetector(
-              onTap: _escolherFoto,
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: const BoxDecoration(
-                    shape: BoxShape.circle, color: Color(0xFFF1F3F4)),
-                child: ClipOval(
-                  child: _foto != null
-                      ? Image.file(_foto!, fit: BoxFit.cover)
-                      : const Icon(Icons.person,
-                          size: 90, color: Color(_redDark)),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text('Toque para alterar a foto',
-                style:
-                    TextStyle(color: Color(0xFF888888), fontSize: 12)),
-            const SizedBox(height: 16),
-            Text(nome,
-                style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Color(_redDark))),
-            const SizedBox(height: 4),
-            Text(email,
-                style:
-                    const TextStyle(fontSize: 16, color: Color(0xFF555555))),
-            const SizedBox(height: 12),
-            Text('Loja $loja',
-                style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(_redDark))),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1A1A1A),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: IconButton(
+                    icon: Icon(Icons.close, color: cor, size: 30),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
-                  onPressed: () {
-                    final nav = Navigator.of(context);
-                    widget.session.logout();
-                    nav.pop();
-                    nav.pushNamedAndRemoveUntil(
-                        '/login', (route) => false);
-                  },
-                  child: const Text('SAIR',
-                      style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
-            ),
-          ],
+              const Spacer(),
+              GestureDetector(
+                onTap: _escolherFoto,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: cor.withValues(alpha: 0.12),
+                  ),
+                  child: ClipOval(
+                    child: _foto != null
+                        ? Image.file(_foto!, fit: BoxFit.cover)
+                        : Icon(Icons.person, size: 90, color: cor),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Toque para alterar a foto',
+                style: TextStyle(color: Color(0xFF888888), fontSize: 12),
+              ),
+              const SizedBox(height: 20),
+              InkWell(
+                onTap: _editarApelido,
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          nome,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: cor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Icon(Icons.edit, size: 18, color: cor),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Toque no nome para alterar o apelido',
+                style: TextStyle(color: Color(0xFF999999), fontSize: 11),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                email,
+                style: const TextStyle(fontSize: 16, color: Color(0xFF555555)),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Loja $loja',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: cor,
+                ),
+              ),
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: cor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: () {
+                      final nav = Navigator.of(context);
+                      widget.session.logout();
+                      nav.pop();
+                      nav.pushNamedAndRemoveUntil('/login', (route) => false);
+                    },
+                    child: const Text(
+                      'SAIR',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
