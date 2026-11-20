@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -31,13 +32,27 @@ void main() async {
         session.hasSavedCredentials() ? '/auto-login' : '/login';
     appNavigatorKey.currentState?.pushReplacementNamed(destino);
   };
-  // Polling em background (notificações de novos pedidos) — equiv. PedidoPollingWorker
-  await inicializarPolling();
-  // Permite notificações (Android 13+ exige permissão em runtime)
-  if (await Permission.notification.isDenied) {
-    await Permission.notification.request();
-  }
   runApp(MaestroApp(session: session, apiService: apiService));
+  // Só depois da UI montada: inicializar plugins antes do runApp podia deixar
+  // o app preso na splash em alguns aparelhos.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    unawaited(_inicializarServicosBackground());
+  });
+}
+
+Future<void> _inicializarServicosBackground() async {
+  try {
+    await inicializarPolling();
+  } catch (_) {
+    // Não bloqueia o app se o agendador falhar.
+  }
+  try {
+    if (await Permission.notification.isDenied) {
+      await Permission.notification.request();
+    }
+  } catch (_) {
+    // Permissão negada/indisponível: o app segue funcionando.
+  }
 }
 
 class MaestroApp extends StatelessWidget {

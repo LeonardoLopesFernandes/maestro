@@ -12,6 +12,7 @@ const String kChannelId = 'maestro_pedidos';
 const String kChannelName = 'Novos pedidos';
 const String kChannelDescription = 'Avisa quando há novos pedidos';
 bool _notificacoesIniciadas = false;
+Future<void>? _workmanagerIniciado;
 
 // Equivalente ao PedidoPollingWorker do Kotlin: dispara em background (mesmo
 // com o app fechado) e emite notificação quando há novos pedidos aguardando.
@@ -93,14 +94,26 @@ Future<void> inicializarNotificacoes() async {
 
 // Registra a tarefa periódica (15 min). Deve ser chamado uma vez na inicialização.
 Future<void> inicializarPolling() async {
-  await inicializarNotificacoes();
-  await Workmanager().initialize(pollingCallbackDispatcher);
+  await _garantirWorkmanager();
   await agendarPollingSeLogado();
+  await inicializarNotificacoes();
+}
+
+Future<void> _garantirWorkmanager() async {
+  final futuro =
+      _workmanagerIniciado ??= Workmanager().initialize(pollingCallbackDispatcher);
+  try {
+    await futuro;
+  } catch (_) {
+    _workmanagerIniciado = null;
+    rethrow;
+  }
 }
 
 // Chamado também após o login: antes, quem logava na primeira execução só
 // tinha o worker agendado no próximo início do app.
 Future<void> agendarPollingSeLogado() async {
+  await _garantirWorkmanager();
   final session = await SessionManager.create();
   if (!session.isLoggedIn()) return;
   await Workmanager().registerPeriodicTask(
