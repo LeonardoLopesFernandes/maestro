@@ -194,11 +194,21 @@ class PedidoCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Bloco A: cliente + número + badge
-                Text(pedido.cliente?.nome ?? 'Cliente não informado',
-                    style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1E293B))),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                          pedido.cliente?.nome ?? 'Cliente não informado',
+                          style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E293B))),
+                    ),
+                    if (editado)
+                      const Icon(Icons.edit,
+                          size: 16, color: Color(0xFF2563EB)),
+                  ],
+                ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
@@ -235,11 +245,6 @@ class PedidoCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (editado) ...[
-                          const Icon(Icons.edit,
-                              size: 16, color: Color(0xFF2563EB)),
-                          const SizedBox(width: 6),
-                        ],
                         if (mostraCanal) ...[
                           Container(
                             padding: const EdgeInsets.symmetric(
