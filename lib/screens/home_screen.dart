@@ -10,6 +10,7 @@ import '../network/api_service.dart';
 import '../network/session_manager.dart';
 import '../utils/constants.dart';
 import '../utils/log_helper.dart';
+import '../background/polling_worker.dart';
 import 'dashboard_screen.dart';
 import 'historico_screen.dart';
 import '../widgets/pedido_card.dart';
@@ -91,6 +92,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
     });
     _carregarCounts();
+    // Garante o worker periódico também para quem acabou de logar.
+    unawaited(agendarPollingSeLogado());
     // Polling em tempo real: atualiza os counts E recarrega a lista da aba
     // visível, para os pedidos aparecerem sem pull-to-refresh.
     _iniciarPolling();
