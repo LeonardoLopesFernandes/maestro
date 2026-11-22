@@ -1682,11 +1682,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       // Flag/itens salvos só após confirmação (no _executarConfirmacao).
       // Salvar aqui marcava o lápis mesmo quando o usuário cancelava.
       // 2º diálogo: confirmação parcial com motivo
-      final alterados = <(String, int, int)>[];
+      final alterados = <(Item, int)>[];
       for (final it in itens) {
         final n = novaQtd(it);
         if (n != it.quantidade) {
-          alterados.add((it.codigoSAP ?? it.descricao ?? 'item', it.quantidade, n));
+          alterados.add((it, n));
         }
       }
       final total = itens.fold<int>(0, (s, it) => s + novaQtd(it));
@@ -1751,12 +1751,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
 
     if (houveAlteracao) {
       // Flag/itens salvos só após confirmação (no _executarConfirmacao).
-      final alterados = <(String, int, int)>[];
+      final alterados = <(Item, int)>[];
       for (final it in itens) {
         final n = novaQtd(it);
         if (n != it.quantidade) {
-          alterados.add(
-              (it.codigoSAP ?? it.descricao ?? 'item', it.quantidade, n));
+          alterados.add((it, n));
         }
       }
       final total = itens.fold<int>(0, (s, it) => s + novaQtd(it));

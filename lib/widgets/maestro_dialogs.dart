@@ -890,106 +890,283 @@ class MaestroDialogs {
     );
   }
 
-  // ===== Passo 2: "Confirmação" — reconfirma as quantidades alteradas =====
+  // ===== Passo 2: "Confirmação" — layout de conferência do inventário =====
   static Future<bool?> confirmarQuantidades(
     BuildContext context, {
-    required List<(String, int, int)> alterados,
+    required List<(Item, int)> alterados,
   }) {
+    final divergentes = alterados.where((a) {
+      final disponivel = a.$1.estoque;
+      return disponivel != null && a.$2 > disponivel;
+    }).length;
+    final totalAlterados = alterados.length;
+    final avisoTitulo = divergentes > 0
+        ? '$divergentes ${divergentes == 1 ? 'produto' : 'produtos'} com divergência'
+        : '$totalAlterados ${totalAlterados == 1 ? 'produto' : 'produtos'} com quantidade alterada';
+    final avisoTexto = divergentes > 0
+        ? 'A quantidade foi ajustada conforme o estoque disponível.'
+        : 'Confira as alterações antes de continuar.';
+    final intro = divergentes > 0
+        ? 'Um ou mais produtos não possuem estoque suficiente. Confira as alterações antes de continuar.'
+        : 'As quantidades dos itens foram alteradas. Confira as alterações antes de continuar.';
+
+    Widget colunaQuantidade(String label, String valor, {bool perigo = false}) {
+      return Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 12, color: Color(0xFF888888))),
+            const SizedBox(height: 5),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(valor,
+                  style: TextStyle(
+                      fontSize: 27,
+                      fontWeight: FontWeight.bold,
+                      color: perigo
+                          ? const Color(0xFFC93636)
+                          : const Color(0xFF242424))),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Widget cardAjuste(Item item, int quantidadeFinal) {
+      final disponivel = item.estoque;
+      final semEstoque = disponivel != null && disponivel <= 0;
+      final acimaDoEstoque = disponivel != null && quantidadeFinal > disponivel;
+      final status = semEstoque
+          ? 'SEM ESTOQUE'
+          : acimaDoEstoque
+              ? 'ESTOQUE INSUFICIENTE'
+              : 'QUANTIDADE AJUSTADA';
+      final descricao = (item.descricao?.trim().isNotEmpty ?? false)
+          ? item.descricao!.trim()
+          : 'Item sem descrição';
+      final ean = (item.codigoEAN?.trim().isNotEmpty ?? false)
+          ? item.codigoEAN!.trim()
+          : '---';
+      final sap = (item.codigoSAP?.trim().isNotEmpty ?? false)
+          ? item.codigoSAP!.trim()
+          : '---';
+      final diferenca = quantidadeFinal - item.quantidade;
+      final ajuste = diferenca == 0
+          ? 'Sem alteração'
+          : '${diferenca < 0 ? '−' : '+'}${diferenca.abs()} '
+              '${diferenca.abs() == 1 ? 'unidade' : 'unidades'}';
+      final corAjuste = diferenca < 0
+          ? const Color(0xFFC93636)
+          : diferenca > 0
+              ? const Color(0xFF16A328)
+              : const Color(0xFF777777);
+
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: const Color(0xFFE2E5E9)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(descricao,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF242424))),
+                      const SizedBox(height: 5),
+                      Text('EAN: $ean  •  SAP: $sap',
+                          style: const TextStyle(
+                              fontSize: 12, color: Color(0xFF777777))),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFDE9E9),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(status,
+                      style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFB92D2D))),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                colunaQuantidade('Solicitado', '${item.quantidade}'),
+                colunaQuantidade('Disponível',
+                    disponivel?.toString() ?? '—',
+                    perigo: semEstoque),
+                colunaQuantidade('Quantidade final', '$quantidadeFinal'),
+              ],
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 14),
+              child: Divider(height: 1, color: Color(0xFFEEEEEE)),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                      diferenca < 0
+                          ? 'Quantidade recusada'
+                          : diferenca > 0
+                              ? 'Quantidade adicionada'
+                              : 'Ajuste realizado',
+                      style: const TextStyle(
+                          fontSize: 13, color: Color(0xFF777777))),
+                ),
+                Text(ajuste,
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: corAjuste)),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
     return showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => _dialogFull(
         header: _stepperHeader(passo: 2),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(22, 26, 22, 32),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                  'Deseja confirmar a solicitação com as quantidades abaixo?',
+              const Text('Confirme os ajustes do inventário',
                   style: TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF212121),
-                      height: 1.4,
-                      fontWeight: FontWeight.w600)),
-              const SizedBox(height: 16),
-              ...alterados.map((a) {
-                final diff = a.$3 - a.$2;
-                final recusa = diff < 0;
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(a.$1,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Text('${a.$2}',
-                                    style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey[500],
-                                        decoration:
-                                            TextDecoration.lineThrough)),
-                                const Padding(
-                                  padding:
-                                      EdgeInsets.symmetric(horizontal: 6),
-                                  child: Icon(Icons.arrow_forward,
-                                      size: 14, color: Colors.grey),
-                                ),
-                                Text('${a.$3}',
-                                    style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFFE61937))),
-                              ],
-                            ),
-                          ],
-                        ),
+                      fontSize: 22,
+                      height: 1.3,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF242424))),
+              const SizedBox(height: 9),
+              Text(intro,
+                  style: const TextStyle(
+                      fontSize: 14,
+                      height: 1.5,
+                      color: Color(0xFF777777))),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(13),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF1F1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.info_outline,
+                        size: 18, color: Color(0xFFB92D2D)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(avisoTitulo,
+                              style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFB92D2D))),
+                          const SizedBox(height: 3),
+                          Text(avisoTexto,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  height: 1.4,
+                                  color: Color(0xFF777777))),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: recusa
-                              ? const Color(0xFFFFEBEE)
-                              : const Color(0xFFE8F5E9),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(diff > 0 ? '+$diff' : '$diff',
-                            style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: recusa
-                                    ? const Color(0xFFE60014)
-                                    : const Color(0xFF2E7D32))),
-                      ),
-                    ],
-                  ),
-                );
-              }),
+                    ),
+                  ],
+                ),
+              ),
+              ...alterados.map((a) => cardAjuste(a.$1, a.$2)),
             ],
           ),
         ),
-        footer: _stepFooter(
-          onFechar: () => Navigator.of(ctx).pop(false),
-          onSim: () => Navigator.of(ctx).pop(true),
+        footer: Container(
+          padding: const EdgeInsets.fromLTRB(22, 16, 22, 20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: Color(0xFFEEEEEE))),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 52,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    style: TextButton.styleFrom(
+                      backgroundColor: const Color(0xFFF0F1F3),
+                      foregroundColor: const Color(0xFF333333),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: const Text('VOLTAR',
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 135,
+                child: SizedBox(
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(_verde),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('CONFIRMAR',
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w700)),
+                        SizedBox(width: 7),
+                        Icon(Icons.check, size: 18),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1021,21 +1198,29 @@ class MaestroDialogs {
 
   static Widget _stepperHeader({required int passo, VoidCallback? onBack}) {
     const vermelho = Color(0xFFD32F2F);
-    Widget item({required bool check, required String label, String? numero}) {
+    Widget item(
+        {required bool check,
+        required String label,
+        String? numero,
+        bool current = false}) {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             width: 24,
             height: 24,
-            decoration: const BoxDecoration(
-                color: vermelho, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+                color: current ? Colors.white : vermelho,
+                shape: BoxShape.circle,
+                border:
+                    current ? Border.all(color: vermelho, width: 2) : null),
             alignment: Alignment.center,
             child: check
-                ? const Icon(Icons.check, size: 14, color: Colors.white)
+                ? Icon(Icons.check,
+                    size: 14, color: current ? vermelho : Colors.white)
                 : Text(numero ?? '',
-                    style: const TextStyle(
-                        color: Colors.white,
+                    style: TextStyle(
+                        color: current ? vermelho : Colors.white,
                         fontSize: 12,
                         fontWeight: FontWeight.bold)),
           ),
@@ -1080,7 +1265,11 @@ class MaestroDialogs {
                     color: const Color(0xFFE0E0E0),
                   ),
                 ),
-                item(check: passo >= 2, label: 'Confirmação', numero: '2'),
+                item(
+                    check: false,
+                    label: 'Confirmação',
+                    numero: '2',
+                    current: passo >= 2),
               ],
             ),
           ),
