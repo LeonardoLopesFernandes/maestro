@@ -152,28 +152,34 @@ class MaestroDialogs {
                     textAlign: TextAlign.center),
                 const SizedBox(height: 24),
               ],
+              const Text('Digite o código de retirada',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF666666))),
+              const SizedBox(height: 4),
               TextField(
                 controller: c,
                 keyboardType: TextInputType.number,
                 maxLength: 4,
                 textAlign: TextAlign.center,
+                cursorColor: const Color(0xFFC8102E),
+                cursorWidth: 2,
+                cursorHeight: 44,
                 style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black),
-                decoration: InputDecoration(
-                  hintText: 'Insira o código de retirada',
-                  hintStyle: const TextStyle(
-                      color: Color(0xFF8C8C8C), fontSize: 18),
+                    fontSize: 44,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFFC8102E),
+                    decoration: TextDecoration.underline,
+                    decorationColor: Color(0xFFBDBDBD),
+                    decorationThickness: 2),
+                decoration: const InputDecoration(
                   counterText: '',
-                  contentPadding: const EdgeInsets.symmetric(
-                      vertical: 16, horizontal: 16),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                      borderSide: const BorderSide(color: Color(0xFF5A7EB0))),
-                  enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(6),
-                      borderSide: const BorderSide(color: Color(0xFF5A7EB0))),
+                  isDense: true,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(vertical: 8),
                 ),
                 onChanged: (v) => set(() => habilitado = v.trim().isNotEmpty),
               ),
