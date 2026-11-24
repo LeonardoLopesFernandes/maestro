@@ -953,6 +953,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
 
   Widget _cardItens() => _card(
         titulo: 'Itens do pedido ($_quantidadeItens)',
+        contentPadding: const EdgeInsets.fromLTRB(6, 12, 12, 12),
         child: Column(
           children: [
             ..._pedido.itens.map(_itemRow).toList(),
@@ -1072,7 +1073,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   Widget _card(
           {required String titulo,
           required Widget child,
-          Widget? headerTrailing}) =>
+          Widget? headerTrailing,
+          EdgeInsets? contentPadding}) =>
       Card(
         margin: EdgeInsets.zero,
         elevation: 0,
@@ -1104,7 +1106,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: contentPadding ?? const EdgeInsets.all(12),
               child: child,
             ),
           ],
@@ -2261,14 +2263,11 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
               children: [
                 SizedBox(
                   width: 40,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text('${qtd}x',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: corItem)),
-                  ),
+                  child: Text('${qtd}x',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: corItem)),
                 ),
                 const SizedBox(width: 6),
                 InkWell(
