@@ -2262,12 +2262,16 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(
-                  width: 40,
-                  child: Text('${qtd}x',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: corItem)),
+                  width: 30,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text('${qtd}x',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: corItem)),
+                  ),
                 ),
                 const SizedBox(width: 6),
                 InkWell(
@@ -2287,7 +2291,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
