@@ -527,6 +527,33 @@ class MaestroDialogs {
       return const Color(0xFFE6F4EA); // GREEN_600 claro
     }
 
+    Widget fotoItem(Item item) {
+      const double size = 32;
+      final url = (item.urlImagem ?? '').trim();
+      Widget placeholder() => Container(
+            width: size,
+            height: size,
+            color: const Color(0xFFF3F4F6),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.image_outlined,
+              size: 18,
+              color: Color(0xFF9CA3AF),
+            ),
+          );
+      if (url.isEmpty) return placeholder();
+      return Image.network(
+        url,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        cacheWidth: 96,
+        errorBuilder: (_, __, ___) => placeholder(),
+        loadingBuilder: (context, child, progress) =>
+            progress == null ? child : placeholder(),
+      );
+    }
+
     return showDialog<(Map<String, int>, bool)>(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -586,6 +613,12 @@ class MaestroDialogs {
                                           : (v) => set(
                                               () => selecionados[i] = v ?? false),
                                     ),
+                                    const SizedBox(width: 6),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: fotoItem(it),
+                                    ),
+                                    const SizedBox(width: 8),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:

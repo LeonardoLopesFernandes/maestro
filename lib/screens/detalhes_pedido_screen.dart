@@ -2214,23 +2214,23 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     Widget _fotoItem(Item item) {
       final url = (item.urlImagem ?? '').trim();
       Widget placeholder() => Container(
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             color: const Color(0xFFF3F4F6),
             alignment: Alignment.center,
             child: const Icon(
               Icons.image_outlined,
-              size: 20,
+              size: 18,
               color: Color(0xFF9CA3AF),
             ),
           );
       if (url.isEmpty) return placeholder();
       return Image.network(
         url,
-        width: 40,
-        height: 40,
+        width: 36,
+        height: 36,
         fit: BoxFit.contain,
-        cacheWidth: 120,
+        cacheWidth: 108,
         errorBuilder: (_, __, ___) => placeholder(),
         loadingBuilder: (context, child, progress) =>
             progress == null ? child : placeholder(),
