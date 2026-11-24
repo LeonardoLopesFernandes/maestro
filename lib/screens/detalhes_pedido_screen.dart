@@ -262,25 +262,53 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                         },
                         child: ListView(
                           controller: _scrollController,
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           children: [
-                            _headerStatus(),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: _headerStatus(),
+                            ),
                             const SizedBox(height: 12),
                             if (_ehDelivery) ...[
-                              _cardAvisoFormulario(),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: _cardAvisoFormulario(),
+                              ),
                               const SizedBox(height: 12),
                             ],
                             if (_coletaTardia) ...[
-                              _cardAnalisarColeta(),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                                child: _cardAnalisarColeta(),
+                              ),
                               const SizedBox(height: 12),
                             ],
-                            _cardCliente(),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: _cardCliente(),
+                            ),
                             const SizedBox(height: 10),
-                            _cardMotivo(),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: _cardMotivo(),
+                            ),
                             const SizedBox(height: 10),
-                            _cardItens(),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 6),
+                              child: _cardItens(),
+                            ),
                             const SizedBox(height: 10),
-                            _cardTokens(),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: _cardTokens(),
+                            ),
                             const SizedBox(height: 96),
                           ],
                         ),
@@ -2183,6 +2211,32 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       );
     }
 
+    Widget _fotoItem(Item item) {
+      final url = (item.urlImagem ?? '').trim();
+      Widget placeholder() => Container(
+            width: 40,
+            height: 40,
+            color: const Color(0xFFF3F4F6),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.image_outlined,
+              size: 20,
+              color: Color(0xFF9CA3AF),
+            ),
+          );
+      if (url.isEmpty) return placeholder();
+      return Image.network(
+        url,
+        width: 40,
+        height: 40,
+        fit: BoxFit.contain,
+        cacheWidth: 120,
+        errorBuilder: (_, __, ___) => placeholder(),
+        loadingBuilder: (context, child, progress) =>
+            progress == null ? child : placeholder(),
+      );
+    }
+
     @override
     Widget build(BuildContext context) {
       final i = widget.item;
@@ -2213,6 +2267,19 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                           fontWeight: FontWeight.bold,
                           color: corItem)),
                 ),
+                InkWell(
+                  borderRadius: BorderRadius.circular(6),
+                  onTap: () => mostrarImagemProduto(
+                    context,
+                    item: i,
+                    loja: widget.loja,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: _fotoItem(i),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
