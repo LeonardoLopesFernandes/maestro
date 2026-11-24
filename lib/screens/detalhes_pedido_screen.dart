@@ -154,7 +154,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             _carregarTokens();
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               content:
-                  Text('✅ Entregador confirmou a coleta! Toque em CONFIRMAR.'),
+                  Text('✅ Entregador confirmou a coleta! Toque em PRONTO PARA RETIRADA.'),
               duration: Duration(seconds: 4),
             ));
           }
@@ -1254,7 +1254,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       badges.add(_badgeAcao(
           'EM SEPARAÇÃO', const Color(0xFF12CD0C), _acaoSeparar));
     } else if (s.contains('SEPARACAO')) {
-      badges.add(_badgeAcao('CONFIRMAR', const Color(0xFF00CBFE), _acaoConfirmar));
+      badges.add(_badgeAcao(
+          'PRONTO PARA RETIRADA', const Color(0xFF00CBFE), _acaoConfirmar));
     } else if (s.contains('PRONTO')) {
       if (_podeCancelarRetirada()) {
         // RETIRAR PEDIDO + CANCELAR lado a lado (larguras/alturas iguais)
