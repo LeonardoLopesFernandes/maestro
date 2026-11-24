@@ -520,11 +520,12 @@ class MaestroDialogs {
     bool nenhum = false;
 
     Color fundoItem(int i, Item it) {
-      final sel = nenhum ? false : (selecionados[i] ?? false);
+      if (nenhum) return const Color(0xFFF1F3F4); // GRAY_100
+      final sel = selecionados[i] ?? false;
       final alterado = (qtd[i] ?? it.quantidade) != it.quantidade;
-      if (!sel) return const Color(0xFFF1F3F4); // GRAY_100
       if (alterado) return const Color(0xFFFFE5E5); // RED_LIGHT
-      return const Color(0xFFE6F4EA); // GREEN_600 claro
+      if (sel) return const Color(0xFFE6F4EA); // GREEN_600 claro
+      return const Color(0xFFF1F3F4); // GRAY_100
     }
 
     Widget fotoItem(Item item) {
@@ -590,6 +591,16 @@ class MaestroDialogs {
                             final i = e.key;
                             final it = e.value;
                             final sel = nenhum ? false : (selecionados[i] ?? false);
+                            final alterado = !nenhum &&
+                                (qtd[i] ?? it.quantidade) != it.quantidade;
+                            final corCheck = alterado
+                                ? const Color(0xFFE61937)
+                                : const Color(0xFF4CAF50);
+                            final corBorda = alterado
+                                ? const Color(0xFFE61937)
+                                : (sel
+                                    ? const Color(0xFF4CAF50)
+                                    : const Color(0xFF9E9E9E));
                             return InkWell(
                               onTap: () {
                                 if (nenhum) return;
@@ -607,7 +618,7 @@ class MaestroDialogs {
                                   children: [
                                     Checkbox(
                                       value: sel,
-                                      activeColor: const Color(0xFFE61937),
+                                      activeColor: corCheck,
                                       onChanged: nenhum
                                           ? null
                                           : (v) => set(
@@ -665,7 +676,19 @@ class MaestroDialogs {
                                         decoration: InputDecoration(
                                           border: OutlineInputBorder(
                                               borderRadius:
-                                                  BorderRadius.circular(8)),
+                                                  BorderRadius.circular(8),
+                                              borderSide:
+                                                  BorderSide(color: corBorda)),
+                                          enabledBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              borderSide:
+                                                  BorderSide(color: corBorda)),
+                                          focusedBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              borderSide: BorderSide(
+                                                  color: corBorda, width: 2)),
                                           contentPadding:
                                               const EdgeInsets.symmetric(
                                                   vertical: 4),
