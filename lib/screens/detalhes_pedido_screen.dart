@@ -2260,13 +2260,17 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(
-                  width: 45,
-                  child: Text('${qtd}x',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: corItem)),
+                  width: 40,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text('${qtd}x',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: corItem)),
+                  ),
                 ),
+                const SizedBox(width: 6),
                 InkWell(
                   borderRadius: BorderRadius.circular(6),
                   onTap: () => mostrarImagemProduto(
@@ -2274,12 +2278,17 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                     item: i,
                     loja: widget.loja,
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: _fotoItem(i),
+                  child: SizedBox(
+                    width: 40,
+                    child: Center(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: _fotoItem(i),
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2309,9 +2318,6 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                                   style: TextStyle(
                                       fontSize: 11, color: corSecundaria)),
                             ),
-                            if ((i.codigoEAN ?? '').isNotEmpty)
-                              const Icon(Icons.copy,
-                                  size: 13, color: Color(0xFF9CA3AF)),
                             if (_secundarios.isNotEmpty) ...[
                               const SizedBox(width: 6),
                               GestureDetector(
