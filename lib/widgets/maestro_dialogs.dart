@@ -170,16 +170,24 @@ class MaestroDialogs {
                     fontSize: 44,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFFC8102E),
-                    decoration: TextDecoration.underline,
-                    decorationColor: Color(0xFFBDBDBD),
-                    decorationThickness: 2),
-                decoration: const InputDecoration(
+                    letterSpacing: 1),
+                decoration: InputDecoration(
                   counterText: '',
-                  isDense: true,
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 8),
+                  contentPadding: const EdgeInsets.symmetric(
+                      vertical: 12, horizontal: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFFC8102E)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFFC8102E)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide:
+                        const BorderSide(color: Color(0xFFC8102E), width: 1.5),
+                  ),
                 ),
                 onChanged: (v) => set(() => habilitado = v.trim().isNotEmpty),
               ),

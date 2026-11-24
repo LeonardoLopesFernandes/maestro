@@ -266,14 +266,14 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                           children: [
                             Padding(
                               padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
+                                  const EdgeInsets.symmetric(horizontal: 6),
                               child: _headerStatus(),
                             ),
                             const SizedBox(height: 12),
                             if (_ehDelivery) ...[
                               Padding(
                                 padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
+                                    const EdgeInsets.symmetric(horizontal: 6),
                                 child: _cardAvisoFormulario(),
                               ),
                               const SizedBox(height: 12),
@@ -281,20 +281,20 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                             if (_coletaTardia) ...[
                               Padding(
                                 padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
+                                    const EdgeInsets.symmetric(horizontal: 6),
                                 child: _cardAnalisarColeta(),
                               ),
                               const SizedBox(height: 12),
                             ],
                             Padding(
                               padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
+                                  const EdgeInsets.symmetric(horizontal: 6),
                               child: _cardCliente(),
                             ),
                             const SizedBox(height: 10),
                             Padding(
                               padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
+                                  const EdgeInsets.symmetric(horizontal: 6),
                               child: _cardMotivo(),
                             ),
                             const SizedBox(height: 10),
@@ -306,7 +306,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                             const SizedBox(height: 10),
                             Padding(
                               padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
+                                  const EdgeInsets.symmetric(horizontal: 6),
                               child: _cardTokens(),
                             ),
                             const SizedBox(height: 96),
