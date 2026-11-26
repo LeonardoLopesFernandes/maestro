@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 import '../models/pedido.dart';
+
+final Map<String, Uint8List?> _cacheImagensPedido = {};
 
 class ImprimirPedidoScreen extends StatelessWidget {
   final Pedido pedido;
@@ -35,6 +38,7 @@ class ImprimirPedidoScreen extends StatelessWidget {
     final logoBytes = await rootBundle
         .load('assets/icons/americanas_logo.jpg')
         .then((bd) => bd.buffer.asUint8List());
+    final imagens = await Future.wait(pedido.itens.map(_carregarImagemItem));
     doc.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
@@ -61,7 +65,7 @@ class ImprimirPedidoScreen extends StatelessWidget {
             ),
           ),
           pw.SizedBox(height: 14),
-          _itensPedido(),
+          _itensPedido(imagens),
         ],
       ),
     );
@@ -78,26 +82,13 @@ class ImprimirPedidoScreen extends StatelessWidget {
           height: 46,
           fit: pw.BoxFit.contain,
         ),
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.end,
-          children: [
-            pw.Text(
-              'Pedido via ${_canalLabel()}',
-              style: const pw.TextStyle(
-                fontSize: 10,
-                color: PdfColors.grey700,
-              ),
-            ),
-            pw.SizedBox(height: 2),
-            pw.Text(
-              pedido.codigoExterno,
-              style: pw.TextStyle(
-                fontSize: 11,
-                fontWeight: pw.FontWeight.bold,
-                color: PdfColors.grey700,
-              ),
-            ),
-          ],
+        pw.Text(
+          pedido.codigoExterno,
+          style: pw.TextStyle(
+            fontSize: 11,
+            fontWeight: pw.FontWeight.bold,
+            color: PdfColors.grey700,
+          ),
         ),
       ],
     );
@@ -107,12 +98,14 @@ class ImprimirPedidoScreen extends StatelessWidget {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
+        _linhaInfo('Canal de venda', _canalLabel()),
         _linhaInfo('Modalidade de entrega', _modalidade()),
         _linhaInfo(
           'Criação do pedido',
-          _formatarData(pedido.dataCriacao ?? pedido.dataInclusao),
+          _formatarDataHora(pedido.dataCriacao ?? pedido.dataInclusao),
         ),
-        _linhaInfo('Entrega estimada', _formatarData(pedido.dhEntregaEstimada)),
+        _linhaInfo(
+            'Entrega estimada', _formatarDataHora(pedido.dhEntregaEstimada)),
         _linhaInfo('Nome do cliente', pedido.cliente?.nome ?? '-'),
         _linhaInfo(
           'Nome do recebedor',
@@ -248,7 +241,7 @@ class ImprimirPedidoScreen extends StatelessWidget {
     );
   }
 
-  pw.Widget _itensPedido() {
+  pw.Widget _itensPedido(List<Uint8List?> imagens) {
     if (pedido.itens.isEmpty) {
       return pw.Text(
         'Nenhum item no pedido.',
@@ -256,33 +249,141 @@ class ImprimirPedidoScreen extends StatelessWidget {
       );
     }
     return pw.Wrap(
-      spacing: 16,
-      runSpacing: 8,
-      children: pedido.itens.map((item) {
+      spacing: 12,
+      runSpacing: 18,
+      children: List.generate(pedido.itens.length, (i) {
+        final item = pedido.itens[i];
+        final bytes = i < imagens.length ? imagens[i] : null;
         return pw.SizedBox(
-          width: 250,
-          child: pw.Text(
-            _textoItem(item),
-            style: const pw.TextStyle(
-              fontSize: 8.5,
-              lineSpacing: 2,
-            ),
-          ),
+          width: 160,
+          child: _cardItem(item, bytes),
         );
-      }).toList(),
+      }),
     );
   }
 
-  String _textoItem(Item item) {
-    final eans = <String>{};
+  pw.Widget _cardItem(Item item, Uint8List? imagem) {
+    final ean = _eanPrincipal(item);
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.SizedBox(
+              width: 22,
+              child: pw.Text(
+                '${item.quantidadeEfetiva}x',
+                style: pw.TextStyle(
+                  fontSize: 10,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ),
+            pw.Container(
+              width: 72,
+              height: 72,
+              alignment: pw.Alignment.center,
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.grey300),
+                borderRadius: pw.BorderRadius.circular(2),
+              ),
+              child: imagem == null
+                  ? pw.Text(
+                      'sem\nimagem',
+                      textAlign: pw.TextAlign.center,
+                      style: const pw.TextStyle(
+                        fontSize: 7,
+                        color: PdfColors.grey500,
+                      ),
+                    )
+                  : pw.Image(
+                      pw.MemoryImage(imagem),
+                      width: 66,
+                      height: 66,
+                      fit: pw.BoxFit.contain,
+                    ),
+            ),
+          ],
+        ),
+        pw.SizedBox(height: 8),
+        pw.Text(
+          item.descricao ?? '',
+          style: const pw.TextStyle(fontSize: 9, lineSpacing: 1.5),
+        ),
+        pw.SizedBox(height: 5),
+        pw.Text(
+          'EAN: ${ean.isEmpty ? '---' : ean}',
+          style: const pw.TextStyle(fontSize: 8.5),
+        ),
+        pw.SizedBox(height: 2),
+        pw.Text(
+          'Estoque estimado: ${item.estoque ?? 0}',
+          style: const pw.TextStyle(fontSize: 8.5),
+        ),
+      ],
+    );
+  }
+
+  String _eanPrincipal(Item item) {
     final principal = (item.codigoEAN ?? '').trim();
-    if (principal.isNotEmpty) eans.add(principal);
+    if (principal.isNotEmpty) return principal;
     for (final ean in item.eans) {
       final valor = ean.trim();
-      if (valor.isNotEmpty) eans.add(valor);
+      if (valor.isNotEmpty) return valor;
     }
-    final sufixo = eans.isEmpty ? '' : ' (EAN: ${eans.join(' ou ')})';
-    return '${item.quantidadeEfetiva}x ${item.descricao ?? ''}$sufixo';
+    return '';
+  }
+
+  Future<Uint8List?> _carregarImagemItem(Item item) async {
+    final url = _urlImagemAlta((item.urlImagem ?? '').trim());
+    if (url.isEmpty) return null;
+    if (_cacheImagensPedido.containsKey(url)) {
+      return _cacheImagensPedido[url];
+    }
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: const {'User-Agent': 'Mozilla/5.0'},
+      ).timeout(const Duration(seconds: 12));
+      final bytes = response.bodyBytes;
+      if (response.statusCode >= 200 &&
+          response.statusCode < 300 &&
+          _imagemSuportada(bytes)) {
+        _cacheImagensPedido[url] = bytes;
+        return bytes;
+      }
+    } catch (_) {
+      // Imagem indisponível: o item continua sendo impresso.
+    }
+    _cacheImagensPedido[url] = null;
+    return null;
+  }
+
+  bool _imagemSuportada(Uint8List bytes) {
+    if (bytes.length < 8) return false;
+    final png = bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47;
+    final jpeg = bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF;
+    return png || jpeg;
+  }
+
+  String _urlImagemAlta(String url) {
+    var valor = url.trim();
+    if (valor.startsWith('//')) {
+      valor = 'https:$valor';
+    } else if (valor.startsWith('http://')) {
+      valor = 'https://${valor.substring(7)}';
+    }
+    final uri = Uri.tryParse(valor);
+    if (uri == null || !uri.host.contains('vteximg.com.br')) return valor;
+    final path = uri.path.replaceFirst(
+      RegExp(r'-\d+-\d+(?=/)'),
+      '-1000-1000',
+    );
+    return uri.replace(path: path).toString();
   }
 
   String _canalLabel() {
@@ -297,7 +398,7 @@ class ImprimirPedidoScreen extends StatelessWidget {
   String _modalidade() {
     final tipo = (pedido.tipoEntrega ?? '').toUpperCase();
     if (tipo.contains('EXTERNA')) return 'delivery';
-    if (tipo.contains('RETIRADA')) return 'retirada';
+    if (tipo.contains('RETIRADA')) return 'pegue na loja hoje';
     final valor = pedido.tipoEntrega?.trim() ?? '';
     return valor.isEmpty ? 'delivery' : valor.toLowerCase();
   }
@@ -308,12 +409,13 @@ class ImprimirPedidoScreen extends StatelessWidget {
     return nome.substring(0, 1).toUpperCase();
   }
 
-  String _formatarData(String? data) {
+  String _formatarDataHora(String? data) {
     if (data == null || data.trim().isEmpty) return '-';
     final dt = DateTime.tryParse(data)?.toLocal();
     if (dt == null) return data;
     final p = (int v) => v.toString().padLeft(2, '0');
-    return '${p(dt.day)}/${p(dt.month)}/${dt.year}';
+    return '${p(dt.day)}/${p(dt.month)}/${dt.year} - '
+        '${p(dt.hour)}h${p(dt.minute)}';
   }
 
   String _enderecoCompleto() {
