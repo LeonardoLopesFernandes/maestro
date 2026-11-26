@@ -153,8 +153,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             setState(() => _pedido = p);
             _carregarTokens();
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content:
-                  Text('✅ Entregador confirmou a coleta! Toque em PRONTO PARA RETIRADA.'),
+              content: Text(
+                  '✅ Entregador confirmou a coleta! Toque em PRONTO PARA RETIRADA.'),
               duration: Duration(seconds: 4),
             ));
           }
@@ -167,8 +167,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
 
   Future<void> _carregarTokens() async {
     try {
-      final t = await widget.apiService
-          .getDeliveryTokens(_pedido.codigoExterno);
+      final t =
+          await widget.apiService.getDeliveryTokens(_pedido.codigoExterno);
       if (mounted) {
         final data = t['data'] is Map ? t['data'] : t;
         setState(() =>
@@ -352,15 +352,12 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final nome = _pedido.cliente?.nome ?? 'Cliente';
-                    final ehPronto =
-                        status.texto == 'Pronto para Retirada';
+                    final ehPronto = status.texto == 'Pronto para Retirada';
                     bool extenso = false;
                     if (_mostrarStatusHeader && ehPronto) {
-                      final nomeW =
-                          _larguraTexto(nome, 14, FontWeight.bold);
+                      final nomeW = _larguraTexto(nome, 14, FontWeight.bold);
                       final badgeW =
-                          _larguraTexto(status.texto, 12, FontWeight.bold) +
-                              20;
+                          _larguraTexto(status.texto, 12, FontWeight.bold) + 20;
                       extenso = nomeW + badgeW + 8 > constraints.maxWidth;
                     }
                     _nomeExtenso = extenso;
@@ -378,8 +375,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                         ),
                         if (_mostrarStatusHeader && !ocultar) ...[
                           const SizedBox(width: 8),
-                          _pillHeader(status.texto, status.cor,
-                              fontSize: 12),
+                          _pillHeader(status.texto, status.cor, fontSize: 12),
                         ],
                       ],
                     );
@@ -398,16 +394,14 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                     if (_pedido.canalDeVendas != null &&
                         _pedido.canalDeVendas!.isNotEmpty) ...[
                       const SizedBox(width: 8),
-                      _pillHeader(
-                          _pedido.canalDeVendas!,
+                      _pillHeader(_pedido.canalDeVendas!,
                           _corCanal(_pedido.canalDeVendas ?? ''),
                           fontSize: 12),
                     ],
                     if (_pedido.tipoEntrega != null &&
                         _pedido.tipoEntrega!.isNotEmpty) ...[
                       const SizedBox(width: 8),
-                      _pillHeader(
-                          _labelTipoEntrega(_pedido.tipoEntrega!),
+                      _pillHeader(_labelTipoEntrega(_pedido.tipoEntrega!),
                           const Color(0xFF760018),
                           fontSize: 12),
                     ],
@@ -448,8 +442,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   Widget _pillHeader(String texto, Color cor, {double? fontSize}) {
     final compacto = texto.length > 12;
     return Container(
-      padding: EdgeInsets.symmetric(
-          horizontal: compacto ? 7 : 10, vertical: 2),
+      padding: EdgeInsets.symmetric(horizontal: compacto ? 7 : 10, vertical: 2),
       decoration: BoxDecoration(
         color: cor,
         borderRadius: BorderRadius.circular(20),
@@ -470,35 +463,106 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         child: _timeline(),
       );
 
-  ({String label, String icon, Color cor, bool tint}) _timelineInfo(String nome) {
+  ({String label, String icon, Color cor, bool tint}) _timelineInfo(
+      String nome) {
     final n = nome.toUpperCase();
     if (n.contains('NOVO') || n.contains('INCLUIDO') || n.contains('CHEGADA'))
-      return (label: 'Chegada', icon: 'assets/icons/criado.svg', cor: const Color(0xFF12CD0C), tint: true);
+      return (
+        label: 'Chegada',
+        icon: 'assets/icons/criado.svg',
+        cor: const Color(0xFF12CD0C),
+        tint: true
+      );
     if (n.contains('VISUALIZ'))
-      return (label: 'Visualizado', icon: 'assets/icons/criado.svg', cor: const Color(0xFF12CD0C), tint: true);
+      return (
+        label: 'Visualizado',
+        icon: 'assets/icons/criado.svg',
+        cor: const Color(0xFF12CD0C),
+        tint: true
+      );
     if (n.contains('CRIADO'))
-      return (label: 'Criado', icon: 'assets/icons/criado.svg', cor: const Color(0xFF12CD0C), tint: true);
+      return (
+        label: 'Criado',
+        icon: 'assets/icons/criado.svg',
+        cor: const Color(0xFF12CD0C),
+        tint: true
+      );
     if (n.contains('SEPARACAO'))
-      return (label: 'Em Separação', icon: 'assets/icons/em_separacao.svg', cor: const Color(0xFF00CBFE), tint: true);
+      return (
+        label: 'Em Separação',
+        icon: 'assets/icons/em_separacao.svg',
+        cor: const Color(0xFF00CBFE),
+        tint: true
+      );
     if (n.contains('EDITADO'))
-      return (label: 'Editado', icon: 'assets/icons/editado.webp', cor: const Color(0xFFED7D31), tint: false);
+      return (
+        label: 'Editado',
+        icon: 'assets/icons/editado.webp',
+        cor: const Color(0xFFED7D31),
+        tint: false
+      );
     if (n.contains('PRONTO'))
-      return (label: 'Pronto para Retirada', icon: 'assets/icons/pronto_para_retirada.svg', cor: const Color(0xFFFFAA02), tint: true);
+      return (
+        label: 'Pronto para Retirada',
+        icon: 'assets/icons/pronto_para_retirada.svg',
+        cor: const Color(0xFFFFAA02),
+        tint: true
+      );
     if (n.contains('ENTREGA'))
-      return (label: 'Saiu para Entrega', icon: 'assets/icons/saiu_para_entrega.svg', cor: const Color(0xFFCE00FF), tint: true);
+      return (
+        label: 'Saiu para Entrega',
+        icon: 'assets/icons/saiu_para_entrega.svg',
+        cor: const Color(0xFFCE00FF),
+        tint: true
+      );
     if (n.contains('RETORNAR'))
-      return (label: 'Retornar ao Estoque', icon: 'assets/icons/retornar_para_estoque.svg', cor: const Color(0xFFDC2626), tint: true);
+      return (
+        label: 'Retornar ao Estoque',
+        icon: 'assets/icons/retornar_para_estoque.svg',
+        cor: const Color(0xFFDC2626),
+        tint: true
+      );
     if (n.contains('CANCEL'))
-      return (label: 'Cancelado', icon: 'assets/icons/cancelado.svg', cor: const Color(0xFFDC2626), tint: true);
+      return (
+        label: 'Cancelado',
+        icon: 'assets/icons/cancelado.svg',
+        cor: const Color(0xFFDC2626),
+        tint: true
+      );
     if (n.contains('DEVOLV'))
-      return (label: 'Devolvido', icon: 'assets/icons/devolvido.svg', cor: const Color(0xFFDC2626), tint: true);
+      return (
+        label: 'Devolvido',
+        icon: 'assets/icons/devolvido.svg',
+        cor: const Color(0xFFDC2626),
+        tint: true
+      );
     if (n.contains('ENTREGUE') || n.contains('FINALIZ'))
-      return (label: 'Entregue', icon: 'assets/icons/entregue.svg', cor: const Color(0xFF12CD0C), tint: true);
+      return (
+        label: 'Entregue',
+        icon: 'assets/icons/entregue.svg',
+        cor: const Color(0xFF12CD0C),
+        tint: true
+      );
     if (n.contains('AGUARDANDO_SAL'))
-      return (label: 'Aguardando análise do SAL', icon: 'assets/icons/editado.webp', cor: const Color(0xFFED7D31), tint: false);
+      return (
+        label: 'Aguardando análise do SAL',
+        icon: 'assets/icons/editado.webp',
+        cor: const Color(0xFFED7D31),
+        tint: false
+      );
     if (n.contains('AGUARDANDO_LOJA'))
-      return (label: 'Aguardando confirmação da loja', icon: 'assets/icons/editado.webp', cor: const Color(0xFFED7D31), tint: false);
-    return (label: nome, icon: 'assets/icons/criado.svg', cor: const Color(0xFF9CA3AF), tint: true);
+      return (
+        label: 'Aguardando confirmação da loja',
+        icon: 'assets/icons/editado.webp',
+        cor: const Color(0xFFED7D31),
+        tint: false
+      );
+    return (
+      label: nome,
+      icon: 'assets/icons/criado.svg',
+      cor: const Color(0xFF9CA3AF),
+      tint: true
+    );
   }
 
   String _formatarDataBr(String? data) {
@@ -630,7 +694,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
-                foreground: Paint()
+              foreground: Paint()
                 ..style = PaintingStyle.stroke
                 ..strokeWidth = 0.25
                 ..color = const Color(0xFF1F2937),
@@ -726,9 +790,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                   Text(
                     'Para que o cliente possa consultar a nota fiscal é necessário imprimir o formulário do pedido com o QR Code e grampeá-lo junto ao pacote.',
                     style: TextStyle(
-                        fontSize: 12.5,
-                        color: Color(0xFF1F2937),
-                        height: 1.35),
+                        fontSize: 12.5, color: Color(0xFF1F2937), height: 1.35),
                   ),
                 ],
               ),
@@ -766,9 +828,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                   Text(
                     'Analise a retirada do pedido e, caso não tenha sido coletado, entre em contato com o SAL.',
                     style: TextStyle(
-                        fontSize: 12.5,
-                        color: Color(0xFF1F2937),
-                        height: 1.35),
+                        fontSize: 12.5, color: Color(0xFF1F2937), height: 1.35),
                   ),
                 ],
               ),
@@ -787,8 +847,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                       borderRadius: BorderRadius.circular(8)),
                 ),
                 child: const Text('ANALISAR',
-                    style: TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.bold)),
+                    style:
+                        TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -806,8 +866,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                 child: IconButton(
                   padding: EdgeInsets.zero,
                   tooltip: 'Imprimir informações do pedido',
-                  icon: const Icon(Icons.print,
-                      color: Colors.white, size: 20),
+                  icon: const Icon(Icons.print, color: Colors.white, size: 20),
                   onPressed: _abrirImpressaoPedido,
                 ),
               )
@@ -815,8 +874,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _linhaDado(Icons.person,
-                _pedido.cliente?.nome ?? 'Cliente não informado',
+            _linhaDado(
+                Icons.person, _pedido.cliente?.nome ?? 'Cliente não informado',
                 negrito: true, size: 16),
             if (_pedido.cliente?.cpf != null)
               _linhaDadoImagem(
@@ -830,8 +889,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
                   const Icon(Icons.phone, size: 18, color: Color(0xFF9CA3AF)),
                   const SizedBox(width: 8),
                   Expanded(
-                      child: Text(
-                          _formatarTelefone(_pedido.cliente!.telefone),
+                      child: Text(_formatarTelefone(_pedido.cliente!.telefone),
                           style: const TextStyle(
                               fontSize: 13, color: Color(0xFF6B7280)))),
                   IconButton(
@@ -1013,8 +1071,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
               color: Colors.white,
               size: 20,
             ),
-            onPressed: () =>
-                setState(() => _mostrarTokens = !_mostrarTokens),
+            onPressed: () => setState(() => _mostrarTokens = !_mostrarTokens),
             tooltip: _mostrarTokens ? 'Ocultar tokens' : 'Mostrar tokens',
           ),
         ),
@@ -1251,8 +1308,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     final s = _pedido.status.toUpperCase();
     final badges = <Widget>[];
     if (s.contains('NOVO')) {
-      badges.add(_badgeAcao(
-          'EM SEPARAÇÃO', const Color(0xFF12CD0C), _acaoSeparar));
+      badges.add(
+          _badgeAcao('EM SEPARAÇÃO', const Color(0xFF12CD0C), _acaoSeparar));
     } else if (s.contains('SEPARACAO')) {
       badges.add(_badgeAcao(
           'PRONTO PARA RETIRADA', const Color(0xFF00CBFE), _acaoConfirmar));
@@ -1280,8 +1337,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       } else {
         badges.add(_badgeAcao(
             'RETIRAR PEDIDO', const Color(0xFFFFAA02), _acaoRetirar,
-            inicio: const Icon(Icons.arrow_forward,
-                color: Colors.white, size: 18),
+            inicio:
+                const Icon(Icons.arrow_forward, color: Colors.white, size: 18),
             fim: appIcon('assets/icons/retirar.png',
                 width: 22, height: 22, color: Colors.white)));
       }
@@ -1291,8 +1348,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     } else if (s.contains('RETORNAR')) {
       badges.add(_badgeAcao('DEVOLVER PARA ESTOQUE', const Color(0xFFF80032),
           _acaoDevolverEstoque,
-          inicio: const Icon(Icons.arrow_forward,
-              color: Colors.white, size: 18),
+          inicio:
+              const Icon(Icons.arrow_forward, color: Colors.white, size: 18),
           fim: appIcon('assets/icons/devolver.png',
               width: 22, height: 22, color: Colors.white)));
     } else if (s.contains('FINALIZADO')) {
@@ -1316,11 +1373,10 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             s.contains('DEVOLV') ||
             s.contains('CANCEL'));
     // NOTA FISCAL (nfe.png): somente no histórico
-    final temNota =
-        (_pedido.notaFiscalChave ?? '').isNotEmpty && ehHistorico;
+    final temNota = (_pedido.notaFiscalChave ?? '').isNotEmpty && ehHistorico;
     // NOTA FISCAL DE DEVOLUÇÃO (nfe_dev.png): quando houver NF de devolução
-    final temNotaDev = (_pedido.notaFiscalDevolucaoChave ?? '').isNotEmpty &&
-        !ehRetornar;
+    final temNotaDev =
+        (_pedido.notaFiscalDevolucaoChave ?? '').isNotEmpty && !ehRetornar;
 
     final notas = <Widget>[
       if (temNota) _badgeAcaoNotaFiscal(),
@@ -1534,8 +1590,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
               const SizedBox(height: 8),
               Text(msg,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      color: Color(0xFF555555), fontSize: 14)),
+                  style:
+                      const TextStyle(color: Color(0xFF555555), fontSize: 14)),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -1565,8 +1621,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   void _aviso(String msg) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   // Cancelamento/devolução: mantém a tela aberta, atualiza o status exibido,
@@ -1623,8 +1678,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         await widget.apiService.marcarNaoColetado(
             _normOrigem(_pedido.origem), _pedido.codigoExterno);
         if (!mounted) return;
-        _aviso(
-            'Registrado: pedido não coletado (aguardando análise do SAL).');
+        _aviso('Registrado: pedido não coletado (aguardando análise do SAL).');
         await _carregar(silencioso: true);
       } catch (e) {
         _erroMsg(e);
@@ -1636,8 +1690,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
 
   Future<void> _acaoSeparar() async {
     try {
-      await widget.apiService.separarPedido(
-          _normOrigem(_pedido.origem), _pedido.codigoExterno);
+      await widget.apiService
+          .separarPedido(_normOrigem(_pedido.origem), _pedido.codigoExterno);
       final anterior = _pedido.status;
       if (mounted) {
         setState(() => _pedido = _pedido.copyWith(status: 'EM_SEPARACAO'));
@@ -1649,8 +1703,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 
   Future<void> _acaoConfirmar() async {
-    final temSmartphone =
-        _pedido.itens.any((i) => i.quantidadeImeis > 0);
+    final temSmartphone = _pedido.itens.any((i) => i.quantidadeImeis > 0);
     if (temSmartphone) {
       await showDialog(
         context: context,
@@ -1683,21 +1736,19 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     }
 
     // Recusa total: todos os itens com quantidade 0
-    final recusaTotal = nenhum ||
-        itens.isNotEmpty &&
-            itens.every((it) => novaQtd(it) == 0);
+    final recusaTotal =
+        nenhum || itens.isNotEmpty && itens.every((it) => novaQtd(it) == 0);
 
     if (recusaTotal) {
       final motivos = await _carregarMotivosRecusa(origem, _pedido.status);
       final motivo = motivos.isEmpty
           ? 'RECUSA_TOTAL'
           : await MaestroDialogs.recusaMotivo(context,
-              titulo: 'Selecione o motivo da recusa:',
-              motivos: motivos);
+              titulo: 'Selecione o motivo da recusa:', motivos: motivos);
       if (motivo == null || motivo.isEmpty) return;
       try {
-        await widget.apiService.updateInventory(numero, [], 0.0,
-            corpoVazio: true);
+        await widget.apiService
+            .updateInventory(numero, [], 0.0, corpoVazio: true);
         await widget.apiService.recusarPedido(origem, codigoExterno, motivo);
         _sucesso('Pedido recusado.');
       } catch (e) {
@@ -1706,8 +1757,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       return;
     }
 
-    final houveAlteracao =
-        itens.any((it) => novaQtd(it) != it.quantidade);
+    final houveAlteracao = itens.any((it) => novaQtd(it) != it.quantidade);
 
     if (houveAlteracao) {
       // Flag/itens salvos só após confirmação (no _executarConfirmacao).
@@ -1734,17 +1784,15 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       if (confirma != true) return;
       // atualiza inventário (somente itens alterados) e confirma
       try {
-        final itensComErro = _buildItensBody(itens, novaQtd)
-            .where((m) {
-              final sap = m['codigoSAP'] ?? '';
-              final it = itens.firstWhere(
-                  (x) => (x.codigoSAP ?? '') == sap,
-                  orElse: () => itens.first);
-              return novaQtd(it) != it.quantidade;
-            })
-            .toList();
+        final itensComErro = _buildItensBody(itens, novaQtd).where((m) {
+          final sap = m['codigoSAP'] ?? '';
+          final it = itens.firstWhere((x) => (x.codigoSAP ?? '') == sap,
+              orElse: () => itens.first);
+          return novaQtd(it) != it.quantidade;
+        }).toList();
         final novoValorTotal = _calcularValorTotal(itens, novaQtd);
-        await widget.apiService.updateInventory(numero, itensComErro, novoValorTotal);
+        await widget.apiService
+            .updateInventory(numero, itensComErro, novoValorTotal);
         await _executarConfirmacao(origem, codigoExterno, itens, novaQtd,
             editado: true, motivo: motivo);
       } catch (e) {
@@ -1777,8 +1825,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       return quantidades[key] ?? it.quantidade;
     }
 
-    final houveAlteracao =
-        itens.any((it) => novaQtd(it) != it.quantidade);
+    final houveAlteracao = itens.any((it) => novaQtd(it) != it.quantidade);
 
     if (houveAlteracao) {
       // Flag/itens salvos só após confirmação (no _executarConfirmacao).
@@ -1802,16 +1849,15 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           alterados: alterados);
       if (confirma != true) return;
       try {
-        final itensComErro = _buildItensBody(itens, novaQtd, imeis)
-            .where((m) {
-              final sap = m['codigoSAP'] ?? '';
-              final it = itens.firstWhere((x) => (x.codigoSAP ?? '') == sap,
-                  orElse: () => itens.first);
-              return novaQtd(it) != it.quantidade;
-            })
-            .toList();
+        final itensComErro = _buildItensBody(itens, novaQtd, imeis).where((m) {
+          final sap = m['codigoSAP'] ?? '';
+          final it = itens.firstWhere((x) => (x.codigoSAP ?? '') == sap,
+              orElse: () => itens.first);
+          return novaQtd(it) != it.quantidade;
+        }).toList();
         final novoValorTotal = _calcularValorTotal(itens, novaQtd);
-        await widget.apiService.updateInventory(numero, itensComErro, novoValorTotal);
+        await widget.apiService
+            .updateInventory(numero, itensComErro, novoValorTotal);
         await _executarConfirmacao(origem, codigoExterno, itens, novaQtd,
             editado: true, motivo: motivo, imeisEditados: imeis);
       } catch (e) {
@@ -1839,14 +1885,20 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       final valorUnitario = it.valorUnitario;
       final sap = it.codigoSAP ?? '';
       final digitados = imeisEditados?[sap];
-      final List<dynamic> imeisFinal;
+      final int perUnit = it.quantidadeImeis;
       final int qtdImeis;
+      final List<List<String>> imeisFinal;
       if (digitados != null && digitados.isNotEmpty) {
-        imeisFinal = [digitados];
-        qtdImeis = digitados.length;
+        qtdImeis = perUnit > 0 ? perUnit : 1;
+        imeisFinal = <List<String>>[];
+        for (var i = 0; i < digitados.length; i += qtdImeis) {
+          final fim =
+              i + qtdImeis > digitados.length ? digitados.length : i + qtdImeis;
+          imeisFinal.add(digitados.sublist(i, fim));
+        }
       } else {
-        imeisFinal = it.imeis;
-        qtdImeis = (it.imeis as List?)?.length ?? 0;
+        qtdImeis = perUnit;
+        imeisFinal = it.imeis.take(n).map((e) => List<String>.from(e)).toList();
       }
       return <String, dynamic>{
         'codigoEAN': it.codigoEAN ?? '',
@@ -1870,21 +1922,15 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   double _calcularValorTotal(List<Item> itens, int Function(Item) novaQtd) {
     final subtotal =
         itens.fold<double>(0.0, (s, it) => s + it.valorUnitario * novaQtd(it));
-    return subtotal -
-        (_pedido.valorDesconto) +
-        (_pedido.valorEntrega);
+    return subtotal - (_pedido.valorDesconto) + (_pedido.valorEntrega);
   }
 
-  Future<void> _executarConfirmacao(
-      String origem,
-      String codigoExterno,
-      List<Item> itens,
-      int Function(Item) novaQtd,
+  Future<void> _executarConfirmacao(String origem, String codigoExterno,
+      List<Item> itens, int Function(Item) novaQtd,
       {required bool editado,
       String? motivo,
       Map<String, List<String>>? imeisEditados}) async {
-    final itensAtualizados =
-        _buildItensBody(itens, novaQtd, imeisEditados);
+    final itensAtualizados = _buildItensBody(itens, novaQtd, imeisEditados);
     final novoValorTotal = _calcularValorTotal(itens, novaQtd);
     final codigosSapAlterados = <String>[];
     for (final it in itens) {
@@ -1905,34 +1951,30 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     final itensQuery =
         codigosSapAlterados.isNotEmpty ? codigosSapAlterados.join(',') : null;
     await widget.apiService.confirmarPedido(origem, codigoExterno,
-        body: body,
-        editado: editado,
-        motivo: motivo,
-        itens: itensQuery);
+        body: body, editado: editado, motivo: motivo, itens: itensQuery);
     // Salvar flag de edição e itens originais localmente (espelha Kotlin)
     if (editado) {
       try {
-        final itensJson = jsonEncode(itens.map((it) => {
-          'codigoEAN': it.codigoEAN,
-          'codigoSAP': it.codigoSAP,
-          'descricao': it.descricao,
-          'quantidade': it.quantidade,
-        }).toList());
-        widget.session.savePedidoItens(
-            _pedido.id, itensJson,
-            numero: _pedido.numero,
-            codigoExterno: _pedido.codigoExterno);
-        widget.session.saveEditFlag(
-            _pedido.id,
-            numero: _pedido.numero,
-            codigoExterno: _pedido.codigoExterno);
+        final itensJson = jsonEncode(itens
+            .map((it) => {
+                  'codigoEAN': it.codigoEAN,
+                  'codigoSAP': it.codigoSAP,
+                  'descricao': it.descricao,
+                  'quantidade': it.quantidade,
+                })
+            .toList());
+        widget.session.savePedidoItens(_pedido.id, itensJson,
+            numero: _pedido.numero, codigoExterno: _pedido.codigoExterno);
+        widget.session.saveEditFlag(_pedido.id,
+            numero: _pedido.numero, codigoExterno: _pedido.codigoExterno);
       } catch (_) {}
     }
     // Atualiza localmente os itens com a quantidade alterada, para o card
     // do item ficar vermelho (foiAlterado) sem depender do reload da API.
     if (mounted) {
       setState(() {
-        _pedido = _pedido.copyWith(itens: itens.map((it) {
+        _pedido = _pedido.copyWith(
+            itens: itens.map((it) {
           final n = novaQtd(it);
           if (n != it.quantidade) {
             return it.copyWith(quantidadeTotal: n);
@@ -1946,8 +1988,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     // sem reload da API que pudesse reverter o status. As abas da home
     // atualizam ao voltar (onVoltarDetalhes).
     if (mounted) {
-      setState(
-          () => _pedido = _pedido.copyWith(status: 'PRONTO_PARA_SAIR'));
+      setState(() => _pedido = _pedido.copyWith(status: 'PRONTO_PARA_SAIR'));
     }
     if (mounted) {
       _sucesso('Pedido confirmado! Status: Pronto para Retirada.',
@@ -1958,8 +1999,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   Future<List<MotivoRecusa>> _carregarMotivosRecusa(
       String origem, String status) async {
     try {
-      return await widget.apiService.getMotivosRecusa(
-          origem: origem, status: status);
+      return await widget.apiService
+          .getMotivosRecusa(origem: origem, status: status);
     } catch (_) {
       return [];
     }
@@ -1973,8 +2014,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     // "Pegue na Loja Hoje" (cliente retira na loja) é o fluxo da loja: nós
     // digitamos o token informado e finalizamos (Packk/FINALIZADO). Corresponde
     // a tipoEntrega == 'RETIRADA' ou origem == 'PEGUE_NA_LOJA_HOJE'.
-    final isPegueNaLoja =
-        tipo == 'RETIRADA' || origem == 'PEGUE_NA_LOJA_HOJE';
+    final isPegueNaLoja = tipo == 'RETIRADA' || origem == 'PEGUE_NA_LOJA_HOJE';
     // EXTERNA + Americanas/Magazine (e NÃO Pegue na Loja) => fluxo inverso:
     // exibimos o token para o entregador que vem buscar (SAIU_PARA_ENTREGA).
     final isReserva = !isPegueNaLoja &&
@@ -2018,8 +2058,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
             ? tokenRetirada!
             : (tokenInsucesso?.isNotEmpty == true ? tokenInsucesso! : '---');
         _iniciarPollingEntregador();
-        final ok = await MaestroDialogs.tokenInsucesso(context, tk,
-            reserva: true);
+        final ok =
+            await MaestroDialogs.tokenInsucesso(context, tk, reserva: true);
         if (ok != true) {
           _pollingEntregador?.cancel();
           return;
@@ -2030,8 +2070,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         // informado pelo cliente e finaliza (Packk/FINALIZADO). Nunca exibe o
         // dialog de token de insucesso (esse é para fluxo de entrega/entregador).
         final codigo = await MaestroDialogs.token(context,
-            nome: _pedido.cliente?.nome ?? '',
-            numero: _pedido.codigoExterno);
+            nome: _pedido.cliente?.nome ?? '', numero: _pedido.codigoExterno);
         if (codigo == null || codigo.isEmpty) return;
         if (!await validarCodigo(codigo)) return;
         await _confirmarRetirada(token: codigo);
@@ -2044,8 +2083,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       } else {
         // iFood Delivery (sem token de insucesso): digitamos o token informado
         final codigo = await MaestroDialogs.token(context,
-            nome: _pedido.cliente?.nome ?? '',
-            numero: _pedido.codigoExterno);
+            nome: _pedido.cliente?.nome ?? '', numero: _pedido.codigoExterno);
         if (codigo == null || codigo.isEmpty) return;
         if (!await validarCodigo(codigo)) return;
         await _confirmarRetirada(token: codigo);
@@ -2060,11 +2098,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         (_pedido.tipoEntrega ?? '').toUpperCase() == 'RETIRADA';
     final statusAnterior = _pedido.status;
     if (isLoja) {
-      await widget.apiService.retirarPedidoPackk(
-          _pedido.codigoExterno);
+      await widget.apiService.retirarPedidoPackk(_pedido.codigoExterno);
     } else {
-      await widget.apiService.retirarPedidoShipFromStore(
-          _pedido.codigoExterno);
+      await widget.apiService.retirarPedidoShipFromStore(_pedido.codigoExterno);
     }
     // Persiste o token digitado/validado (Kotlin: salvarTokenEPedido) para
     // exibir depois (ex.: histórico como ENTREGUE).
@@ -2130,12 +2166,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       final lojaPedido = _pedido.loja.isNotEmpty
           ? _pedido.loja
           : (widget.session.getUserStore() ?? 'L291');
-      await widget.apiService.devolverPedido(
-          lojaPedido,
-          _pedido.codigoExterno,
-          recaptchaToken: res.$3,
-          motivo: res.$1,
-          observacao: res.$2);
+      await widget.apiService.devolverPedido(lojaPedido, _pedido.codigoExterno,
+          recaptchaToken: res.$3, motivo: res.$1, observacao: res.$2);
     } catch (e) {
       _erroMsg(e);
     }
@@ -2150,8 +2182,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         textoSim: 'SIM, CANCELAR');
     if (ok != true) return;
     try {
-      await widget.apiService.retornarParaEstoque(
-          _normOrigem(_pedido.origem), numero);
+      await widget.apiService
+          .retornarParaEstoque(_normOrigem(_pedido.origem), numero);
       await _sucessoComSaida(
           'Pedido devolvido ao estoque.', 'RETORNAR_PARA_ESTOQUE');
     } catch (e) {
@@ -2164,11 +2196,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
         numero: _pedido.codigoExterno);
     if (res == null) return;
     try {
-      await widget.apiService.cancelarPedido(
-          _normOrigem(_pedido.origem),
-          _pedido.codigoExterno,
-          res.$1,
-          'CANCELAMENTO');
+      await widget.apiService.cancelarPedido(_normOrigem(_pedido.origem),
+          _pedido.codigoExterno, res.$1, 'CANCELAMENTO');
       _sucesso('Pedido cancelado.');
     } catch (e) {
       _erroMsg(e);
@@ -2181,239 +2210,238 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   }
 }
 
-  class _ItemRowDetalhe extends StatefulWidget {
-    final Item item;
-    final String loja;
-    const _ItemRowDetalhe({required this.item, required this.loja});
-    @override
-    State<_ItemRowDetalhe> createState() => _ItemRowDetalheState();
+class _ItemRowDetalhe extends StatefulWidget {
+  final Item item;
+  final String loja;
+  const _ItemRowDetalhe({required this.item, required this.loja});
+  @override
+  State<_ItemRowDetalhe> createState() => _ItemRowDetalheState();
+}
+
+class _ItemRowDetalheState extends State<_ItemRowDetalhe> {
+  bool _expanded = false;
+  late final List<String> _secundarios;
+
+  @override
+  void initState() {
+    super.initState();
+    final ean = widget.item.codigoEAN;
+    _secundarios = widget.item.eans
+        .where((e) => ean == null || ean.isEmpty || e != ean)
+        .toList();
   }
 
-  class _ItemRowDetalheState extends State<_ItemRowDetalhe> {
-    bool _expanded = false;
-    late final List<String> _secundarios;
+  void _copiarEan(String? ean) {
+    final valor = (ean ?? '').trim();
+    if (valor.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: valor));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('EAN copiado: $valor'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
 
-    @override
-    void initState() {
-      super.initState();
-      final ean = widget.item.codigoEAN;
-      _secundarios = widget.item.eans
-          .where((e) => ean == null || ean.isEmpty || e != ean)
-          .toList();
-    }
+  Widget _fotoItem(Item item) {
+    final url = (item.urlImagem ?? '').trim();
+    Widget placeholder() => Container(
+          width: 36,
+          height: 36,
+          color: const Color(0xFFF3F4F6),
+          alignment: Alignment.center,
+          child: const Icon(
+            Icons.image_outlined,
+            size: 18,
+            color: Color(0xFF9CA3AF),
+          ),
+        );
+    if (url.isEmpty) return placeholder();
+    return Image.network(
+      url,
+      width: 36,
+      height: 36,
+      fit: BoxFit.contain,
+      cacheWidth: 108,
+      errorBuilder: (_, __, ___) => placeholder(),
+      loadingBuilder: (context, child, progress) =>
+          progress == null ? child : placeholder(),
+    );
+  }
 
-    void _copiarEan(String? ean) {
-      final valor = (ean ?? '').trim();
-      if (valor.isEmpty) return;
-      Clipboard.setData(ClipboardData(text: valor));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('EAN copiado: $valor'),
-          duration: const Duration(seconds: 1),
-        ),
-      );
-    }
+  @override
+  Widget build(BuildContext context) {
+    final i = widget.item;
+    final alterado = i.foiAlterado;
+    final recusado = i.foiRecusado;
+    final corItem = recusado
+        ? const Color(0xFFDC2626)
+        : alterado
+            ? const Color(0xFFDC2626)
+            : const Color(0xFF2B2B2B);
+    final corSecundaria = recusado || alterado
+        ? const Color(0xFFDC2626)
+        : const Color(0xFF888888);
+    final qtd = i.quantidadeEfetiva;
 
-    Widget _fotoItem(Item item) {
-      final url = (item.urlImagem ?? '').trim();
-      Widget placeholder() => Container(
-            width: 36,
-            height: 36,
-            color: const Color(0xFFF3F4F6),
-            alignment: Alignment.center,
-            child: const Icon(
-              Icons.image_outlined,
-              size: 18,
-              color: Color(0xFF9CA3AF),
-            ),
-          );
-      if (url.isEmpty) return placeholder();
-      return Image.network(
-        url,
-        width: 36,
-        height: 36,
-        fit: BoxFit.contain,
-        cacheWidth: 108,
-        errorBuilder: (_, __, ___) => placeholder(),
-        loadingBuilder: (context, child, progress) =>
-            progress == null ? child : placeholder(),
-      );
-    }
-
-    @override
-    Widget build(BuildContext context) {
-      final i = widget.item;
-      final alterado = i.foiAlterado;
-      final recusado = i.foiRecusado;      final corItem = recusado
-          ? const Color(0xFFDC2626)
-          : alterado
-              ? const Color(0xFFDC2626)
-              : const Color(0xFF2B2B2B);
-      final corSecundaria = recusado || alterado
-          ? const Color(0xFFDC2626)
-          : const Color(0xFF888888);
-      final qtd = i.quantidadeEfetiva;
-
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 30,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text('${qtd}x',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: corItem)),
-                  ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 30,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text('${qtd}x',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: corItem)),
                 ),
-                const SizedBox(width: 6),
-                InkWell(
-                  borderRadius: BorderRadius.circular(6),
-                  onTap: () => mostrarImagemProduto(
-                    context,
-                    item: i,
-                    loja: widget.loja,
-                  ),
-                  child: SizedBox(
-                    width: 40,
-                    child: Center(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: _fotoItem(i),
-                      ),
+              ),
+              const SizedBox(width: 6),
+              InkWell(
+                borderRadius: BorderRadius.circular(6),
+                onTap: () => mostrarImagemProduto(
+                  context,
+                  item: i,
+                  loja: widget.loja,
+                ),
+                child: SizedBox(
+                  width: 40,
+                  child: Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: _fotoItem(i),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      InkWell(
-                        borderRadius: BorderRadius.circular(6),
-                        onTap: () => mostrarImagemProduto(
-                          context,
-                          item: i,
-                          loja: widget.loja,
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2),
-                          child: Text(i.descricao ?? '',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: corItem)),
-                        ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    InkWell(
+                      borderRadius: BorderRadius.circular(6),
+                      onTap: () => mostrarImagemProduto(
+                        context,
+                        item: i,
+                        loja: widget.loja,
                       ),
-                      InkWell(
-                        onTap: () => _copiarEan(i.codigoEAN),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text('EAN: ${i.codigoEAN ?? ''}',
-                                  style: TextStyle(
-                                      fontSize: 11, color: corSecundaria)),
-                            ),
-                            if (_secundarios.isNotEmpty) ...[
-                              const SizedBox(width: 6),
-                              GestureDetector(
-                                onTap: () =>
-                                    setState(() => _expanded = !_expanded),
-                                child: Icon(
-                                    _expanded
-                                        ? Icons.keyboard_arrow_up
-                                        : Icons.keyboard_arrow_down,
-                                    size: 16,
-                                    color: const Color(0xFF6B7280)),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      if (_expanded && _secundarios.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 3),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: _secundarios
-                                .map((e) => InkWell(
-                                      onTap: () => _copiarEan(e),
-                                      child: Text('EAN: $e',
-                                          style: TextStyle(
-                                              fontSize: 11,
-                                              color: corSecundaria)),
-                                    ))
-                                .toList(),
-                          ),
-                        ),
-                      Text('SAP: ${i.codigoSAP ?? ''}',
-                          style: TextStyle(
-                              fontSize: 11, color: corSecundaria)),
-                      if (i.imeis.isNotEmpty)
-                        Text(
-                            i.imeis
-                                .expand((e) => e)
-                                .map((e) => 'IMEI: $e')
-                                .join('\n'),
-                            style: const TextStyle(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2),
+                        child: Text(i.descricao ?? '',
+                            style: TextStyle(
                                 fontSize: 12,
-                                color: Color(0xFFD32F2F),
-                                fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-                SizedBox(
-                  width: 110,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('R\$ ${CurrencyFormatter.formatarMoeda(i.valorUnitario * qtd)}',
-                          style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: corItem)),
+                                fontWeight: FontWeight.bold,
+                                color: corItem)),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () => _copiarEan(i.codigoEAN),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text('EAN: ${i.codigoEAN ?? ''}',
+                                style: TextStyle(
+                                    fontSize: 11, color: corSecundaria)),
+                          ),
+                          if (_secundarios.isNotEmpty) ...[
+                            const SizedBox(width: 6),
+                            GestureDetector(
+                              onTap: () =>
+                                  setState(() => _expanded = !_expanded),
+                              child: Icon(
+                                  _expanded
+                                      ? Icons.keyboard_arrow_up
+                                      : Icons.keyboard_arrow_down,
+                                  size: 16,
+                                  color: const Color(0xFF6B7280)),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (_expanded && _secundarios.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 3),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _secundarios
+                              .map((e) => InkWell(
+                                    onTap: () => _copiarEan(e),
+                                    child: Text('EAN: $e',
+                                        style: TextStyle(
+                                            fontSize: 11,
+                                            color: corSecundaria)),
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                    Text('SAP: ${i.codigoSAP ?? ''}',
+                        style: TextStyle(fontSize: 11, color: corSecundaria)),
+                    if (i.imeis.isNotEmpty)
                       Text(
-                          '${qtd}x R\$ ${CurrencyFormatter.formatarMoeda(i.valorUnitario)}',
-                          style: TextStyle(
+                          i.imeis
+                              .expand((e) => e)
+                              .map((e) => 'IMEI: $e')
+                              .join('\n'),
+                          style: const TextStyle(
                               fontSize: 12,
-                              color: corItem,
+                              color: Color(0xFFD32F2F),
                               fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (i.estoque != null)
-              Align(
-                alignment: Alignment.centerRight,
-                child: Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF29CC39),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text('Estoque estimado: ${i.estoque}',
-                      style: const TextStyle(
-                          color: Colors.white, fontSize: 11)),
+                  ],
                 ),
               ),
-            const Divider(height: 16, color: Color(0xFFDDDDDD)),
-          ],
-        ),
-      );
-    }
+              SizedBox(
+                width: 110,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                        'R\$ ${CurrencyFormatter.formatarMoeda(i.valorUnitario * qtd)}',
+                        style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: corItem)),
+                    Text(
+                        '${qtd}x R\$ ${CurrencyFormatter.formatarMoeda(i.valorUnitario)}',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: corItem,
+                            fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (i.estoque != null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: Container(
+                margin: const EdgeInsets.only(top: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF29CC39),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text('Estoque estimado: ${i.estoque}',
+                    style: const TextStyle(color: Colors.white, fontSize: 11)),
+              ),
+            ),
+          const Divider(height: 16, color: Color(0xFFDDDDDD)),
+        ],
+      ),
+    );
   }
-
+}
 
 /// Animação de sucesso: o círculo verde surge e o check é desenhado
 /// progressivamente por traço.

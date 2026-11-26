@@ -62,8 +62,12 @@ class _SmartphoneConfirmacaoDialogState
   void _ensureImeiCtrls(String k, Item it, int qtd) {
     final count = qtd * it.quantidadeImeis;
     final list = _imeiCtrls.putIfAbsent(k, () => []);
+    final existentes = it.imeis.expand((e) => e).toList();
     while (list.length < count) {
-      final c = TextEditingController();
+      final index = list.length;
+      final c = TextEditingController(
+        text: index < existentes.length ? existentes[index] : '',
+      );
       c.addListener(() {
         if (mounted) setState(() {});
       });
@@ -79,15 +83,16 @@ class _SmartphoneConfirmacaoDialogState
       _imeiCtrls[k]?.map((c) => c.text.trim()).toList() ?? [];
 
   void _alterarQtd(String k, Item it, int nova) {
-    final clamped = nova < 1 ? 1 : (nova > it.quantidade ? it.quantidade : nova);
+    final clamped =
+        nova < 1 ? 1 : (nova > it.quantidade ? it.quantidade : nova);
     _qtd[k] = clamped;
     _ensureImeiCtrls(k, it, clamped);
     setState(() {});
   }
 
   Future<void> _scanInto(String k, int index) async {
-    final imei = await Navigator.of(context)
-        .push<String>(MaterialPageRoute(builder: (_) => const ScannerImeiScreen()));
+    final imei = await Navigator.of(context).push<String>(
+        MaterialPageRoute(builder: (_) => const ScannerImeiScreen()));
     if (imei == null || imei.isEmpty) return;
     final list = _imeiCtrls[k];
     if (list == null || index >= list.length) return;
@@ -185,8 +190,8 @@ class _SmartphoneConfirmacaoDialogState
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close,
-                        color: Colors.white, size: 20),
+                    icon:
+                        const Icon(Icons.close, color: Colors.white, size: 20),
                     onPressed: _cancelar,
                     splashRadius: 20,
                     padding: EdgeInsets.zero,
@@ -311,8 +316,7 @@ class _SmartphoneConfirmacaoDialogState
               children: [
                 const Padding(
                   padding: EdgeInsets.only(top: 2),
-                  child: Icon(Icons.check_box_rounded,
-                      color: red600, size: 22),
+                  child: Icon(Icons.check_box_rounded, color: red600, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -418,8 +422,8 @@ class _SmartphoneConfirmacaoDialogState
                       IconButton(
                         icon: const Icon(Icons.remove, size: 16),
                         color: Colors.grey.shade700,
-                        constraints: const BoxConstraints(
-                            minWidth: 36, minHeight: 36),
+                        constraints:
+                            const BoxConstraints(minWidth: 36, minHeight: 36),
                         padding: EdgeInsets.zero,
                         onPressed: qtdAtual > 1
                             ? () => _alterarQtd(k, it, qtdAtual - 1)
@@ -440,8 +444,8 @@ class _SmartphoneConfirmacaoDialogState
                       IconButton(
                         icon: const Icon(Icons.add, size: 16),
                         color: Colors.grey.shade700,
-                        constraints: const BoxConstraints(
-                            minWidth: 36, minHeight: 36),
+                        constraints:
+                            const BoxConstraints(minWidth: 36, minHeight: 36),
                         padding: EdgeInsets.zero,
                         onPressed: qtdAtual < qtdMax
                             ? () => _alterarQtd(k, it, qtdAtual + 1)
@@ -518,8 +522,8 @@ class _SmartphoneConfirmacaoDialogState
                           icon: const Icon(Icons.camera_alt_outlined,
                               size: 16, color: red600),
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                              minWidth: 32, minHeight: 32),
+                          constraints:
+                              const BoxConstraints(minWidth: 32, minHeight: 32),
                           onPressed: () => _scanInto(k, i),
                         ),
                       ),

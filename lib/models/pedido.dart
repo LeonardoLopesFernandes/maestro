@@ -62,20 +62,20 @@ class Pedido {
     this.deliveryToken,
     this.timelines = const [],
     this.historico = const [],
-      this.canalDeVendas,
-      this.searchtext,
-      this.notaFiscalChave,
-      this.notaFiscalUrl,
-      this.notaFiscalDevolucaoChave,
-      this.notaFiscalDevolucaoUrl,
-      this.transportadora,
-      this.tempoConfirmacao,
-      this.aba,
-      this.coletaTardia,
-      this.pendencia,
-      this.dataConfirmacao,
-      this.motivo,
-    });
+    this.canalDeVendas,
+    this.searchtext,
+    this.notaFiscalChave,
+    this.notaFiscalUrl,
+    this.notaFiscalDevolucaoChave,
+    this.notaFiscalDevolucaoUrl,
+    this.transportadora,
+    this.tempoConfirmacao,
+    this.aba,
+    this.coletaTardia,
+    this.pendencia,
+    this.dataConfirmacao,
+    this.motivo,
+  });
 
   factory Pedido.fromJson(Map<String, dynamic> json) {
     return Pedido(
@@ -90,14 +90,13 @@ class Pedido {
       dataAlteracao: json['dataAlteracao'],
       dataCriacao: json['dataCriacao'],
       erro: json['erro'],
-      cliente: json['cliente'] != null ? Cliente.fromJson(json['cliente']) : null,
+      cliente:
+          json['cliente'] != null ? Cliente.fromJson(json['cliente']) : null,
       recebedor: json['recebedor'] != null
           ? Recebedor.fromJson(json['recebedor'])
           : null,
-      itens: (json['itens'] as List?)
-              ?.map((e) => Item.fromJson(e))
-              .toList() ??
-          [],
+      itens:
+          (json['itens'] as List?)?.map((e) => Item.fromJson(e)).toList() ?? [],
       valorTotal: _toDouble(json['valorTotal']),
       valorSubtotal: _toDouble(json['valorSubtotal']),
       valorDesconto: _toDouble(json['valorDesconto']),
@@ -133,8 +132,8 @@ class Pedido {
       pendencia: json['pendencia'],
       dataConfirmacao: json['dataConfirmacao'],
       motivo: (json['motivo'] as List?)
-              ?.map((e) => MotivoCancelamento.fromJson(e))
-              .toList(),
+          ?.map((e) => MotivoCancelamento.fromJson(e))
+          .toList(),
     );
   }
 
@@ -318,12 +317,11 @@ class Item {
 
   factory Item.fromJson(Map<String, dynamic> json) => Item(
         codigoEAN: json['codigoEAN'],
-        eans:
-            (json['eans'] as List?)?.map((e) => e.toString()).toList() ?? [],
+        eans: (json['eans'] as List?)?.map((e) => e.toString()).toList() ?? [],
         eansSecundarios: (json['eansSecundarios'] as List?)
                 ?.whereType<Map>()
-                .map((e) =>
-                    EanSecundario.fromJson(Map<String, dynamic>.from(e)))
+                .map(
+                    (e) => EanSecundario.fromJson(Map<String, dynamic>.from(e)))
                 .toList() ??
             const [],
         codigoSAP: json['codigoSAP'],
@@ -337,8 +335,9 @@ class Item {
         precoVenda: _toDouble(json['precoVenda']),
         quantidadeImeis: json['quantidadeImeis'] ?? 0,
         imeis: (json['imeis'] as List?)
-                ?.map((l) =>
-                    (l as List).map((e) => e.toString()).toList())
+                ?.map((l) => l is List
+                    ? l.map((e) => e.toString()).toList()
+                    : <String>[l.toString()])
                 .toList() ??
             [],
       );
@@ -347,7 +346,8 @@ class Item {
   int get quantidadeEfetiva => quantidadeTotal ?? quantidade;
 
   /// Se o item foi alterado (quantidadeTotal difere de quantidade)
-  bool get foiAlterado => quantidadeTotal != null && quantidadeTotal != quantidade;
+  bool get foiAlterado =>
+      quantidadeTotal != null && quantidadeTotal != quantidade;
 
   /// Se o item foi recusado (quantidadeTotal == 0)
   bool get foiRecusado => quantidadeTotal != null && quantidadeTotal == 0;
