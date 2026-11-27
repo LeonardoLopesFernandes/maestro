@@ -37,7 +37,7 @@ class _SmartphoneConfirmacaoDialogState
   List<Item> get _itens =>
       widget.pedido.itens.where((i) => i.quantidadeImeis > 0).toList();
 
-  String _key(Item i) => i.codigoSAP ?? i.codigoEAN ?? i.descricao ?? '';
+  String _key(Item i) => widget.pedido.itens.indexOf(i).toString();
 
   @override
   void initState() {

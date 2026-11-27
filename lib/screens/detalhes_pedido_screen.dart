@@ -1730,9 +1730,9 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     final numero = _pedido.numero;
 
     int novaQtd(Item it) {
-      final sap = it.codigoSAP ?? '';
       if (nenhum) return 0;
-      return quantidadesEditadas[sap] ?? it.quantidade;
+      final idx = itens.indexOf(it);
+      return quantidadesEditadas['$idx'] ?? it.quantidade;
     }
 
     // Recusa total: todos os itens com quantidade 0
@@ -1784,12 +1784,13 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       if (confirma != true) return;
       // atualiza inventário (somente itens alterados) e confirma
       try {
-        final itensComErro = _buildItensBody(itens, novaQtd).where((m) {
-          final sap = m['codigoSAP'] ?? '';
-          final it = itens.firstWhere((x) => (x.codigoSAP ?? '') == sap,
-              orElse: () => itens.first);
-          return novaQtd(it) != it.quantidade;
-        }).toList();
+        final bodyItens = _buildItensBody(itens, novaQtd);
+        final itensComErro = <Map<String, dynamic>>[];
+        for (var i = 0; i < itens.length; i++) {
+          if (novaQtd(itens[i]) != itens[i].quantidade) {
+            itensComErro.add(bodyItens[i]);
+          }
+        }
         final novoValorTotal = _calcularValorTotal(itens, novaQtd);
         await widget.apiService
             .updateInventory(numero, itensComErro, novoValorTotal);
@@ -1821,8 +1822,8 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
     final numero = _pedido.numero;
 
     int novaQtd(Item it) {
-      final key = it.codigoSAP ?? it.codigoEAN ?? it.descricao ?? '';
-      return quantidades[key] ?? it.quantidade;
+      final idx = itens.indexOf(it);
+      return quantidades['$idx'] ?? it.quantidade;
     }
 
     final houveAlteracao = itens.any((it) => novaQtd(it) != it.quantidade);
@@ -1849,12 +1850,13 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
           alterados: alterados);
       if (confirma != true) return;
       try {
-        final itensComErro = _buildItensBody(itens, novaQtd, imeis).where((m) {
-          final sap = m['codigoSAP'] ?? '';
-          final it = itens.firstWhere((x) => (x.codigoSAP ?? '') == sap,
-              orElse: () => itens.first);
-          return novaQtd(it) != it.quantidade;
-        }).toList();
+        final bodyItens = _buildItensBody(itens, novaQtd, imeis);
+        final itensComErro = <Map<String, dynamic>>[];
+        for (var i = 0; i < itens.length; i++) {
+          if (novaQtd(itens[i]) != itens[i].quantidade) {
+            itensComErro.add(bodyItens[i]);
+          }
+        }
         final novoValorTotal = _calcularValorTotal(itens, novaQtd);
         await widget.apiService
             .updateInventory(numero, itensComErro, novoValorTotal);
@@ -1880,11 +1882,12 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
   List<Map<String, dynamic>> _buildItensBody(
       List<Item> itens, int Function(Item) novaQtd,
       [Map<String, List<String>>? imeisEditados]) {
-    return itens.map((it) {
+    return itens.asMap().entries.map((entry) {
+      final idx = entry.key;
+      final it = entry.value;
       final n = novaQtd(it);
       final valorUnitario = it.valorUnitario;
-      final sap = it.codigoSAP ?? '';
-      final digitados = imeisEditados?[sap];
+      final digitados = imeisEditados?['$idx'];
       final int perUnit = it.quantidadeImeis;
       final int qtdImeis;
       final List<List<String>> imeisFinal;
@@ -1932,7 +1935,7 @@ class _DetalhesPedidoScreenState extends State<DetalhesPedidoScreen> {
       Map<String, List<String>>? imeisEditados}) async {
     final itensAtualizados = _buildItensBody(itens, novaQtd, imeisEditados);
     final novoValorTotal = _calcularValorTotal(itens, novaQtd);
-    final codigosSapAlterados = <String>[];
+    final codigosSapAlterados = <String>{};
     for (final it in itens) {
       if (novaQtd(it) != it.quantidade) {
         codigosSapAlterados.add(it.codigoSAP ?? '');

@@ -56,9 +56,7 @@ class MaestroDialogs {
                   const Text(
                     'Os Termos de Serviço do reCAPTCHA estão mudando. Acesse.',
                     style: TextStyle(
-                        fontSize: 9.5,
-                        color: Color(0xFF555555),
-                        height: 1.2),
+                        fontSize: 9.5, color: Color(0xFF555555), height: 1.2),
                   ),
                 ],
               ),
@@ -92,8 +90,8 @@ class MaestroDialogs {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: const Color(_vermelho)),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(_vermelho)),
               onPressed: () => Navigator.of(context).pop(true),
               child: Text(textoSim,
                   style: const TextStyle(
@@ -173,8 +171,8 @@ class MaestroDialogs {
                     letterSpacing: 1),
                 decoration: InputDecoration(
                   counterText: '',
-                  contentPadding: const EdgeInsets.symmetric(
-                      vertical: 12, horizontal: 12),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: const BorderSide(color: Color(0xFFC8102E)),
@@ -435,9 +433,7 @@ class MaestroDialogs {
   }
 
   static Widget _statusRetirada(
-      {required bool feito,
-      required String titulo,
-      required String detalhe}) {
+      {required bool feito, required String titulo, required String detalhe}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -451,8 +447,7 @@ class MaestroDialogs {
             width: 26,
             height: 26,
             child: feito
-                ? const Icon(Icons.check_circle,
-                    color: Color(_verde), size: 26)
+                ? const Icon(Icons.check_circle, color: Color(_verde), size: 26)
                 : const CircularProgressIndicator(
                     strokeWidth: 2, color: Color(0xFF9E9E9E)),
           ),
@@ -496,8 +491,8 @@ class MaestroDialogs {
                   backgroundColor: const Color(_vermelho)),
               onPressed: () => Navigator.of(context).pop(false),
               child: const Text('Cancelar',
-                  style:
-                      TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(height: 8),
@@ -508,8 +503,8 @@ class MaestroDialogs {
                   backgroundColor: const Color(_verde)),
               onPressed: () => Navigator.of(context).pop(true),
               child: const Text('Confirmar',
-                  style:
-                      TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -604,7 +599,8 @@ class MaestroDialogs {
                           ...pedido.itens.asMap().entries.map((e) {
                             final i = e.key;
                             final it = e.value;
-                            final sel = nenhum ? false : (selecionados[i] ?? false);
+                            final sel =
+                                nenhum ? false : (selecionados[i] ?? false);
                             final alterado = !nenhum &&
                                 (qtd[i] ?? it.quantidade) != it.quantidade;
                             final corCheck = alterado
@@ -618,7 +614,8 @@ class MaestroDialogs {
                             return InkWell(
                               onTap: () {
                                 if (nenhum) return;
-                                set(() => selecionados[i] = !(selecionados[i] ?? false));
+                                set(() => selecionados[i] =
+                                    !(selecionados[i] ?? false));
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
@@ -635,8 +632,8 @@ class MaestroDialogs {
                                       activeColor: corCheck,
                                       onChanged: nenhum
                                           ? null
-                                          : (v) => set(
-                                              () => selecionados[i] = v ?? false),
+                                          : (v) => set(() =>
+                                              selecionados[i] = v ?? false),
                                     ),
                                     const SizedBox(width: 6),
                                     ClipRRect(
@@ -661,14 +658,15 @@ class MaestroDialogs {
                                                   color: Color(0xFF555555))),
                                           if (it.estoque != null)
                                             Container(
-                                              margin: const EdgeInsets.only(
-                                                  top: 4),
+                                              margin:
+                                                  const EdgeInsets.only(top: 4),
                                               padding:
                                                   const EdgeInsets.symmetric(
                                                       horizontal: 8,
                                                       vertical: 2),
                                               decoration: BoxDecoration(
-                                                  color: const Color(0xFF4CAF50),
+                                                  color:
+                                                      const Color(0xFF4CAF50),
                                                   borderRadius:
                                                       BorderRadius.circular(8)),
                                               child: Text(
@@ -676,7 +674,8 @@ class MaestroDialogs {
                                                   style: const TextStyle(
                                                       fontSize: 10,
                                                       color: Colors.white,
-                                                      fontWeight: FontWeight.bold)),
+                                                      fontWeight:
+                                                          FontWeight.bold)),
                                             ),
                                         ],
                                       ),
@@ -718,10 +717,9 @@ class MaestroDialogs {
                                             controllers[i]!.selection =
                                                 TextSelection.fromPosition(
                                                     TextPosition(
-                                                        offset:
-                                                            controllers[i]!
-                                                                .text
-                                                                .length));
+                                                        offset: controllers[i]!
+                                                            .text
+                                                            .length));
                                             set(() => qtd[i] = it.quantidade);
                                           } else {
                                             set(() => qtd[i] = nova);
@@ -735,14 +733,14 @@ class MaestroDialogs {
                             );
                           }).toList(),
                           InkWell(
-                            onTap: () =>
-                                set(() => nenhum = !nenhum),
+                            onTap: () => set(() => nenhum = !nenhum),
                             child: Row(
                               children: [
                                 Checkbox(
                                   value: nenhum,
                                   activeColor: const Color(0xFFE61937),
-                                  onChanged: (v) => set(() => nenhum = v ?? false),
+                                  onChanged: (v) =>
+                                      set(() => nenhum = v ?? false),
                                 ),
                                 const Text('A loja não possui nenhum item.',
                                     style: TextStyle(
@@ -785,10 +783,7 @@ class MaestroDialogs {
                                       i < pedido.itens.length;
                                       i++) {
                                     if (selecionados[i] == true) {
-                                      final sap =
-                                          pedido.itens[i].codigoSAP ??
-                                              'idx_$i';
-                                      result[sap] = qtd[i] ?? 0;
+                                      result['$i'] = qtd[i] ?? 0;
                                     }
                                   }
                                   Navigator.of(ctx).pop((result, false));
@@ -832,9 +827,8 @@ class MaestroDialogs {
                   shape: BoxShape.circle,
                   color: sel ? const Color(_vermelho) : Colors.transparent,
                   border: Border.all(
-                    color: sel
-                        ? const Color(_vermelho)
-                        : const Color(0xFFBDBDBD),
+                    color:
+                        sel ? const Color(_vermelho) : const Color(0xFFBDBDBD),
                     width: 2,
                   ),
                 ),
@@ -847,8 +841,7 @@ class MaestroDialogs {
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: const BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(color: Color(0xFFEEEEEE))),
+                  border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE))),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -930,8 +923,8 @@ class MaestroDialogs {
           }
 
           return _dialogFull(
-            header: _stepperHeader(
-                passo: 1, onBack: () => Navigator.of(ctx).pop()),
+            header:
+                _stepperHeader(passo: 1, onBack: () => Navigator.of(ctx).pop()),
             body: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -986,8 +979,7 @@ class MaestroDialogs {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label,
-                style: const TextStyle(
-                    fontSize: 12, color: Color(0xFF888888))),
+                style: const TextStyle(fontSize: 12, color: Color(0xFF888888))),
             const SizedBox(height: 5),
             FittedBox(
               fit: BoxFit.scaleDown,
@@ -1087,8 +1079,7 @@ class MaestroDialogs {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 colunaQuantidade('Solicitado', '${item.quantidade}'),
-                colunaQuantidade('Disponível',
-                    disponivel?.toString() ?? '—',
+                colunaQuantidade('Disponível', disponivel?.toString() ?? '—',
                     perigo: semEstoque),
                 colunaQuantidade('Quantidade final', '$quantidadeFinal'),
               ],
@@ -1140,9 +1131,7 @@ class MaestroDialogs {
               const SizedBox(height: 9),
               Text(intro,
                   style: const TextStyle(
-                      fontSize: 14,
-                      height: 1.5,
-                      color: Color(0xFF777777))),
+                      fontSize: 14, height: 1.5, color: Color(0xFF777777))),
               const SizedBox(height: 20),
               Container(
                 padding: const EdgeInsets.all(13),
@@ -1282,8 +1271,7 @@ class MaestroDialogs {
             decoration: BoxDecoration(
                 color: current ? Colors.white : vermelho,
                 shape: BoxShape.circle,
-                border:
-                    current ? Border.all(color: vermelho, width: 2) : null),
+                border: current ? Border.all(color: vermelho, width: 2) : null),
             alignment: Alignment.center,
             child: check
                 ? Icon(Icons.check,
@@ -1316,8 +1304,8 @@ class MaestroDialogs {
             child: onBack == null
                 ? null
                 : IconButton(
-                    icon: const Icon(Icons.arrow_back,
-                        color: Color(0xFF212121)),
+                    icon:
+                        const Icon(Icons.arrow_back, color: Color(0xFF212121)),
                     onPressed: onBack,
                   ),
           ),
@@ -1330,8 +1318,7 @@ class MaestroDialogs {
                 Expanded(
                   child: Container(
                     height: 2,
-                    margin:
-                        const EdgeInsets.only(top: 11, left: 8, right: 8),
+                    margin: const EdgeInsets.only(top: 11, left: 8, right: 8),
                     color: const Color(0xFFE0E0E0),
                   ),
                 ),
@@ -1376,10 +1363,9 @@ class MaestroDialogs {
               foregroundColor:
                   habilitado ? Colors.white : const Color(0xFF9E9E9E),
               elevation: 0,
-              shape:
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             ),
             child: Row(
               children: [
@@ -1415,8 +1401,8 @@ class MaestroDialogs {
           return Dialog(
             insetPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: 520,
@@ -1443,8 +1429,7 @@ class MaestroDialogs {
                         children: [
                           Container(
                             height: 58,
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF2F2F2),
                               borderRadius: BorderRadius.circular(4),
@@ -1475,10 +1460,7 @@ class MaestroDialogs {
                                     if (v != null) {
                                       final partes = v.split('|');
                                       final auto = partes.length > 1
-                                          ? partes
-                                              .sublist(1)
-                                              .join('|')
-                                              .trim()
+                                          ? partes.sublist(1).join('|').trim()
                                           : v.trim();
                                       if (obs.text.isEmpty ||
                                           obs.text == autoAnterior) {
@@ -1524,8 +1506,7 @@ class MaestroDialogs {
                             const Center(
                               child: Text('---',
                                   style: TextStyle(
-                                      fontSize: 42,
-                                      color: Color(0xFFC8102E))),
+                                      fontSize: 42, color: Color(0xFFC8102E))),
                             )
                           else
                             SizedBox(
@@ -1738,8 +1719,8 @@ class MaestroDialogs {
           return Dialog(
             insetPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 maxWidth: 560,
@@ -1907,15 +1888,18 @@ class MaestroDialogs {
           children: [
             const Text('⚠️ ', style: TextStyle(fontSize: 28)),
             Text(titulo,
-                style:
-                    TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(_vermelhoDark))),
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(_vermelhoDark))),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(mensagem,
-                style: const TextStyle(fontSize: 16), textAlign: TextAlign.center),
+                style: const TextStyle(fontSize: 16),
+                textAlign: TextAlign.center),
             const SizedBox(height: 20),
             Row(
               children: [
@@ -2043,13 +2027,9 @@ class MaestroDialogs {
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF1E1E1E))),
                     const SizedBox(height: 18),
-                    opcao(
-                        'confirmar',
-                        'Confirmar coleta',
+                    opcao('confirmar', 'Confirmar coleta',
                         'Marque essa opção se o entregador já retirou este pedido na loja.'),
-                    opcao(
-                        'nao_coletado',
-                        'Pedido não coletado',
+                    opcao('nao_coletado', 'Pedido não coletado',
                         'Marque essa opção se o pedido não foi coletado e está na loja. Entre em contato com o SAL para analisarem o pedido.'),
                     const Divider(height: 8, color: Color(0xFFE6E6E6)),
                     const SizedBox(height: 12),
@@ -2094,8 +2074,7 @@ class MaestroDialogs {
                                     ),
                                   ],
                                 ),
-                                const Text(
-                                    'Segunda a Sexta, das 09h às 21h.',
+                                const Text('Segunda a Sexta, das 09h às 21h.',
                                     style: TextStyle(
                                         fontSize: 13,
                                         color: Color(0xFF5E6164))),
