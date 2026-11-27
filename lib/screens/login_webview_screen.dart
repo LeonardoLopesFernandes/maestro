@@ -34,6 +34,12 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
   Timer? _pollTimer;
   Timer? _injectTimer;
   bool _promptInjetado = false;
+  static const MethodChannel _smsChannel =
+      MethodChannel('maestro.io/sms_consent');
+  static const EventChannel _smsEvents =
+      EventChannel('maestro.io/sms_consent_events');
+  StreamSubscription? _smsSub;
+  String? _smsCode;
   Color _statusBarColor = const Color(0xFFE60000);
 
   @override
@@ -60,8 +66,7 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
           }
         },
       )
-      ..setUserAgent(
-          "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 "
+      ..setUserAgent("Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 "
           "(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36")
       ..setNavigationDelegate(
         NavigationDelegate(
@@ -81,6 +86,12 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
               setState(() => _carregando = false);
             }
             _verificarUrl(url);
+            if (!_loginConcluido && url.contains('login.microsoftonline.com')) {
+              _iniciarSmsConsent();
+            }
+            if (!_loginConcluido && _smsCode != null) {
+              _preencherCodigoSms(_smsCode!);
+            }
             _atualizarCorStatusBar();
             Future.delayed(const Duration(milliseconds: 800), () {
               if (mounted) _atualizarCorStatusBar();
@@ -101,6 +112,14 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
         ),
       );
 
+    _smsSub = _smsEvents.receiveBroadcastStream().listen((event) {
+      final code = (event ?? '').toString().replaceAll(RegExp(r'\D'), '');
+      if (code.isEmpty) return;
+      _smsCode = code;
+      _preencherCodigoSms(code);
+    }, onError: (_) {});
+    _iniciarSmsConsent();
+
     // ENTRAR COM MICROSOFT: limpa a sessão do site/Microsoft para forçar o
     // login pedir credenciais (troca de usuário), em vez de reutilizar a
     // sessão anterior que entrava automaticamente.
@@ -120,8 +139,7 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
     // periodicamente até o login concluir (o Microsoft pode trocar de tela
     // entre email/senha/KMSI em momentos diferentes).
     if (_autoLogin) {
-      _injectTimer =
-          Timer.periodic(const Duration(milliseconds: 1200), (_) {
+      _injectTimer = Timer.periodic(const Duration(milliseconds: 1200), (_) {
         if (!_loginConcluido) _preencherLoginAutomatico();
       });
     }
@@ -171,6 +189,43 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
           }
         })();
       ''');
+    } catch (_) {}
+  }
+
+  Future<void> _iniciarSmsConsent() async {
+    try {
+      await _smsChannel.invokeMethod('start');
+    } catch (_) {}
+  }
+
+  Future<void> _preencherCodigoSms(String codigo, [int tentativa = 0]) async {
+    if (_loginConcluido) return;
+    final digits = codigo.replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty) return;
+    final js = '''
+      (function() {
+        var el = document.querySelector('input[name="otc"],input[id="idTxtBc"],input[autocomplete="one-time-code"],input[type="tel"]');
+        if (!el) return 'no-input';
+        var d = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
+        if (d && d.set) d.set.call(el, '$digits'); else el.value = '$digits';
+        el.dispatchEvent(new Event('input', {bubbles: true}));
+        el.dispatchEvent(new Event('change', {bubbles: true}));
+        var b = document.querySelector('#idSubmit_SAOTCC_Continue,#idSIButton9,button[type="submit"]');
+        if (b) { b.click(); return 'submitted'; }
+        return 'filled';
+      })();
+    ''';
+    try {
+      final result = await _controller.runJavaScriptReturningResult(js);
+      final txt = result?.toString() ?? '';
+      if (txt.contains('no-input') && tentativa < 6) {
+        await Future.delayed(const Duration(seconds: 2));
+        if (mounted && !_loginConcluido) {
+          await _preencherCodigoSms(codigo, tentativa + 1);
+        }
+      } else if (txt.contains('submitted')) {
+        _smsCode = null;
+      }
     } catch (_) {}
   }
 
@@ -362,7 +417,8 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
     try {
       final claims = _decodificarClaims(token);
       await _session.saveToken(token,
-          expiryEpochSeconds: claims?['exp'] is int ? claims!['exp'] as int : null);
+          expiryEpochSeconds:
+              claims?['exp'] is int ? claims!['exp'] as int : null);
       // Suporta JWT com claims aninhados em "user" (minhaloja/trocafacil)
       // e flat (Microsoft OAuth padrão).
       final user = claims?['user'] is Map
@@ -373,19 +429,21 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
                   claims?['upn'] ??
                   claims?['preferred_username'] ??
                   claims?['unique_name'] ??
-                  widget.args?['email'])?.toString() ??
-          "usuario@americanas.io";
-      final nome = (user?['nome'] ??
-                  user?['name'] ??
-                  _nomeDosClaims(claims, email))
+                  widget.args?['email'])
               ?.toString() ??
-          '';
+          "usuario@americanas.io";
+      final nome =
+          (user?['nome'] ?? user?['name'] ?? _nomeDosClaims(claims, email))
+                  ?.toString() ??
+              '';
       final stores = user?['stores'] ?? claims?['stores'];
       final loja = user?['loja']?.toString() ??
           claims?['loja']?.toString() ??
-          (stores is List && stores.isNotEmpty ? stores.first.toString() : null);
-      _session.saveUserInfo(
-          email, nome, loja ?? _session.getUserStore() ?? Constants.defaultStore);
+          (stores is List && stores.isNotEmpty
+              ? stores.first.toString()
+              : null);
+      _session.saveUserInfo(email, nome,
+          loja ?? _session.getUserStore() ?? Constants.defaultStore);
     } catch (e) {
       LogHelper.e('LoginWebView: erro ao salvar token', e);
     }
@@ -417,6 +475,10 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
 
   @override
   void dispose() {
+    _smsSub?.cancel();
+    try {
+      _smsChannel.invokeMethod('stop');
+    } catch (_) {}
     _pollTimer?.cancel();
     _injectTimer?.cancel();
     super.dispose();
@@ -425,14 +487,12 @@ class _LoginWebViewScreenState extends State<LoginWebViewScreen> {
   @override
   Widget build(BuildContext context) {
     final fundoClaro = _statusBarColor.computeLuminance() > 0.5;
-    final icones =
-        fundoClaro ? Brightness.dark : Brightness.light;
+    final icones = fundoClaro ? Brightness.dark : Brightness.light;
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: _statusBarColor,
         statusBarIconBrightness: icones,
-        statusBarBrightness:
-            fundoClaro ? Brightness.light : Brightness.dark,
+        statusBarBrightness: fundoClaro ? Brightness.light : Brightness.dark,
       ),
       child: PopScope(
         canPop: !_loginConcluido,
